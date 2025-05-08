@@ -55,10 +55,4 @@ public class Person {
     @Temporal(TemporalType.TIMESTAMP)
     @CreationTimestamp
     private Date createdAt;
-
-    // new by ali
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date updatedAt;
-    @Column(nullable = false)
-    private boolean deleted = false;
 }
