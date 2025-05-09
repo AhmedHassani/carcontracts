@@ -5,8 +5,6 @@ import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,6 +13,8 @@ import java.util.stream.Collectors;
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
+
+
 
     /* ----------------------------------------------------
      * إنشاء شركة جديدة
@@ -51,7 +51,6 @@ public class CompanyService {
     public CompanyResponse getCompanyById(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
-
         return mapToDto(company);
     }
 

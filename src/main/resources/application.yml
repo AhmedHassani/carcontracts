@@ -10,5 +10,9 @@ spring:
       maximum-pool-size: 10
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     show-sql: true
+
+jwt:
+  secret: bAEuwlZGHSxmPsZFfEj5q2Qdycx23VX8yDGwmGUDnhSIh1vWPuGTAi9aAXU0ocNJuqJSl67vqknIuvSmliOHrA==
+  expiration-ms: 3600000
