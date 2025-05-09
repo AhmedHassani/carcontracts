@@ -23,4 +23,14 @@ public class PersonController {
     public ResponseEntity<List<PersonResponseDTO>> getAll() {
         return ResponseEntity.ok(personService.getAllPersons());
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
+        personService.softDeletePerson(id);
+        return ResponseEntity.ok(personService.getAllPersons());
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<PersonResponseDTO> updatePerson(
+            @PathVariable Long id, @RequestBody PersonRequestDTO dto) {
+        return ResponseEntity.ok(personService.updatePerson(id, dto));
+    }
 }
