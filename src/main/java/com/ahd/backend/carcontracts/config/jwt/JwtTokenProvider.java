@@ -16,14 +16,20 @@ import java.util.Date;
 public class JwtTokenProvider {
     private final SecretKey key;
     private final JwtProperties props;
+    private final SecretKey refreshKey;
+
+
 
     public JwtTokenProvider(JwtProperties props) {
         this.props = props;
         byte[] keyBytes = Decoders.BASE64.decode(props.getSecret());
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        byte[] refreshBytes = Decoders.BASE64.decode(props.getRefreshSecret());
+        this.refreshKey = Keys.hmacShaKeyFor(refreshBytes);
     }
 
-    public String generateToken(Authentication auth) {
+
+    public String generateAccessToken(Authentication auth) {
         Date now = new Date();
         Date exp = new Date(now.getTime() + props.getExpirationMs());
         return Jwts.builder()
@@ -34,13 +40,33 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String getUsername(String token) {
+    public String generateRefreshToken(Authentication auth) {
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + props.getRefreshExpirationMs());
+        return Jwts.builder()
+                .setSubject(auth.getName())
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .signWith(refreshKey, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+
+    public String getUsernameFromAccessToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public String getUsernameFromRefreshToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(refreshKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody().getSubject();
     }
 
 
@@ -54,6 +80,23 @@ public class JwtTokenProvider {
         } catch (JwtException ex) {
             return false;
         }
+    }
+
+
+    public boolean validateRefreshToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(refreshKey)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException ex) {
+            return false;
+        }
+    }
+
+    public JwtProperties getProps() {
+        return props;
     }
 }
 

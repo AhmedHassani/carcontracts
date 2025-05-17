@@ -10,9 +10,19 @@ spring:
       maximum-pool-size: 10
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
 
 jwt:
   secret: bAEuwlZGHSxmPsZFfEj5q2Qdycx23VX8yDGwmGUDnhSIh1vWPuGTAi9aAXU0ocNJuqJSl67vqknIuvSmliOHrA==
-  expiration-ms: 3600000
+  expiration-ms: 2592000000
+  refresh-secret: LMyBPW/4uRR2vb+zJPrgc1ex0faZthlVd0lFKn7sQQ85qzvQ9D6MMGCD+FloSuhygi9BmS9M4he1XdLekYxXIw==
+  refresh-expiration-ms: 3592000000
+
+application:
+  service:
+    name: carcontracts
+    domain: api
+  api:
+    version: v1
+    base-path: ${application.service.domain}/${application.service.name}/${application.api.version}

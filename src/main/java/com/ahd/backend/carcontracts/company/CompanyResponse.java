@@ -1,12 +1,13 @@
 package com.ahd.backend.carcontracts.company;
 
 
+import com.ahd.backend.carcontracts.util.base.Pagination;
 import lombok.Builder;
 
 import java.time.LocalDate;
 
 @Builder
-public record CompanyResponse(
+public record CompanyResponse (
 
         /** رقم الشركة (PK) */
         Long id,
@@ -34,4 +35,5 @@ public record CompanyResponse(
 
         /** الحالة */
         CompanyStatus status
+
 ) {}

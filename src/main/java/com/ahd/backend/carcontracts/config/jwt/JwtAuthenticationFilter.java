@@ -29,7 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             if (tokenProvider.validate(token)) {
-                String username = tokenProvider.getUsername(token);
+                String username = tokenProvider.getUsernameFromAccessToken(token);
                 var userDetails = uds.loadUserByUsername(username);
                 var auth = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

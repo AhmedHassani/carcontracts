@@ -4,7 +4,9 @@ package com.ahd.backend.carcontracts.appuser.services;
 
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ public class RoleService {
     private final RoleRepository repo;
 
 
+    @Auditable(operation = "READ_CONTRACT")
+    @Transactional
     public List<Role> findAll() { return repo.findAll(); }
 
     public Role create(Role r) {

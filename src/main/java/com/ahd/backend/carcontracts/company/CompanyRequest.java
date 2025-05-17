@@ -24,7 +24,7 @@ public record CompanyRequest(
 
         /** رقم صاحب الشركة (هاتف أو هوية) */
         @NotBlank
-        @Size(max = 50)
+        @Size(max = 250)
         String ownerContact,
 
         /** اسم الشركة */
