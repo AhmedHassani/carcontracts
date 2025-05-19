@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.ahd.backend.carcontracts.FireBase.FirebaseService;
 
 @Service
 @RequiredArgsConstructor
@@ -40,37 +41,40 @@ public class NotificationService {
                 .message(notification.getMessage())
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())
-                .is_read(notification.getIsRead())
+                .isRead(notification.isRead())
                 .build();
     }
 
     public List<NotificationResponseDTO> getAllNotifications() {
-        return notificationRepository.findAllByOrderByCreatedAtDesc()
+        return notificationRepository.findAll()
                 .stream().map(notification -> NotificationResponseDTO.builder()
                         .id(notification.getId())
                         .message(notification.getMessage())
                         .link(notification.getLink())
                         .createdAt(notification.getCreatedAt())
-                        .is_read(notification.getIsRead())
+                        .isRead(notification.isRead())
                         .build())
                 .collect(Collectors.toList());
     }
 
     public NotificationResponseDTO getNotificationById(Long id) {
-        Optional<Notification> notification = notificationRepository.findById(id);
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
 
         return NotificationResponseDTO.builder()
                 .id(notification.getId())
                 .message(notification.getMessage())
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())
-                .is_read(notification.getIsRead())
+                .isRead(notification.isRead())
                 .build();
     }
-    public NotificationResponseDTO markAsRead(Long id) {
-        Notification notification = notificationRepository.findById(id);
 
-        notification.setIsRead(true);
+    public NotificationResponseDTO markAsRead(Long id) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+
+        notification.setRead(true);
         notificationRepository.save(notification);
 
         return NotificationResponseDTO.builder()
@@ -78,8 +82,9 @@ public class NotificationService {
                 .message(notification.getMessage())
                 .link(notification.getLink())
                 .createdAt(notification.getCreatedAt())
-                .is_read(notification.getIsRead())
+                //.isRead(notification.getIsRead())
                 .build();
     }
+
 
 }

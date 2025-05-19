@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Date;
+
 @Data
 @Builder
 public class NotificationResponseDTO {
@@ -15,6 +17,6 @@ public class NotificationResponseDTO {
     private Long id;
     private String message;
     private String link;
-    private boolean is_read ;
+    private boolean isRead ;
     private Date createdAt;
 }

@@ -11,4 +11,5 @@ public class NotificationRequestDTO {
     private String message;
     private String link;
     private String firebaseToken;
+    private boolean isRead ;
 }

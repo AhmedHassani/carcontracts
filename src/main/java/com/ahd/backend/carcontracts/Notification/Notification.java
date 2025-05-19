@@ -7,6 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.util.Date;
 
 @Entity
 @Data
@@ -28,6 +31,7 @@ public class Notification {
 //    @JoinColumn(name = "user_id", nullable = false)
 //    private app_user app_user;
     @Column(nullable = false)
+    @Builder.Default
     private boolean isRead = false;
 
     @Column(name = "created_at", updatable = false)
