@@ -7,6 +7,6 @@ import java.util.Date;
 
 @Data
 public class PersonAttachmentRequestDTO {
-    private String type; // e.g. "passport", "personal_doc"
-    private MultipartFile file;
+    private String type;
+//    private MultipartFile file;
 }

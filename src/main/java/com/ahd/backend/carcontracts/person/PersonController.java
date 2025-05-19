@@ -26,7 +26,7 @@ public class PersonController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         personService.softDeletePerson(id);
-        return ResponseEntity.ok(personService.getAllPersons());
+        return ResponseEntity.ok().build();
     }
     @PutMapping("/{id}")
     public ResponseEntity<PersonResponseDTO> updatePerson(

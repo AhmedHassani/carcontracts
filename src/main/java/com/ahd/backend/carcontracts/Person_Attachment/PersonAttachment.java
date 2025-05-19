@@ -31,6 +31,7 @@ public class PersonAttachment  {
     @JoinColumn(name = "person_id")
     private Person person;
 
+    @Builder.Default
     private boolean isDeleted = false;
 
     @Column(name = "created_at", updatable = false)

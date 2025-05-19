@@ -60,5 +60,6 @@ public class Person {
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
     @Column(nullable = false)
+    @Builder.Default
     private boolean deleted = false;
 }
