@@ -8,7 +8,7 @@ spring:
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
+#  jpa:
+#    hibernate:
+#      ddl-auto: create
+#    show-sql: true
