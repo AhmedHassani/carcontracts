@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8087
 spring:
   datasource:
     url: jdbc:sqlserver://209.127.228.55;databaseName=carcontracts;encrypt=true;trustServerCertificate=true;
@@ -8,7 +8,7 @@ spring:
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
-  jpa:
-    hibernate:
-      ddl-auto: create
-    show-sql: true
+#  jpa:
+#    hibernate:
+#      ddl-auto: create
+#    show-sql: true

@@ -1,10 +1,9 @@
-package com.ahd.backend.carcontracts.Car;
+package com.ahd.backend.carcontracts.car;
 
-import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import com.ahd.backend.carcontracts.company.Company;
+import com.ahd.backend.carcontracts.company.CompanyRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -17,11 +16,13 @@ public class CarService {
     }
 
     public Car getCarById(Long id) {
-        return carRepository.findByIdAndDeletedFalse(id);
+        return carRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
     }
 
     public Car updateCar(Long id, Car updatedCar) {
-        Car car = carRepository.findByIdAndDeletedFalse(id);
+        Car car = carRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
 
         car.setModel(updatedCar.getModel());
         car.setColor(updatedCar.getColor());
@@ -34,14 +35,17 @@ public class CarService {
         car.setPassengerCount(updatedCar.getPassengerCount());
         car.setEngineType(updatedCar.getEngineType());
         car.setOrigin(updatedCar.getOrigin());
-        car.setCompany(updatedCar.getCompany());
+//        car.setCompany(updatedCar.getCompany());
 
         return carRepository.save(car);
     }
 
     public void softDeleteCar(Long id) {
-        Car car = carRepository.findByIdAndDeletedFalse(id);
+        Car car = carRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
+
         car.setDeleted(true);
         carRepository.save(car);
     }
+
 }

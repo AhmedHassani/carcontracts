@@ -1,11 +1,11 @@
-package com.ahd.backend.carcontracts.Car;
+package com.ahd.backend.carcontracts.car;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/cars")
+@RequestMapping("/api/carcontracts/v1/car")
 @RequiredArgsConstructor
 public class CarController {
 

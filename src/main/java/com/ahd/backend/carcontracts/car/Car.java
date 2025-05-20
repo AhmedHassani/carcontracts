@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.Car;
+package com.ahd.backend.carcontracts.car;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -52,6 +52,7 @@ public class Car {
     private String origin;
 
     @Column(name = "deleted")
+    @Builder.Default
     private boolean deleted = false;
 
     @Column(name = "created_at", updatable = false)

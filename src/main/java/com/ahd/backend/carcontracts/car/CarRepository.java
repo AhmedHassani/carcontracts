@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.Car;
+package com.ahd.backend.carcontracts.car;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

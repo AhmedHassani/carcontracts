@@ -1,14 +1,9 @@
-package com.ahd.backend.carcontracts.Car;
+package com.ahd.backend.carcontracts.car;
 
-import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
-@Builder
-public class CarResponseDTO {
-    private Long id;
+public class CarRequestDTO {
     private String model;
     private String color;
     private String type;
@@ -20,5 +15,4 @@ public class CarResponseDTO {
     private Integer passengerCount;
     private String engineType;
     private String origin;
-    private LocalDateTime createdAt;
 }
