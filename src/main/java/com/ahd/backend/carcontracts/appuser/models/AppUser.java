@@ -27,6 +27,15 @@ public class AppUser implements UserDetails {
     private String username;
     @Column(nullable = false)
     private String password;
+
+    private String email;
+
+    private String phone;
+
+    private String fullName;
+
+    private String image;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",
@@ -65,5 +74,8 @@ public class AppUser implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
+
 }
 

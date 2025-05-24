@@ -1,6 +1,4 @@
 package com.ahd.backend.carcontracts.appuser.models;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,10 +15,9 @@ public class SecuredEndpoint {
     @GeneratedValue
     private Long id;
     @Column(nullable = false)
-    private String httpMethod; // GET, POST, …
+    private String httpMethod;
     @Column(nullable = false)
     private String pattern;
-    // Ant‐style, e.g. /api/users/**
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;

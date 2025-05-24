@@ -18,7 +18,7 @@ jwt:
   expiration-ms: 2592000000
   refresh-secret: LMyBPW/4uRR2vb+zJPrgc1ex0faZthlVd0lFKn7sQQ85qzvQ9D6MMGCD+FloSuhygi9BmS9M4he1XdLekYxXIw==
   refresh-expiration-ms: 3592000000
-
+  
 application:
   service:
     name: carcontracts
@@ -26,3 +26,16 @@ application:
   api:
     version: v1
     base-path: ${application.service.domain}/${application.service.name}/${application.api.version}
+
+aws:
+  region: eu-north-1
+  s3:
+    bucket: carcontracts
+
+cloud:
+  aws:
+    credentials:
+      access-key: AKIAWJXF2KW4LZTFXDUM
+      secret-key: 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
+    region:
+      static: ${aws.region}
