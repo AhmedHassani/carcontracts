@@ -1,0 +1,59 @@
+name: build-and-deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest      # runner on GitHub
+
+    steps:
+    # 1. checkout code
+    - uses: actions/checkout@v4
+
+    # 2. build the jar
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Build production jar
+      run: mvn -Pprod -DskipTests clean package
+
+    # 3. copy just the jar to the server
+    - name: Upload JAR
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        source: target/carcontracts.jar
+        target: ~/jars/
+
+    # 4. stop old container, rebuild image, run new
+    - name: Restart container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          set -e
+          cd ~/jars
+
+          echo "Stopping old container (if any)…"
+          docker stop carcontracts || true
+          docker rm   carcontracts || true
+
+          echo "Building fresh image…"
+          docker build -t carcontracts:latest .
+
+          echo "Starting new container…"
+          docker run -d --name carcontracts \
+                     --restart always \
+                     -p 8083:8083 \
+                     carcontracts:latest
+
+          echo "Pruning dangling images…"
+          docker image prune -f
+
