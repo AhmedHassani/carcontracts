@@ -10,9 +10,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 @EnableConfigurationProperties(JwtProperties.class)
 public class CarContractsApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(CarContractsApplication.class, args);
 	}
-
 }
