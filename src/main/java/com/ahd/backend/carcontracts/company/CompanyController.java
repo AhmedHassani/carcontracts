@@ -1,6 +1,5 @@
 package com.ahd.backend.carcontracts.company;
 
-
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -8,10 +7,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-
 
 @RestController
 @RequestMapping("${application.api.base-path}/companies")
@@ -25,16 +20,10 @@ public class CompanyController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllCompanies( @RequestParam Map<String, String> allParams,
-                                                        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC)
-                                                        Pageable pageable){
-        Map<String,String> filters = allParams.entrySet().stream()
-                .filter(e -> e.getKey().contains("_"))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue
-                ));
-        return ResponseEntity.ok(companyService.getAllCompanies(filters, pageable));
+    public ResponseEntity<ApiResponse> getAllCompanies(
+            CompanySearchCriteria searchCriteria,
+            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(companyService.getAllCompanies(searchCriteria, pageable));
     }
 
     @GetMapping("/{id}")
@@ -53,6 +42,4 @@ public class CompanyController {
         ApiResponse<Void> response = companyService.deleteCompany(id);
         return ResponseEntity.ok(response);
     }
-
-
 }

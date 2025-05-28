@@ -1,12 +1,8 @@
 package com.ahd.backend.carcontracts.company;
 
-
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
-import com.ahd.backend.carcontracts.util.Helper;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
-import com.ahd.backend.carcontracts.util.base.PageRequestParams;
 import com.ahd.backend.carcontracts.util.base.Pagination;
-import com.ahd.backend.carcontracts.util.base.SpecificationBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,14 +15,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
-
 
     /* ----------------------------------------------------
      * إنشاء شركة جديدة
@@ -48,19 +42,37 @@ public class CompanyService {
     }
 
     /* ----------------------------------------------------
-     * جلب جميع الشركات
+     * جلب جميع الشركات مع البحث والفلترة والترتيب
      * -------------------------------------------------- */
-    public ApiResponse<List<CompanyResponse>> getAllCompanies(Map<String, String> filters, Pageable page) {
-        Specification<Company> spec =
-                new SpecificationBuilder<>(Company.class).build(filters);
-        Page<CompanyResponse> pageResult = companyRepository
-                .findAll(spec,page)
-                .map(this::mapToDto);
-        Pagination pagination = new Pagination(
-                pageResult.getNumber(),      // current page
-                pageResult.getTotalPages(),  // total pages
-                pageResult.getTotalElements()// total items
+    public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
+        // Create sort object based on criteria
+        Sort sort = Sort.by(
+            criteria.getSortDirection().equalsIgnoreCase("DESC") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC,
+            criteria.getSortBy()
         );
+        
+        // Create pageable with sort
+        PageRequest pageRequest = PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            sort
+        );
+        
+        // Build specification and get results
+        Specification<Company> spec = CompanySpecification.buildSpecification(criteria);
+        Page<CompanyResponse> pageResult = companyRepository
+                .findAll(spec, pageRequest)
+                .map(this::mapToDto);
+
+        // Create pagination info
+        Pagination pagination = new Pagination(
+                pageResult.getNumber(),
+                pageResult.getTotalPages(),
+                pageResult.getTotalElements()
+        );
+
+        // Return response
         return ApiResponse.<List<CompanyResponse>>builder()
                 .success(true)
                 .message("OK")
@@ -128,6 +140,4 @@ public class CompanyService {
                 .date(Instant.now())
                 .build();
     }
-
-
 }
