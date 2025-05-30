@@ -18,6 +18,8 @@ public class ContractResponseDTO {
     private Long sellerId;
     private Long buyerId;
     private Long branchId;
+    private int installmentAmount;
+    private Long daysAmountBetweenInstallments;
     private String saleType;
     private BigInteger totalAmount;
     private BigInteger amountPaid;
@@ -26,5 +28,6 @@ public class ContractResponseDTO {
     private Long createdBy;
     private Date createdAt;
     private Date updatedAt;
+    @Builder.Default
     private boolean deleted = false;
 }

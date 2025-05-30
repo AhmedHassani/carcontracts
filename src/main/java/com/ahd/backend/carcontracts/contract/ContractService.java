@@ -1,9 +1,11 @@
 package com.ahd.backend.carcontracts.contract;
 
+import com.ahd.backend.carcontracts.contract_installment.ContractInstallment;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import com.ahd.backend.carcontracts.contract_installment.ContractInstallmentRepository;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
@@ -14,47 +16,64 @@ import java.util.stream.Collectors;
 public class ContractService {
 
     private final ContractRepository contractRepository;
+    private final ContractInstallmentRepository installmentRepository;
 
-    public ContractResponseDTO createContract(ContractRequestDTO dto) {
-        Contract contract = Contract.builder()
-                .contractNumber(dto.getContractNumber())
-                .contractDate(dto.getContractDate())
-                .carId(dto.getCarId())
-                .sellerId(dto.getSellerId())
-                .buyerId(dto.getBuyerId())
-                .branchId(dto.getBranchId())
-                .saleType(dto.getSaleType())
-                .totalAmount(dto.getTotalAmount())
-                .amountPaid(dto.getAmountPaid())
-                .paymentMethod(dto.getPaymentMethod())
-                .paymentStatus(dto.getPaymentStatus())
-                .createdBy(dto.getCreatedBy())
-                .createdAt(new Date())
-                .updatedAt(new Date())
-                .deleted(false)
-                .build();
+    @Transactional
+    public Contract createContractWithInstallments(ContractAndInstallmentCreateDto dto) {
+        Contract savedContract = contractRepository.save(dto.getContract());
+        List<ContractInstallment> installments = dto.getContractInstallments();
 
-        contract = contractRepository.save(contract);
-
-        return ContractResponseDTO.builder()
-                .id(contract.getId())
-                .contractNumber(contract.getContractNumber())
-                .contractDate(contract.getContractDate())
-                .carId(contract.getCarId())
-                .sellerId(contract.getSellerId())
-                .buyerId(contract.getBuyerId())
-                .branchId(contract.getBranchId())
-                .saleType(contract.getSaleType())
-                .totalAmount(contract.getTotalAmount())
-                .amountPaid(contract.getAmountPaid())
-                .paymentMethod(contract.getPaymentMethod())
-                .paymentStatus(contract.getPaymentStatus())
-                .createdBy(contract.getCreatedBy())
-                .createdAt(contract.getCreatedAt())
-                .updatedAt(contract.getUpdatedAt())
-                .deleted(contract.isDeleted())
-                .build();
+        for (ContractInstallment installment : installments) {
+            installment.setContract(savedContract);
+        }
+        installmentRepository.saveAll(installments);
+        return savedContract;
     }
+
+//    public ContractResponseDTO createContract(ContractRequestDTO dto) {
+//        Contract contract = Contract.builder()
+//                .contractNumber(dto.getContractNumber())
+//                .contractDate(dto.getContractDate())
+//                .carId(dto.getCarId())
+//                .sellerId(dto.getSellerId())
+//                .buyerId(dto.getBuyerId())
+//                .branchId(dto.getBranchId())
+//                .installmentAmount(dto.getInstallmentAmount())
+//                .daysAmountBetweenInstallments(dto.getDaysAmountBetweenInstallments())
+//                .saleType(dto.getSaleType())
+//                .totalAmount(dto.getTotalAmount())
+//                .amountPaid(dto.getAmountPaid())
+//                .paymentMethod(dto.getPaymentMethod())
+//                .paymentStatus(dto.getPaymentStatus())
+//                .createdBy(dto.getCreatedBy())
+//                .createdAt(new Date())
+//                .updatedAt(new Date())
+//                .deleted(false)
+//                .build();
+//
+//        contract = contractRepository.save(contract);
+//
+//        return ContractResponseDTO.builder()
+//                .id(contract.getId())
+//                .contractNumber(contract.getContractNumber())
+//                .contractDate(contract.getContractDate())
+//                .carId(contract.getCarId())
+//                .sellerId(contract.getSellerId())
+//                .buyerId(contract.getBuyerId())
+//                .branchId(contract.getBranchId())
+//                .installmentAmount(contract.getInstallmentAmount())
+//                .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
+//                .saleType(contract.getSaleType())
+//                .totalAmount(contract.getTotalAmount())
+//                .amountPaid(contract.getAmountPaid())
+//                .paymentMethod(contract.getPaymentMethod())
+//                .paymentStatus(contract.getPaymentStatus())
+//                .createdBy(contract.getCreatedBy())
+//                .createdAt(contract.getCreatedAt())
+//                .updatedAt(contract.getUpdatedAt())
+//                .deleted(contract.isDeleted())
+//                .build();
+//    }
 
     public List<ContractResponseDTO> getAllContracts() {
         return contractRepository.findAll()
@@ -68,6 +87,8 @@ public class ContractService {
                         .sellerId(contract.getSellerId())
                         .buyerId(contract.getBuyerId())
                         .branchId(contract.getBranchId())
+                        .installmentAmount(contract.getInstallmentAmount())
+                        .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
                         .saleType(contract.getSaleType())
                         .totalAmount(contract.getTotalAmount())
                         .amountPaid(contract.getAmountPaid())
@@ -103,9 +124,11 @@ public class ContractService {
         contract.setSellerId(dto.getSellerId());
         contract.setBuyerId(dto.getBuyerId());
         contract.setBranchId(dto.getBranchId());
+      //  contract.setInstallmentAmount(dto.getInstallmentAmount());
+      //  contract.setDaysAmountBetweenInstallments(dto.getDaysAmountBetweenInstallments());
         contract.setSaleType(dto.getSaleType());
-        contract.setTotalAmount(dto.getTotalAmount());
-        contract.setAmountPaid(dto.getAmountPaid());
+     //   contract.setTotalAmount(dto.getTotalAmount());
+     //   contract.setAmountPaid(dto.getAmountPaid());
         contract.setPaymentMethod(dto.getPaymentMethod());
         contract.setPaymentStatus(dto.getPaymentStatus());
         contract.setCreatedBy(dto.getCreatedBy());
@@ -121,9 +144,11 @@ public class ContractService {
                 .sellerId(updated.getSellerId())
                 .buyerId(updated.getBuyerId())
                 .branchId(updated.getBranchId())
+              //  .installmentAmount(updated.getInstallmentAmount())
+              //  .daysAmountBetweenInstallments(updated.getDaysAmountBetweenInstallments())
                 .saleType(updated.getSaleType())
-                .totalAmount(updated.getTotalAmount())
-                .amountPaid(updated.getAmountPaid())
+              //  .totalAmount(updated.getTotalAmount())
+              //  .amountPaid(updated.getAmountPaid())
                 .paymentMethod(updated.getPaymentMethod())
                 .paymentStatus(updated.getPaymentStatus())
                 .createdBy(updated.getCreatedBy())
@@ -148,6 +173,8 @@ public class ContractService {
                 .sellerId(contract.getSellerId())
                 .buyerId(contract.getBuyerId())
                 .branchId(contract.getBranchId())
+                .installmentAmount(contract.getInstallmentAmount())
+                .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
                 .saleType(contract.getSaleType())
                 .totalAmount(contract.getTotalAmount())
                 .amountPaid(contract.getAmountPaid())

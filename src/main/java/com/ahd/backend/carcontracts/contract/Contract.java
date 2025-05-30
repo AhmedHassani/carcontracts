@@ -50,6 +50,9 @@ public class Contract {
     @Column(name = "amount_paid")
     private BigInteger amountPaid;
 
+    @Column(name = "installment_Amount")
+    private int installmentAmount;
+
     @Column(name = "payment_method", length = 20)
     private String paymentMethod;
 
@@ -66,7 +69,11 @@ public class Contract {
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
+
     @Column(nullable = false)
     @Builder.Default
     private boolean deleted = false;
+
+    @Column(name = "days_amount_between_installments")
+    private Long daysAmountBetweenInstallments;
 }

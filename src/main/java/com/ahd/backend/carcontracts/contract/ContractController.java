@@ -18,9 +18,10 @@ public class ContractController {
     private final ContractService contractService;
 
     @PostMapping
-    public ResponseEntity<ContractResponseDTO> createContract(@RequestBody ContractRequestDTO dto) {
-        return ResponseEntity.ok(contractService.createContract(dto));
+    public ResponseEntity<Contract> createContract(@RequestBody ContractAndInstallmentCreateDto dto) {
+        return ResponseEntity.ok(contractService.createContractWithInstallments(dto));
     }
+
 
     @GetMapping
     public ResponseEntity<List<ContractResponseDTO>> getAllContracts() {
