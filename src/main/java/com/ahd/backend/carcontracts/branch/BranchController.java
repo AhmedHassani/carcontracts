@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/branches")
+@RequestMapping("${application.api.base-path}/branches")
 @RequiredArgsConstructor
 public class BranchController {
 
