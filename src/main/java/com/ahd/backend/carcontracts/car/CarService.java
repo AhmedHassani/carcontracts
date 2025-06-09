@@ -2,8 +2,6 @@ package com.ahd.backend.carcontracts.car;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.ahd.backend.carcontracts.company.Company;
-import com.ahd.backend.carcontracts.company.CompanyRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +33,6 @@ public class CarService {
         car.setPassengerCount(updatedCar.getPassengerCount());
         car.setEngineType(updatedCar.getEngineType());
         car.setOrigin(updatedCar.getOrigin());
-//        car.setCompany(updatedCar.getCompany());
 
         return carRepository.save(car);
     }
