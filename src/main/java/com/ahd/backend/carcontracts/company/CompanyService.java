@@ -1,14 +1,20 @@
 package com.ahd.backend.carcontracts.company;
 
-
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.util.base.ApiResponse;
+import com.ahd.backend.carcontracts.util.base.Pagination;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,13 +42,45 @@ public class CompanyService {
     }
 
     /* ----------------------------------------------------
-     * جلب جميع الشركات
+     * جلب جميع الشركات مع البحث والفلترة والترتيب
      * -------------------------------------------------- */
-    public List<CompanyResponse> getAllCompanies() {
-        return companyRepository.findAll()
-                .stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
+        // Create sort object based on criteria
+        Sort sort = Sort.by(
+            criteria.getSortDirection().equalsIgnoreCase("DESC") ? 
+            Sort.Direction.DESC : Sort.Direction.ASC,
+            criteria.getSortBy()
+        );
+        
+        // Create pageable with sort
+        PageRequest pageRequest = PageRequest.of(
+            pageable.getPageNumber(),
+            pageable.getPageSize(),
+            sort
+        );
+        
+        // Build specification and get results
+        Specification<Company> spec = CompanySpecification.buildSpecification(criteria);
+        Page<CompanyResponse> pageResult = companyRepository
+                .findAll(spec, pageRequest)
+                .map(this::mapToDto);
+
+        // Create pagination info
+        Pagination pagination = new Pagination(
+                pageResult.getNumber(),
+                pageResult.getTotalPages(),
+                pageResult.getTotalElements()
+        );
+
+        // Return response
+        return ApiResponse.<List<CompanyResponse>>builder()
+                .success(true)
+                .message("OK")
+                .code(HttpStatus.OK.value())
+                .data(pageResult.getContent())
+                .pagination(pagination)
+                .date(Instant.now())
+                .build();
     }
 
     /* ----------------------------------------------------
@@ -51,7 +89,6 @@ public class CompanyService {
     public CompanyResponse getCompanyById(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
-
         return mapToDto(company);
     }
 
@@ -69,6 +106,38 @@ public class CompanyService {
                 .expirationDate(company.getExpirationDate())
                 .companyLocation(company.getCompanyLocation())
                 .status(company.getStatus())
+                .build();
+    }
+
+    @Transactional
+    public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
+
+        request.companyName().ifPresent(company::setCompanyName);
+        request.ownerName().ifPresent(company::setOwnerName);
+        request.ownerContact().ifPresent(company::setOwnerContact);
+        request.userCount().ifPresent(company::setUserCount);
+        request.subscriptionDate().ifPresent(company::setSubscriptionDate);
+        request.expirationDate().ifPresent(company::setExpirationDate);
+        request.companyLocation().ifPresent(company::setCompanyLocation);
+        request.status().ifPresent(company::setStatus);
+
+        Company updatedCompany = companyRepository.save(company);
+        return mapToDto(updatedCompany);
+    }
+
+    @Transactional
+    public ApiResponse<Void> deleteCompany(Long id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
+        companyRepository.delete(company);
+
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .message("Company deleted successfully.")
+                .code(HttpStatus.OK.value())
+                .date(Instant.now())
                 .build();
     }
 }
