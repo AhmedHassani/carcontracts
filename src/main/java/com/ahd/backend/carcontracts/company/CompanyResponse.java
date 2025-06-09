@@ -1,37 +1,20 @@
 package com.ahd.backend.carcontracts.company;
 
-
 import lombok.Builder;
+import lombok.Value;
 
 import java.time.LocalDate;
 
+@Value
 @Builder
-public record CompanyResponse(
-
-        /** رقم الشركة (PK) */
-        Long id,
-
-        /** اسم الشركة */
-        String companyName,
-
-        /** اسم صاحب الشركة */
-        String ownerName,
-
-        /** رقم صاحب الشركة (هاتف/هوية) */
-        String ownerContact,
-
-        /** عدد المستخدمين */
-        Integer userCount,
-
-        /** تاريخ الاشتراك */
-        LocalDate subscriptionDate,
-
-        /** تاريخ الانتهاء */
-        LocalDate expirationDate,
-
-        /** موقع الشركة */
-        String companyLocation,
-
-        /** الحالة */
-        CompanyStatus status
-) {}
+public class CompanyResponse {
+    Long id;
+    String companyName;
+    String ownerName;
+    String ownerContact;
+    Integer userCount;
+    LocalDate subscriptionDate;
+    LocalDate expirationDate;
+    String companyLocation;
+    CompanyStatus status;
+}

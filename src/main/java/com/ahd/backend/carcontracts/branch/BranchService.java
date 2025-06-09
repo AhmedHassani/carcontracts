@@ -7,7 +7,6 @@ import com.ahd.backend.carcontracts.company.CompanyRepository;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
