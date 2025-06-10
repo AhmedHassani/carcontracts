@@ -52,12 +52,31 @@ public class PersonService {
                 .build();
     }
 
-    public List<PersonResponseDTO> getAllPersons() {
-        return personRepository.findAll()
-                .stream()
-                .filter(person -> !person.isDeleted())
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
+    public Page<PersonResponseDTO> getAllPersons(
+            String usernameFilter,
+            LocalDate createdDateFilter,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Person> personPage = personRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isFalse(root.get("deleted"))); // Exclude deleted
+
+            if (usernameFilter != null && !usernameFilter.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("username")), "%" + usernameFilter.toLowerCase() + "%"));
+            }
+
+            if (createdDateFilter != null) {
+                predicates.add(cb.equal(root.get("createdDate").as(LocalDate.class), createdDateFilter));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable);
+
+        return personPage.map(this::convertToResponseDTO);
     }
 
     public void softDeletePerson(Long id) {
