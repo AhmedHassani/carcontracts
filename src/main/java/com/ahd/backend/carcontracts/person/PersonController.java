@@ -20,14 +20,16 @@ public class PersonController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PersonResponseDTO>> getAll() {
-        return ResponseEntity.ok(personService.getAllPersons());
+    public ResponseEntity<Page<PersonResponseDTO>> getAll(
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<PersonResponseDTO> result = personService.getAllPersons(username, createdDate, page, size);
+        return ResponseEntity.ok(result);
     }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> softDelete(@PathVariable Long id) {
-        personService.softDeletePerson(id);
-        return ResponseEntity.ok().build();
-    }
+
     @PutMapping("/{id}")
     public ResponseEntity<PersonResponseDTO> updatePerson(
             @PathVariable Long id, @RequestBody PersonRequestDTO dto) {
