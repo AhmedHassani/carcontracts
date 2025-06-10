@@ -24,9 +24,15 @@ public class ContractController {
 
 
     @GetMapping
-    public ResponseEntity<List<ContractResponseDTO>> getAllContracts() {
-        return ResponseEntity.ok(contractService.getAllContracts());
+    public ResponseEntity<Page<ContractResponseDTO>> getAllContracts(
+            @RequestParam(required = false) String contractNumber,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate contractDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(contractService.getAllContracts(contractNumber, contractDate, page, size));
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ContractResponseDTO> updateContract(@PathVariable Long id, @RequestBody ContractRequestDTO dto) {

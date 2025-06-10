@@ -75,32 +75,52 @@ public class ContractService {
 //                .build();
 //    }
 
-    public List<ContractResponseDTO> getAllContracts() {
-        return contractRepository.findAll()
-                .stream()
-                .filter(contract -> !contract.isDeleted()) // skip soft-deleted
-                .map(contract -> ContractResponseDTO.builder()
-                        .id(contract.getId())
-                        .contractNumber(contract.getContractNumber())
-                        .contractDate(contract.getContractDate())
-                        .carId(contract.getCarId())
-                        .sellerId(contract.getSellerId())
-                        .buyerId(contract.getBuyerId())
-                        .branchId(contract.getBranchId())
-                        .installmentAmount(contract.getInstallmentAmount())
-                        .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
-                        .saleType(contract.getSaleType())
-                        .totalAmount(contract.getTotalAmount())
-                        .amountPaid(contract.getAmountPaid())
-                        .paymentMethod(contract.getPaymentMethod())
-                        .paymentStatus(contract.getPaymentStatus())
-                        .createdBy(contract.getCreatedBy())
-                        .createdAt(contract.getCreatedAt())
-                        .updatedAt(contract.getUpdatedAt())
-                        .deleted(contract.isDeleted())
-                        .build())
-                .collect(Collectors.toList());
+    public Page<ContractResponseDTO> getAllContracts(
+            String contractNumberFilter,
+            LocalDate contractDateFilter,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Contract> contractPage = contractRepository.findAll((root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.isFalse(root.get("deleted"))); // soft delete filter
+
+            if (contractNumberFilter != null && !contractNumberFilter.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("contractNumber")), "%" + contractNumberFilter.toLowerCase() + "%"));
+            }
+
+            if (contractDateFilter != null) {
+                predicates.add(cb.equal(root.get("contractDate").as(LocalDate.class), contractDateFilter));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        }, pageable);
+
+        return contractPage.map(contract -> ContractResponseDTO.builder()
+                .id(contract.getId())
+                .contractNumber(contract.getContractNumber())
+                .contractDate(contract.getContractDate())
+                .carId(contract.getCarId())
+                .sellerId(contract.getSellerId())
+                .buyerId(contract.getBuyerId())
+                .branchId(contract.getBranchId())
+                .installmentAmount(contract.getInstallmentAmount())
+                .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
+                .saleType(contract.getSaleType())
+                .totalAmount(contract.getTotalAmount())
+                .amountPaid(contract.getAmountPaid())
+                .paymentMethod(contract.getPaymentMethod())
+                .paymentStatus(contract.getPaymentStatus())
+                .createdBy(contract.getCreatedBy())
+                .createdAt(contract.getCreatedAt())
+                .updatedAt(contract.getUpdatedAt())
+                .deleted(contract.isDeleted())
+                .build());
     }
+
     public void softDeleteContract(Long id) {
         Contract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Contract not found with id: " + id));
