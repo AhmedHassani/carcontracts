@@ -66,13 +66,15 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(email);
             helper.setTo(format.toEmail);
-            if(format.cc!=null) {
-                helper.addCc(format.cc);
+            if(format.cc!=null && format.cc.length != 0) {
+                for (int i = 0 ; i < format.cc.length ; i++) {
+                    helper.addCc(format.cc[i]);
+                }
             }
             helper.setText(content, true);
             mailSender.send(message);
         } catch (Exception e) {
-            log.error(e.getMessage());
+            //log.error(e.getMessage());
             throw new RuntimeException("Failed to send email", e);
         }
     }

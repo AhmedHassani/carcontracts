@@ -12,7 +12,7 @@ import lombok.Setter;
 public class Format {
     @NotNull(message = "toEmail is required")
     String toEmail;
-    String cc;
+    String cc [];
     @NotNull(message = "ownerName is required")
     String ownerName;
     @NotNull(message = "companyUsername is required")
