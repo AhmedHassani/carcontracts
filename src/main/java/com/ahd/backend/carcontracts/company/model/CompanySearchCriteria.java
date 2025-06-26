@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;

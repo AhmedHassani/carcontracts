@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -107,19 +108,16 @@ public class AuthService {
     /**
      * Create a new user with the specified roles.
      */
-    @Transactional
     public AppUser createUser(CreateUserRequest request) {
         // Check if username already exists
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new ResponseStatusException(BAD_REQUEST, "Username already exists");
         }
-
         // Get roles from roleIds
         Set<Role> roles = request.getRoleIds().stream()
                 .map(id -> roleRepository.findById(id)
                         .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "Role not found with id: " + id)))
                 .collect(Collectors.toSet());
-
         // Create and save the new user
         AppUser newUser = AppUser.builder()
                 .username(request.getUsername())
@@ -130,8 +128,14 @@ public class AuthService {
                 .image(request.getImage())
                 .roles(roles)
                 .build();
-
         log.info("Creating new user with username: {}", request.getUsername());
         return userRepository.save(newUser);
+    }
+
+    /**
+     * Get user by ID
+     */
+    public Optional<AppUser> getUserById(Long userId) {
+        return userRepository.findById(userId);
     }
 }

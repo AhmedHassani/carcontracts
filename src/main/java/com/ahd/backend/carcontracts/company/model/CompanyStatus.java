@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
 public enum CompanyStatus {
     ACTIVE,        // نشطة

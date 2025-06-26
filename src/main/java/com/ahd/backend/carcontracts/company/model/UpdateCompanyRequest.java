@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
 
 import java.time.LocalDate;

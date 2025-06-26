@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
 import lombok.Builder;
 import lombok.Value;
@@ -17,4 +17,10 @@ public class CompanyResponse {
     LocalDate expirationDate;
     String companyLocation;
     CompanyStatus status;
+    @Builder.Default
+    String companyUsername = null;
+    @Builder.Default
+    String companyPassword = null;
+    @Builder.Default
+    String companyEmail = null;
 }
