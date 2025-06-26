@@ -73,7 +73,7 @@ public class AuthService {
         }
 
         String username = jwtTokenProvider.getUsernameFromRefreshToken(refreshToken);
-        log.debug("Refreshing tokens for user '{}'", username);
+        //log.debug("Refreshing tokens for user '{}'", username);
         AppUser user = (AppUser) userDetailsService.loadUserByUsername(username);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user, null, user.getAuthorities()
@@ -128,7 +128,7 @@ public class AuthService {
                 .image(request.getImage())
                 .roles(roles)
                 .build();
-        log.info("Creating new user with username: {}", request.getUsername());
+        //log.info("Creating new user with username: {}", request.getUsername());
         return userRepository.save(newUser);
     }
 

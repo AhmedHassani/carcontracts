@@ -12,6 +12,10 @@ public record UpdateCompanyRequest(
         Optional<LocalDate> subscriptionDate,
         Optional<LocalDate> expirationDate,
         Optional<String> companyLocation,
-        Optional<CompanyStatus> status
+        Optional<CompanyStatus> status,
+
+        Optional<String> companyUsername,
+        Optional<String> companyPassword,
+        Optional<String> companyEmail
 ) {}
 

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -40,10 +41,11 @@ public class CompanyService {
     private final CompanyUserRepository companyUserRepository;
     private final UserRepository userRepository;
     private final CompanyMapper companyMapper;
+    private final PasswordEncoder passwordEncoder;
 
 
     public CompanyResponse createCompany(CompanyRequest request) {
-        log.info("Creating company: {}", request.companyName());
+        //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
                 .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
         var createUser = CreateUserRequest.builder()
@@ -124,23 +126,41 @@ public class CompanyService {
                 .build();
     }
 
-    @Transactional
-    public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
-        Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
+@Transactional
+public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
+    Company company = companyRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
 
-        request.companyName().ifPresent(company::setCompanyName);
-        request.ownerName().ifPresent(company::setOwnerName);
-        request.ownerContact().ifPresent(company::setOwnerContact);
-        request.userCount().ifPresent(company::setUserCount);
-        request.subscriptionDate().ifPresent(company::setSubscriptionDate);
-        request.expirationDate().ifPresent(company::setExpirationDate);
-        request.companyLocation().ifPresent(company::setCompanyLocation);
-        request.status().ifPresent(company::setStatus);
+    request.companyName().ifPresent(company::setCompanyName);
+    request.ownerName().ifPresent(company::setOwnerName);
+    request.ownerContact().ifPresent(company::setOwnerContact);
+    request.userCount().ifPresent(company::setUserCount);
+    request.subscriptionDate().ifPresent(company::setSubscriptionDate);
+    request.expirationDate().ifPresent(company::setExpirationDate);
+    request.companyLocation().ifPresent(company::setCompanyLocation);
+    request.status().ifPresent(company::setStatus);
 
-        Company updatedCompany = companyRepository.save(company);
-        return mapToDto(updatedCompany);
-    }
+    CompanyUser companyUser = companyUserRepository.findByCompanyAndRole(company, CompanyUserRole.OWNER)
+            .orElseThrow(() -> new ResourceNotFoundException("Company owner user not found"));
+
+    var user = companyUser.getUser();
+
+    request.companyUsername().ifPresent(user::setUsername);
+    request.companyPassword().ifPresent(password -> {
+        String encoded = passwordEncoder.encode(password); // تأكد أنك تستخدم passwordEncoder
+        user.setPassword(encoded);
+    });
+    request.companyEmail().ifPresent(user::setEmail);
+
+    user.setFullName(request.ownerName().orElse(user.getFullName()));
+    user.setPhone(request.ownerContact().orElse(user.getPhone()));
+
+    userRepository.save(user);
+    Company updatedCompany = companyRepository.save(company);
+
+    return companyMapper.toResponse(updatedCompany, request.companyUsername().orElse(null), request.companyPassword().orElse(null), request.companyEmail().orElse(null));
+
+}
 
     @Transactional
     public ApiResponse<Void> deleteCompany(Long id) {
@@ -159,6 +179,26 @@ public class CompanyService {
     /* ----------------------------------------------------
      * Add a user to a company
      * -------------------------------------------------- */
+//    @Transactional
+//    public void addUserToCompany(Long companyId, Long userId, CompanyUserRole role) {
+//        if (companyUserRepository.existsByCompanyIdAndUserId(companyId, userId)) {
+//            throw new IllegalArgumentException("User is already associated with this company");
+//        }
+//
+//        Company company = companyRepository.findById(companyId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
+//
+//        AppUser user = authService.getUserById(userId)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+//
+//        CompanyUser companyUser = CompanyUser.builder()
+//                .company(company)
+//                .user(user)
+//                .role(role)
+//                .build();
+//
+//        companyUserRepository.save(companyUser);
+//    }
     @Transactional
     public void addUserToCompany(Long companyId, Long userId, CompanyUserRole role) {
         if (companyUserRepository.existsByCompanyIdAndUserId(companyId, userId)) {
@@ -167,7 +207,12 @@ public class CompanyService {
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
-        
+
+        long currentUserCount = companyUserRepository.countByCompanyId(companyId);
+        if (currentUserCount >= company.getUserCount()) {
+            throw new IllegalStateException("The company has reached its maximum allowed users.");
+        }
+
         AppUser user = authService.getUserById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
@@ -176,9 +221,10 @@ public class CompanyService {
                 .user(user)
                 .role(role)
                 .build();
-        
+
         companyUserRepository.save(companyUser);
     }
+
 
     /* ----------------------------------------------------
      * Remove a user from a company
