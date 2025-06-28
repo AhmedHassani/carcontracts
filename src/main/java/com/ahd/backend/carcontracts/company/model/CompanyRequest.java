@@ -5,11 +5,6 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 public record CompanyRequest(
-
-        /** تاريخ الاشتراك */
-        @NotNull
-        LocalDate subscriptionDate,
-
         /** تاريخ الانتهاء */
         @NotNull
         LocalDate expirationDate,
@@ -37,11 +32,6 @@ public record CompanyRequest(
         /** موقع الشركة (اختياري) */
         @Size(max = 250)
         String companyLocation,
-
-        /** الحالة */
-        @NotNull
-        CompanyStatus status,
-
         @Email
         String companyEmail,
         @NotNull(message = "Username is required")

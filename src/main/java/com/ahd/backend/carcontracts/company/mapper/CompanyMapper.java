@@ -6,6 +6,8 @@ import com.ahd.backend.carcontracts.company.model.CompanyRequest;
 import com.ahd.backend.carcontracts.company.model.CompanyResponse;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 
 @Component
 public class CompanyMapper {
@@ -19,10 +21,9 @@ public class CompanyMapper {
                 .ownerName(request.ownerName())
                 .ownerContact(request.ownerContact())
                 .userCount(request.userCount())
-                .subscriptionDate(request.subscriptionDate())
+                .subscriptionDate(LocalDate.now())
                 .expirationDate(request.expirationDate())
                 .companyLocation(request.companyLocation())
-                .status(request.status())
                 .build();
     }
 

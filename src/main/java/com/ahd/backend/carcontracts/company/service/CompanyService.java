@@ -27,7 +27,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -58,6 +60,7 @@ public class CompanyService {
                 .build();
         var user = authService.createUser(createUser);
         Company company = companyMapper.toEntity(request);
+        company.setStatus(CompanyStatus.ACTIVE);
         Company savedCompany = companyRepository.saveAndFlush(company);
         CompanyUser relation = CompanyUser.builder()
                 .company(savedCompany)
@@ -68,9 +71,7 @@ public class CompanyService {
         return companyMapper.toResponse(savedCompany,request.companyUsername(), request.companyPassword(), request.companyEmail());
     }
 
-    /* ----------------------------------------------------
-     * جلب جميع الشركات مع البحث والفلترة والترتيب
-     * -------------------------------------------------- */
+
     public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
         Sort sort = Sort.by(
             criteria.getSortDirection().equalsIgnoreCase("DESC") ? 
@@ -126,41 +127,62 @@ public class CompanyService {
                 .build();
     }
 
-@Transactional
-public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
-    Company company = companyRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
+    @Transactional
+    public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
+        final Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
+        applyBasicUpdates(company, request);
+        boolean expirationChanged = applyDateUpdates(company, request);
+        if (expirationChanged) {
+            recalculateStatus(company);
+        }
+        AppUser user = updateOwnerUser(company, request);
+        userRepository.save(user);
+        Company saved = companyRepository.save(company);
+        return companyMapper.toResponse(
+                saved,
+                request.companyUsername().orElse(null),
+                request.companyPassword().orElse(null),
+                request.companyEmail().orElse(null)
+        );
+    }
 
-    request.companyName().ifPresent(company::setCompanyName);
-    request.ownerName().ifPresent(company::setOwnerName);
-    request.ownerContact().ifPresent(company::setOwnerContact);
-    request.userCount().ifPresent(company::setUserCount);
-    request.subscriptionDate().ifPresent(company::setSubscriptionDate);
-    request.expirationDate().ifPresent(company::setExpirationDate);
-    request.companyLocation().ifPresent(company::setCompanyLocation);
-    request.status().ifPresent(company::setStatus);
+    private void applyBasicUpdates(Company company, UpdateCompanyRequest req) {
+        req.companyName().ifPresent(company::setCompanyName);
+        req.ownerName().ifPresent(company::setOwnerName);
+        req.ownerContact().ifPresent(company::setOwnerContact);
+        req.userCount().ifPresent(company::setUserCount);
+        req.companyLocation().ifPresent(company::setCompanyLocation);
+    }
 
-    CompanyUser companyUser = companyUserRepository.findByCompanyAndRole(company, CompanyUserRole.OWNER)
-            .orElseThrow(() -> new ResourceNotFoundException("Company owner user not found"));
+    private void recalculateStatus(Company company) {
+        LocalDate expiry = company.getExpirationDate();
+        CompanyStatus status = (expiry != null && !expiry.isBefore(LocalDate.now()))
+                ? CompanyStatus.ACTIVE
+                : CompanyStatus.EXPIRED;
+        company.setStatus(status);
+    }
 
-    var user = companyUser.getUser();
+    private AppUser updateOwnerUser(Company company, UpdateCompanyRequest req) {
+        CompanyUser ownerLink = companyUserRepository
+                .findByCompanyAndRole(company, CompanyUserRole.OWNER)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner user not found for company: " + company.getId()));
+        AppUser user = ownerLink.getUser();
+        req.companyUsername().ifPresent(user::setUsername);
+        req.companyPassword().ifPresent(raw -> user.setPassword(passwordEncoder.encode(raw)));
+        req.companyEmail().ifPresent(user::setEmail);
+        user.setFullName(req.ownerName().orElse(user.getFullName()));
+        user.setPhone(req.ownerContact().orElse(user.getPhone()));
+        return user;
+    }
 
-    request.companyUsername().ifPresent(user::setUsername);
-    request.companyPassword().ifPresent(password -> {
-        String encoded = passwordEncoder.encode(password); // تأكد أنك تستخدم passwordEncoder
-        user.setPassword(encoded);
-    });
-    request.companyEmail().ifPresent(user::setEmail);
 
-    user.setFullName(request.ownerName().orElse(user.getFullName()));
-    user.setPhone(request.ownerContact().orElse(user.getPhone()));
-
-    userRepository.save(user);
-    Company updatedCompany = companyRepository.save(company);
-
-    return companyMapper.toResponse(updatedCompany, request.companyUsername().orElse(null), request.companyPassword().orElse(null), request.companyEmail().orElse(null));
-
-}
+    private boolean applyDateUpdates(Company company, UpdateCompanyRequest req) {
+        if (req.expirationDate().isEmpty()) return false;
+        company.setExpirationDate(req.expirationDate().get());
+        company.setSubscriptionDate(LocalDate.now());
+        return true;
+    }
 
     @Transactional
     public ApiResponse<Void> deleteCompany(Long id) {
@@ -204,28 +226,21 @@ public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
         if (companyUserRepository.existsByCompanyIdAndUserId(companyId, userId)) {
             throw new IllegalArgumentException("User is already associated with this company");
         }
-
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
-
         long currentUserCount = companyUserRepository.countByCompanyId(companyId);
         if (currentUserCount >= company.getUserCount()) {
             throw new IllegalStateException("The company has reached its maximum allowed users.");
         }
-
         AppUser user = authService.getUserById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-
         CompanyUser companyUser = CompanyUser.builder()
                 .company(company)
                 .user(user)
                 .role(role)
                 .build();
-
         companyUserRepository.save(companyUser);
     }
-
-
     /* ----------------------------------------------------
      * Remove a user from a company
      * -------------------------------------------------- */
@@ -233,12 +248,10 @@ public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
     public void removeUserFromCompany(Long companyId, Long userId) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-
         // Don't allow removing the company owner
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot remove the company owner");
         }
-
         companyUserRepository.delete(companyUser);
     }
 
@@ -249,12 +262,10 @@ public CompanyResponse updateCompany(Long id, UpdateCompanyRequest request) {
     public void updateUserCompanyRole(Long companyId, Long userId, CompanyUserRole newRole) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-
         // Don't allow changing the company owner's role
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot change the company owner's role");
         }
-
         companyUser.setRole(newRole);
         companyUserRepository.save(companyUser);
     }
