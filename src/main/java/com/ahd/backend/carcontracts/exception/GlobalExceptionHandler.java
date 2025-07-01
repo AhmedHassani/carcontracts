@@ -1,16 +1,31 @@
 package com.ahd.backend.carcontracts.exception;
 
-
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler({ ResponseStatusException.class, AuthenticationException.class })
+    public ResponseEntity<ApiErrorResponse> handleUnauthorized(Exception ex) {
+        HttpStatus status;
+        String message;
+        if (ex instanceof ResponseStatusException rse) {
+            status  = (HttpStatus) rse.getStatusCode();
+            message = rse.getReason();
+        } else {
+            status  = HttpStatus.UNAUTHORIZED;
+            message = ex.getMessage();
+        }
+        return buildResponse(status, message);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(ResourceNotFoundException ex) {
@@ -24,9 +39,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        String msg = ex.getBindingResult().getFieldErrors()
-                .stream().findFirst()
-                .map(error -> error.getField() + " " + error.getDefaultMessage())
+        String msg = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(fe -> fe.getField() + " " + fe.getDefaultMessage())
                 .orElse("Invalid input");
         return buildResponse(HttpStatus.BAD_REQUEST, msg);
     }
@@ -43,10 +58,9 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status, String message) {
         ApiErrorResponse error = ApiErrorResponse.builder()
-                .status(status.value())
-                .error(status.getReasonPhrase())
+                .code(status.value())
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .date(Instant.now())
                 .build();
         return new ResponseEntity<>(error, status);
     }

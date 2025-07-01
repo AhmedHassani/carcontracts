@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.branch;
 
 
-import com.ahd.backend.carcontracts.company.Company;
+import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.*;
 
