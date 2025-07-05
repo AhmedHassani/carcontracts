@@ -4,76 +4,53 @@ import com.ahd.backend.carcontracts.contract_installment.ContractInstallment;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.ahd.backend.carcontracts.contract_installment.ContractInstallmentRepository;
+import com.ahd.backend.carcontracts.S3.ImageStorageService;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import jakarta.persistence.criteria.Predicate;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ContractService {
-
+    private final ImageStorageService imageStorageService;
     private final ContractRepository contractRepository;
     private final ContractInstallmentRepository installmentRepository;
+    private final ContractImageRepository contractImageRepository;
 
     @Transactional
     public Contract createContractWithInstallments(ContractAndInstallmentCreateDto dto) {
         Contract savedContract = contractRepository.save(dto.getContract());
-        List<ContractInstallment> installments = dto.getContractInstallments();
 
-        for (ContractInstallment installment : installments) {
+        for (ContractInstallment installment : dto.getContractInstallments()) {
             installment.setContract(savedContract);
         }
-        installmentRepository.saveAll(installments);
+        installmentRepository.saveAll(dto.getContractInstallments());
+
+        List<ContractImage> contractImages = dto.getContractImage().stream()
+                .map(imageDto -> mapToEntity(imageDto, savedContract))
+                .collect(Collectors.toList());
+
+        contractImageRepository.saveAll(contractImages);
+
         return savedContract;
     }
-
-//    public ContractResponseDTO createContract(ContractRequestDTO dto) {
-//        Contract contract = Contract.builder()
-//                .contractNumber(dto.getContractNumber())
-//                .contractDate(dto.getContractDate())
-//                .carId(dto.getCarId())
-//                .sellerId(dto.getSellerId())
-//                .buyerId(dto.getBuyerId())
-//                .branchId(dto.getBranchId())
-//                .installmentAmount(dto.getInstallmentAmount())
-//                .daysAmountBetweenInstallments(dto.getDaysAmountBetweenInstallments())
-//                .saleType(dto.getSaleType())
-//                .totalAmount(dto.getTotalAmount())
-//                .amountPaid(dto.getAmountPaid())
-//                .paymentMethod(dto.getPaymentMethod())
-//                .paymentStatus(dto.getPaymentStatus())
-//                .createdBy(dto.getCreatedBy())
-//                .createdAt(new Date())
-//                .updatedAt(new Date())
-//                .deleted(false)
-//                .build();
-//
-//        contract = contractRepository.save(contract);
-//
-//        return ContractResponseDTO.builder()
-//                .id(contract.getId())
-//                .contractNumber(contract.getContractNumber())
-//                .contractDate(contract.getContractDate())
-//                .carId(contract.getCarId())
-//                .sellerId(contract.getSellerId())
-//                .buyerId(contract.getBuyerId())
-//                .branchId(contract.getBranchId())
-//                .installmentAmount(contract.getInstallmentAmount())
-//                .daysAmountBetweenInstallments(contract.getDaysAmountBetweenInstallments())
-//                .saleType(contract.getSaleType())
-//                .totalAmount(contract.getTotalAmount())
-//                .amountPaid(contract.getAmountPaid())
-//                .paymentMethod(contract.getPaymentMethod())
-//                .paymentStatus(contract.getPaymentStatus())
-//                .createdBy(contract.getCreatedBy())
-//                .createdAt(contract.getCreatedAt())
-//                .updatedAt(contract.getUpdatedAt())
-//                .deleted(contract.isDeleted())
-//                .build();
-//    }
+    private ContractImage mapToEntity(ContractImageDTO dto, Contract contract) {
+        return ContractImage.builder()
+                .image(dto.getImage())
+                .deleted(dto.isDeleted())
+                .contract(contract)
+                .build();
+    }
 
     public Page<ContractResponseDTO> getAllContracts(
             String contractNumberFilter,

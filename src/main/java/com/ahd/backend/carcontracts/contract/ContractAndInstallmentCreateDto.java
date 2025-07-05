@@ -9,4 +9,5 @@ import java.util.List;
 public class ContractAndInstallmentCreateDto {
     private Contract contract;
     private List<ContractInstallment> contractInstallments;
+    private List<ContractImageDTO> contractImage;
 }
