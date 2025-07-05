@@ -1,11 +1,14 @@
 package com.ahd.backend.carcontracts.person;
 
 
+import com.ahd.backend.carcontracts.car.Car;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -49,5 +52,14 @@ public class PersonController {
     public ResponseEntity<PersonResponseDTO> getByNationalId(
             @PathVariable String nationalId) {
         return ResponseEntity.ok(personService.getByNationalId(nationalId));
+    }
+    @PutMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Person> updatePersonPhoto(
+            @PathVariable Long id,
+            @RequestPart("photo") MultipartFile photo) {
+
+        Person updatedPerson = personService.updatePersonPhoto(photo, id);
+
+        return ResponseEntity.ok(updatedPerson);
     }
 }

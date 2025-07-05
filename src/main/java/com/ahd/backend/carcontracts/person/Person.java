@@ -50,7 +50,8 @@ public class Person {
     private String info_office;
     @Column(nullable = false)
     private String issuing_authority;
-
+    @Builder.Default
+    private String image = "Null";
     @Column(name = "created_at", updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @CreationTimestamp

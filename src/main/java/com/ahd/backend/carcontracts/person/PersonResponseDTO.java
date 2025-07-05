@@ -23,4 +23,6 @@ public class PersonResponseDTO {
     private String info_office;
     private String issuing_authority;
     private Date createdAt;
+    private String image;
+
 }
