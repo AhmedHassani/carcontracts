@@ -2,6 +2,10 @@ package com.ahd.backend.carcontracts.appuser.models;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,12 +30,27 @@ public class AppUser implements UserDetails {
     @Column(unique = true, nullable = false)
     private String username;
     @Column(nullable = false)
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters")
     private String password;
 
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be a valid address")
     private String email;
 
+    @NotBlank(message = "Phone is required")
+    @Pattern(
+            regexp = "^\\+?[0-9]{10,15}$",
+            message = "Phone must consist of 10–15 digits (optionally starting with ‘+’)"
+    )
     private String phone;
 
+    @NotBlank(message = "Full name is required")
+    @Size(max = 50, message = "Full name must not exceed 50 characters")
+    @Pattern(
+            regexp = "^[\\p{L} ]+$",
+            message = "Full name must contain only letters and spaces (no special characters)"
+    )
     private String fullName;
 
     private String image;

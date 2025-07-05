@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -64,16 +65,14 @@ public class UserService {
      */
     @Transactional
     public UserDetailsDTO updateProfile(UpdateProfileRequest request) {
-        // Get current user from security context
         AppUser user = userRepository.findByUsername(
                 SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-        user.setFullName(request.getFullName());
-        user.setEmail(request.getEmail());
-        user.setPhone(request.getPhone());
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
+        Optional.ofNullable(request.getFullName()).ifPresent(user::setFullName);
+        Optional.ofNullable(request.getEmail()).ifPresent(user::setEmail);
+        Optional.ofNullable(request.getPhone()).ifPresent(user::setPhone);
+        Optional.ofNullable(request.getPassword())
+               .ifPresent(password -> user.setPassword(passwordEncoder.encode(password)));
         log.info("Updating profile for user: {}", user.getUsername());
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
