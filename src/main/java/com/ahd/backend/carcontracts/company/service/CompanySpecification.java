@@ -1,5 +1,7 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.service;
 
+import com.ahd.backend.carcontracts.company.model.Company;
+import com.ahd.backend.carcontracts.company.model.CompanySearchCriteria;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 

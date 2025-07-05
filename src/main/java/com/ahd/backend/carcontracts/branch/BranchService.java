@@ -2,8 +2,8 @@ package com.ahd.backend.carcontracts.branch;
 
 
 
-import com.ahd.backend.carcontracts.company.Company;
-import com.ahd.backend.carcontracts.company.CompanyRepository;
+import com.ahd.backend.carcontracts.company.model.Company;
+import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

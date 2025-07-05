@@ -1,18 +1,10 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
+import jakarta.validation.constraints.*;
+
 import java.time.LocalDate;
 
 public record CompanyRequest(
-
-        /** تاريخ الاشتراك */
-        @NotNull
-        LocalDate subscriptionDate,
-
         /** تاريخ الانتهاء */
         @NotNull
         LocalDate expirationDate,
@@ -40,8 +32,15 @@ public record CompanyRequest(
         /** موقع الشركة (اختياري) */
         @Size(max = 250)
         String companyLocation,
+        @Email
+        String companyEmail,
+        @NotNull(message = "Username is required")
+        @Size(min = 4,max = 20, message = "Username must be at most 4 characters long")
+        @Pattern(regexp = "^[\\x00-\\x7F]*$", message = "Username must not contain Arabic or non-ASCII characters")
+        String companyUsername,
 
-        /** الحالة */
-        @NotNull
-        CompanyStatus status
+        @NotNull(message = "Password is required")
+        @Size(min = 8,max = 25, message = "Password must be at most 6 characters long")
+        String companyPassword
+
 ) {}
