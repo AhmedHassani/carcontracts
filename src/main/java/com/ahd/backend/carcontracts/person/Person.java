@@ -34,8 +34,8 @@ public class Person {
 
     @Column(nullable = false)
     private String first_name;
-    @Column(nullable = false , unique = true)
-    private String national_id;
+    @Column(name = "national_id",nullable = false , unique = true)
+    private String nationalId;
     @Column(nullable = false)
     private String phone;
     @Column(nullable = false)
@@ -56,7 +56,6 @@ public class Person {
     @CreationTimestamp
     private Date createdAt;
 
-    // new by ali
     @Temporal(TemporalType.TIMESTAMP)
     private Date updatedAt;
     @Column(nullable = false)

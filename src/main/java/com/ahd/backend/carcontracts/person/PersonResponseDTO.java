@@ -14,7 +14,7 @@ public class PersonResponseDTO {
     private String grandfather_name;
     private String father_name;
     private String first_name;
-    private String national_id;
+    private String nationalId;
     private String phone;
     private String housing_card_number;
     private String house_number;
