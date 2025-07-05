@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.company;
+package com.ahd.backend.carcontracts.company.model;
 
 
 import java.time.LocalDate;
@@ -9,9 +9,10 @@ public record UpdateCompanyRequest(
         Optional<String> ownerName,
         Optional<String> ownerContact,
         Optional<Integer> userCount,
-        Optional<LocalDate> subscriptionDate,
         Optional<LocalDate> expirationDate,
         Optional<String> companyLocation,
-        Optional<CompanyStatus> status
+        Optional<String> companyUsername,
+        Optional<String> companyPassword,
+        Optional<String> companyEmail
 ) {}
 
