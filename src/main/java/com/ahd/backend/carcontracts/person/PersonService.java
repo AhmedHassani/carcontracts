@@ -1,11 +1,15 @@
 package com.ahd.backend.carcontracts.person;
 
+import com.ahd.backend.carcontracts.S3.ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,11 +17,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 public class PersonService {
 
     private final PersonRepository personRepository;
+    private final ImageStorageService imageStorageService;
 
     public PersonResponseDTO createPerson(PersonRequestDTO dto) {
         Person person = Person.builder()
@@ -126,6 +133,7 @@ public class PersonService {
                 .neighborhood(person.getNeighborhood())
                 .info_office(person.getInfo_office())
                 .issuing_authority(person.getIssuing_authority())
+                .image(person.getImage())
                 .createdAt(person.getCreatedAt())
                 .build();
     }
@@ -146,5 +154,16 @@ public class PersonService {
 
         return convertToResponseDTO(person);
     }
-
+    @Transactional
+    public Person updatePersonPhoto(MultipartFile photo , Long Id) {
+        Person person = personRepository.findById(Id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Car not found"));
+        if (person.getImage() != null) {
+            imageStorageService.delete(person.getImage());
+        }
+        String imageKey = imageStorageService.upload(photo);
+        person.setImage(imageKey);
+        personRepository.save(person);
+        return person;
+    }
 }
