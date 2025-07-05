@@ -1,8 +1,16 @@
 package com.ahd.backend.carcontracts.car;
 
+import com.ahd.backend.carcontracts.appuser.models.UserDetailsDTO;
+import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Instant;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/carcontracts/v1/car")
@@ -31,4 +39,14 @@ public class CarController {
         carService.softDeleteCar(id);
         return ResponseEntity.noContent().build();
     }
+    @PutMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Car> updateCarPhoto(
+            @PathVariable Long id,
+            @RequestPart("photo") MultipartFile photo) {
+
+        Car updatedCar = carService.updateCarPhoto(photo, id);
+
+        return ResponseEntity.ok(updatedCar);
+    }
+
 }

@@ -50,7 +50,7 @@ public class Car {
 
     @Column(length = 50)
     private String origin;
-
+    private String image;
     @Column(name = "deleted")
     @Builder.Default
     private boolean deleted = false;

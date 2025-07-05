@@ -1,13 +1,23 @@
 package com.ahd.backend.carcontracts.car;
 
+import com.ahd.backend.carcontracts.appuser.models.UserDetailsDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
+import com.ahd.backend.carcontracts.S3.ImageStorageService;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
 public class CarService {
 
     private final CarRepository carRepository;
+    private final ImageStorageService imageStorageService;
 
     public Car createCar(Car car) {
         return carRepository.save(car);
@@ -17,6 +27,7 @@ public class CarService {
         return carRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
     }
+
 
     public Car updateCar(Long id, Car updatedCar) {
         Car car = carRepository.findByIdAndDeletedFalse(id)
@@ -45,4 +56,16 @@ public class CarService {
         carRepository.save(car);
     }
 
+    @Transactional
+    public Car updateCarPhoto(MultipartFile photo , Long Id) {
+        Car car = carRepository.findById(Id)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Car not found"));
+        if (car.getImage() != null) {
+            imageStorageService.delete(car.getImage());
+        }
+        String imageKey = imageStorageService.upload(photo);
+        car.setImage(imageKey);
+        carRepository.save(car);
+        return car;
+    }
 }
