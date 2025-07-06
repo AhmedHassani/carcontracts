@@ -14,9 +14,11 @@ public class ContractImageController {
     private final ContractImageService contractImageService;
 
     @PutMapping("/{id}")
-    public ResponseEntity<ContractImage> updateImage(@PathVariable Long id,
-                                                     @RequestBody ContractImageDTO dto) {
-        ContractImage updated = contractImageService.updateContractImage(id, dto);
+    public ResponseEntity<ContractImageResponseDTO> updateImage(
+            @PathVariable Long id,
+            @ModelAttribute ContractImageDTO dto) {
+
+        ContractImageResponseDTO updated = contractImageService.updateContractImage(id, dto);
         return ResponseEntity.ok(updated);
     }
 
@@ -27,8 +29,8 @@ public class ContractImageController {
     }
 
     @GetMapping("/{contractId}")
-    public ResponseEntity<List<ContractImage>> getImagesByContractId(@PathVariable Long contractId) {
-        List<ContractImage> images = contractImageService.getImagesByContractId(contractId);
+    public ResponseEntity<List<ContractImageResponseDTO>> getImagesByContractId(@PathVariable Long contractId) {
+        List<ContractImageResponseDTO> images = contractImageService.getImagesByContractId(contractId);
         return ResponseEntity.ok(images);
     }
 

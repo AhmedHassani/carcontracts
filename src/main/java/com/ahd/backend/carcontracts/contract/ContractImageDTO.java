@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -20,7 +21,7 @@ import java.util.Date;
 @Builder
 public class ContractImageDTO {
     private Long id;
-    private String image;
+    private MultipartFile image;
     private boolean deleted;
 }
 

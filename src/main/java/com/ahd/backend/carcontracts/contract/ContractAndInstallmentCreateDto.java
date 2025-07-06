@@ -7,7 +7,8 @@ import java.util.List;
 
 @Data
 public class ContractAndInstallmentCreateDto {
-    private Contract contract;
+    private ContractDTO contract;
+   
     private List<ContractInstallment> contractInstallments;
     private List<ContractImageDTO> contractImage;
 }

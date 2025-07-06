@@ -1,5 +1,8 @@
 package com.ahd.backend.carcontracts.contract;
 
+import com.ahd.backend.carcontracts.branch.Branch;
+import com.ahd.backend.carcontracts.car.Car;
+import com.ahd.backend.carcontracts.person.Person;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,17 +32,21 @@ public class Contract {
     @Column(name = "contract_date", nullable = false)
     private LocalDate contractDate;
 
-    @Column(name = "car_id", nullable = false)
-    private Long carId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "car_id", nullable = false)
+    private Car car;
 
-    @Column(name = "seller_id", nullable = false)
-    private Long sellerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Person seller;
 
-    @Column(name = "buyer_id", nullable = false)
-    private Long buyerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "buyer_id", nullable = false)
+    private Person buyer;
 
-    @Column(name = "branch_id")
-    private Long branchId;
+     @ManyToOne(fetch = FetchType.LAZY)
+     @JoinColumn(name = "branch_id")
+     private Branch branch;
 
     @Column(name = "sale_type", nullable = false, length = 20)
     private String saleType;

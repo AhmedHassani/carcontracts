@@ -28,6 +28,7 @@ public class ContractInstallment {
     private Contract contract;
 
 
+
     @Column(name = "installment_no", nullable = false)
     private Integer installmentNo;
 

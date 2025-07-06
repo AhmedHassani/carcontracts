@@ -9,4 +9,5 @@ public interface PersonRepository extends JpaRepository<Person, Long>,
         JpaSpecificationExecutor<Person> {
     Optional<Person> findByNationalIdAndDeletedFalse(String nationalId);
     Optional<Person> findById(Long id);
+    Optional<Person> findByIdAndDeletedFalse(Long id);
 }
