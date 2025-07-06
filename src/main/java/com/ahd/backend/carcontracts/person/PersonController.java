@@ -48,11 +48,18 @@ public class PersonController {
     }
 
 
-    @GetMapping("/{nationalId}")
+    @GetMapping("/nationalId/{nationalId}")
     public ResponseEntity<PersonResponseDTO> getByNationalId(
             @PathVariable String nationalId) {
         return ResponseEntity.ok(personService.getByNationalId(nationalId));
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<PersonResponseDTO> getById(
+            @PathVariable Long id) {
+        return ResponseEntity.ok(personService.getById(id));
+    }
+
+
     @PutMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Person> updatePersonPhoto(
             @PathVariable Long id,

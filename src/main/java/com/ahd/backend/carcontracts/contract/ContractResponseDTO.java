@@ -14,10 +14,11 @@ public class ContractResponseDTO {
     private Long id;
     private String contractNumber;
     private LocalDate contractDate;
-    private Long carId;
-    private Long sellerId;
-    private Long buyerId;
-    private Long branchId;
+    private String carName;
+    private String sellerUsername;
+    private String buyerUsername;
+    private String branchName;
+    //    private String companyName;
     private int installmentAmount;
     private Long daysAmountBetweenInstallments;
     private String saleType;

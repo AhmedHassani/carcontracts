@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Builder
 public class ContractInstallmentResponseDTO {
     private Long id;
-    private Long contractId;
     private Integer installmentNo;
     private LocalDate dueDate;
     private BigInteger amountDue;
@@ -19,7 +18,6 @@ public class ContractInstallmentResponseDTO {
     private String status;
     private LocalDate paidAt;
     private LocalDateTime createdAt;
-    @Builder.Default
-    private boolean deleted = false;
-
+    private boolean deleted;
+    private Long contractId;
 }

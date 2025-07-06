@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/carcontracts/v1/installments")
@@ -29,15 +30,35 @@ public class ContractInstallmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<ContractInstallment>> getAll() {
-        return ResponseEntity.ok(service.getAll());
-    }
+//    @GetMapping
+//    public ResponseEntity<List<ContractInstallment>> getAll() {
+//        return ResponseEntity.ok(service.getAll());
+//    }
 
     @GetMapping("/contract/{contractId}")
-    public ResponseEntity<List<ContractInstallment>> getByContractId(@PathVariable Long contractId) {
-        return ResponseEntity.ok(service.getByContractId(contractId));
+    public ResponseEntity<List<ContractInstallmentResponseDTO>> getByContractId(@PathVariable Long contractId) {
+        List<ContractInstallment> installments = service.getByContractId(contractId);
+
+        List<ContractInstallmentResponseDTO> dtos = installments.stream()
+                .map(i -> {
+                    return ContractInstallmentResponseDTO.builder()
+                            .id(i.getId())
+                            .installmentNo(i.getInstallmentNo())
+                            .dueDate(i.getDueDate())
+                            .amountDue(i.getAmountDue())
+                            .amountPaid(i.getAmountPaid())
+                            .status(i.getStatus())
+                            .paidAt(i.getPaidAt())
+                            .createdAt(i.getCreatedAt())
+                            .deleted(i.isDeleted())
+                            .contractId(i.getContract().getId())
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ContractInstallment> getById(@PathVariable Long id) {

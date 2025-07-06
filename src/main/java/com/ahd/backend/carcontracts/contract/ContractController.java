@@ -7,11 +7,16 @@ import com.ahd.backend.carcontracts.branch.BranchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/carcontracts/v1/Contract")
@@ -20,11 +25,10 @@ public class ContractController {
 
     private final ContractService contractService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Contract> createContract(@RequestBody ContractAndInstallmentCreateDto dto) {
         return ResponseEntity.ok(contractService.createContractWithInstallments(dto));
     }
-
 
     @GetMapping
     public ResponseEntity<Page<ContractResponseDTO>> getAllContracts(
@@ -35,7 +39,6 @@ public class ContractController {
     ) {
         return ResponseEntity.ok(contractService.getAllContracts(contractNumber, contractDate, page, size));
     }
-
 
     @PutMapping("/{id}")
     public ResponseEntity<ContractResponseDTO> updateContract(@PathVariable Long id, @RequestBody ContractRequestDTO dto) {

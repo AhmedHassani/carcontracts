@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.person;
 
 import com.ahd.backend.carcontracts.S3.ImageStorageService;
+import com.ahd.backend.carcontracts.S3.S3UrlService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,7 @@ public class PersonService {
 
     private final PersonRepository personRepository;
     private final ImageStorageService imageStorageService;
+    private final S3UrlService s3UrlService;
 
     public PersonResponseDTO createPerson(PersonRequestDTO dto) {
         Person person = Person.builder()
@@ -151,9 +153,24 @@ public class PersonService {
         Person person = personRepository
                 .findByNationalIdAndDeletedFalse(nationalId)
                 .orElseThrow(() -> new RuntimeException("Person not found"));
+        if (person.getImage() != null ) {
+            person.setImage(s3UrlService.getImageUrl(person.getImage()));
+        }
+        return convertToResponseDTO(person);
+    }
+    public PersonResponseDTO getById(Long id) {
+
+        Person person = personRepository
+                .findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Person not found or deleted"));
+
+        if (person.getImage() != null && !person.getImage().isBlank()) {
+            person.setImage(s3UrlService.getImageUrl(person.getImage()));
+        }
 
         return convertToResponseDTO(person);
     }
+
     @Transactional
     public Person updatePersonPhoto(MultipartFile photo , Long Id) {
         Person person = personRepository.findById(Id)
