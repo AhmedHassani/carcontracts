@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.company.service;
 
 import com.ahd.backend.carcontracts.company.model.Company;
-import com.ahd.backend.carcontracts.company.model.CompanySearchCriteria;
+import com.ahd.backend.carcontracts.company.dto.CompanySearchCriteria;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -13,7 +13,6 @@ public class CompanySpecification {
     public static Specification<Company> buildSpecification(CompanySearchCriteria criteria) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            // Search term (companyName or ownerName)
             if (criteria.getSearchTerm() != null && !criteria.getSearchTerm().trim().isEmpty()) {
                 String searchPattern = "%" + criteria.getSearchTerm().toLowerCase() + "%";
                 predicates.add(cb.or(

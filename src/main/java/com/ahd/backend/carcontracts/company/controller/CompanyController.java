@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.company.controller;
 
-import com.ahd.backend.carcontracts.company.model.*;
+import com.ahd.backend.carcontracts.company.dto.*;
+import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 import com.ahd.backend.carcontracts.company.service.CompanyService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
@@ -35,7 +36,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or @companyService.isUserInCompany(authentication.principal.username, #id)")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CompanyResponse> getCompany(@PathVariable Long id) {
         return ResponseEntity.ok(companyService.getCompanyById(id));
     }
@@ -55,13 +56,10 @@ public class CompanyController {
     }
 
 
-    @PostMapping("/{companyId}/users/{userId}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or @companyService.isUserInCompanyWithRole(authentication.principal.username, #companyId, 'OWNER')")
-    public ResponseEntity<ApiResponse<Void>> addUserToCompany(
-            @PathVariable Long companyId,
-            @PathVariable Long userId,
-            @RequestParam CompanyUserRole role) {
-        companyService.addUserToCompany(companyId, userId, role);
+    @PostMapping("/addUserToCompany")
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> addUserToCompany(@RequestBody AddUserToCompanyRequest request) {
+        companyService.addUserToCompany(request);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)
                 .message("User added to company successfully")
@@ -102,7 +100,23 @@ public class CompanyController {
 
     @GetMapping("/{companyId}/users")
     @PreAuthorize("hasRole('SUPER_ADMIN') or @companyService.isUserInCompany(authentication.principal.username, #companyId)")
-    public ResponseEntity<List<CompanyUser>> getCompanyUsers(@PathVariable Long companyId) {
-        return ResponseEntity.ok(companyService.getCompanyUsers(companyId));
+    public ApiResponse getCompanyUsers(@PathVariable Long companyId,
+                                                 CompanyUserSearchCriteria searchCriteria,
+                                                 @PageableDefault(sort = "userId", direction = Sort.Direction.ASC) Pageable pageable) {
+        return companyService.getCompanyUsers(companyId,searchCriteria,pageable);
     }
+
+
+    @PutMapping("/updateUserInCompany")
+    public ResponseEntity<ApiResponse> updateUserInCompany(@RequestBody @Valid UpdateUserInCompanyRequest req) {
+        companyService.updateUserInCompany(req);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("User updated successfully")
+                .code(200)
+                .date(Instant.now())
+                .build());
+    }
+
+
 }

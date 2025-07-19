@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.company.model;
 
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 import jakarta.persistence.*;
 import lombok.*;
 

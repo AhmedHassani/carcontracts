@@ -4,6 +4,8 @@ import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+
 @RestController
 @RequestMapping("${application.api.base-path}/email")
 public class EmailController {
@@ -12,8 +14,13 @@ public class EmailController {
     private EmailService emailService;
 
     @PostMapping("/send")
-    public ApiResponse<String> sendEmail(@RequestBody Format format) {
+    public ApiResponse<?> sendEmail(@RequestBody Format format) {
         emailService.sendSimpleMail(format);
-        return new ApiResponse<>(true,"Email sent successfully!",200,null);
+        return ApiResponse.builder()
+                .success(true)
+                .message("Email sent successfully!")
+                .code(200)
+                .date(Instant.now())
+                .build();
     }
 }

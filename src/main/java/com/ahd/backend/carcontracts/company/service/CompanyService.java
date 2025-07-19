@@ -6,14 +6,19 @@ import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.services.AuthService;
-import com.ahd.backend.carcontracts.company.model.UpdateCompanyRequest;
+import com.ahd.backend.carcontracts.company.dto.*;
+import com.ahd.backend.carcontracts.company.enums.CompanyStatus;
+import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 import com.ahd.backend.carcontracts.company.mapper.CompanyMapper;
 import com.ahd.backend.carcontracts.company.model.*;
 import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
+import com.ahd.backend.carcontracts.exception.ConflictException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +28,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+
+import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreateUserRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -50,14 +58,7 @@ public class CompanyService {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
                 .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
-        var createUser = CreateUserRequest.builder()
-                .username(request.companyUsername())
-                .password(request.companyPassword())
-                .email(request.companyEmail())
-                .phone(request.ownerContact())
-                .fullName(request.ownerName())
-                .roleIds(Set.of(companyRole.getId()))
-                .build();
+        var createUser = toCreateUserRequest(request,companyRole);
         var user = authService.createUser(createUser);
         Company company = companyMapper.toEntity(request);
         company.setStatus(CompanyStatus.ACTIVE);
@@ -68,17 +69,21 @@ public class CompanyService {
                 .role(CompanyUserRole.OWNER)
                 .build();
         companyUserRepository.save(relation);
-        return companyMapper.toResponse(savedCompany,request.companyUsername(), request.companyPassword(), request.companyEmail());
+        return companyMapper.toResponse(
+                savedCompany,
+                request.companyPassword(),
+                request.companyUsername(),
+                request.companyEmail()
+        );
     }
 
 
-    public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
+        public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
         Sort sort = Sort.by(
-            criteria.getSortDirection().equalsIgnoreCase("DESC") ? 
+            criteria.getSortDirection().equalsIgnoreCase("DESC") ?
             Sort.Direction.DESC : Sort.Direction.ASC,
             criteria.getSortBy()
         );
-        // Build specification and get results
         Specification<Company> spec = CompanySpecification.buildSpecification(criteria);
         Page<CompanyResponse> pageResult = companyRepository
                 .findAll(spec, PageRequest.of(
@@ -92,11 +97,7 @@ public class CompanyService {
                 .message("OK")
                 .code(HttpStatus.OK.value())
                 .data(pageResult.getContent())
-                .pagination(new Pagination(
-                        pageResult.getNumber(),
-                        pageResult.getTotalPages(),
-                        pageResult.getTotalElements()
-                ))
+                .pagination(new Pagination(pageResult))
                 .date(Instant.now())
                 .build();
     }
@@ -201,43 +202,29 @@ public class CompanyService {
     /* ----------------------------------------------------
      * Add a user to a company
      * -------------------------------------------------- */
-//    @Transactional
-//    public void addUserToCompany(Long companyId, Long userId, CompanyUserRole role) {
-//        if (companyUserRepository.existsByCompanyIdAndUserId(companyId, userId)) {
-//            throw new IllegalArgumentException("User is already associated with this company");
-//        }
-//
-//        Company company = companyRepository.findById(companyId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
-//
-//        AppUser user = authService.getUserById(userId)
-//                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-//
-//        CompanyUser companyUser = CompanyUser.builder()
-//                .company(company)
-//                .user(user)
-//                .role(role)
-//                .build();
-//
-//        companyUserRepository.save(companyUser);
-//    }
     @Transactional
-    public void addUserToCompany(Long companyId, Long userId, CompanyUserRole role) {
-        if (companyUserRepository.existsByCompanyIdAndUserId(companyId, userId)) {
-            throw new IllegalArgumentException("User is already associated with this company");
-        }
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
-        long currentUserCount = companyUserRepository.countByCompanyId(companyId);
+    public void addUserToCompany(AddUserToCompanyRequest request) {
+        Company company = companyRepository.findById(request.companyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + request.companyId()));
+        long currentUserCount = companyUserRepository.countByCompanyId(request.companyId());
         if (currentUserCount >= company.getUserCount()) {
-            throw new IllegalStateException("The company has reached its maximum allowed users.");
+            throw new ConflictException("The company has reached its maximum allowed users.");
         }
-        AppUser user = authService.getUserById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+        Role companyRole = roleRepository.findByName("ROLE_STAFF")
+                .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
+        var userInfo = CreateUserRequest.builder()
+                .email(request.email())
+                .password(request.password())
+                .username(request.username())
+                .fullName(request.fullName())
+                .phone(request.phone())
+                .roleIds(Set.of(companyRole.getId()))
+                .build();
+        var user = authService.createUser(userInfo);
         CompanyUser companyUser = CompanyUser.builder()
                 .company(company)
                 .user(user)
-                .role(role)
+                .role(CompanyUserRole.EMPLOYEE)
                 .build();
         companyUserRepository.save(companyUser);
     }
@@ -248,7 +235,6 @@ public class CompanyService {
     public void removeUserFromCompany(Long companyId, Long userId) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        // Don't allow removing the company owner
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot remove the company owner");
         }
@@ -262,7 +248,6 @@ public class CompanyService {
     public void updateUserCompanyRole(Long companyId, Long userId, CompanyUserRole newRole) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        // Don't allow changing the company owner's role
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot change the company owner's role");
         }
@@ -273,8 +258,64 @@ public class CompanyService {
     /* ----------------------------------------------------
      * Get all users in a company
      * -------------------------------------------------- */
-    public List<CompanyUser> getCompanyUsers(Long companyId) {
-        return companyUserRepository.findByCompanyId(companyId);
+
+    public ApiResponse getCompanyUsers(
+            Long companyId,
+            CompanyUserSearchCriteria criteria,
+            Pageable pageable
+    ) {
+        // 1) Build a sorted Pageable
+        Pageable sortedPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(
+                        Sort.Direction.fromString(
+                                Optional.ofNullable(criteria.getSortDirection())
+                                        .filter(d -> !d.isBlank())
+                                        .orElse("asc")
+                        ),
+                        Optional.ofNullable(criteria.getSortBy())
+                                .orElse("user.fullName")
+                )
+        );
+
+        // 2) Build the Specification
+        Specification<CompanyUser> spec = (root, query, cb) -> {
+            Predicate companyPred = cb.equal(root.get("company").get("id"), companyId);
+
+            String kw = criteria.getKeyword();
+            if (kw == null || kw.isBlank()) {
+                return companyPred;
+            }
+
+            kw = kw.trim();
+            String likePattern = "%" + kw.toLowerCase() + "%";
+            Expression<String> emailExpr = cb.lower(root.get("user").get("email"));
+            Expression<String> phoneExpr = root.get("user").get("phone");
+            Expression<String> nameExpr  = cb.lower(root.get("user").get("fullName"));
+            Predicate keywordPred;
+            if (kw.matches("^[\\w\\-.]+@[\\w\\-]+\\.[A-Za-z]{2,}$")) {
+                keywordPred = cb.like(emailExpr, likePattern);
+            } else if (kw.matches("^\\+?\\d+$")) {
+                keywordPred = cb.like(phoneExpr, "%" + kw + "%");
+            } else {
+                keywordPred = cb.like(nameExpr, likePattern);
+            }
+
+            return cb.and(companyPred, keywordPred);
+        };
+        Page<CompanyUserList> page = companyUserRepository
+                .findAll(spec, sortedPageable)
+                .map(CompanyUserList::fromCompanyUser);
+        List<CompanyUserList> companyUserLists = page.getContent();
+        return ApiResponse.builder()
+                .success(true)
+                .message("OK")
+                .code(200)
+                .date(Instant.now())
+                .pagination(new Pagination(page))
+                .data(companyUserLists)
+                .build();
     }
 
     /**
@@ -295,5 +336,27 @@ public class CompanyService {
                         .map(cu -> cu.getRole() == role)
                         .orElse(false))
                 .orElse(false);
+    }
+
+
+    /* ----------------------------------------------------
+     * update user in a company
+     * -------------------------------------------------- */
+    public void updateUserInCompany(UpdateUserInCompanyRequest req) {
+        CompanyUser cu = companyUserRepository
+                .findByCompanyIdAndUserId(req.companyId(), req.userId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User " + req.userId() + " not in company " + req.companyId()));
+        AppUser appUser = cu.getUser();
+        req.email().ifPresent(appUser::setEmail);
+        req.username().ifPresent(appUser::setUsername);
+        req.fullName().ifPresent(appUser::setFullName);
+        req.phone().ifPresent(appUser::setPhone);
+        req.password().ifPresent(appUser::setPassword);
+        authService.updateUser(appUser);
+        req.companyUserRole().ifPresent(newRole -> {
+            cu.setRole(newRole);
+            companyUserRepository.save(cu);
+        });
     }
 }

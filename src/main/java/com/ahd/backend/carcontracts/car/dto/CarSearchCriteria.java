@@ -1,0 +1,23 @@
+package com.ahd.backend.carcontracts.car.dto;
+
+
+import com.ahd.backend.carcontracts.util.base.BaseCriteria;
+import lombok.Builder;
+
+@Builder
+public record CarSearchCriteria(
+        /* BaseCriteria fields */
+        String keyword,
+        String sortBy,
+        String sortDirection,
+        /* Car-specific filters */
+        String type,
+        String color,
+        String engineType,
+        String origin,
+        Boolean deleted,
+        Integer minKm,
+        Integer maxKm,
+        Integer minCylinders,
+        Integer maxCylinders
+) implements BaseCriteria { }

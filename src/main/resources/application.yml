@@ -1,5 +1,5 @@
 server:
-  port: 8084
+  port: 8082
   ssl:
     enabled: false
     key-store: classpath:keystore.p12
@@ -37,7 +37,7 @@ spring:
       maximum-pool-size: 10
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:

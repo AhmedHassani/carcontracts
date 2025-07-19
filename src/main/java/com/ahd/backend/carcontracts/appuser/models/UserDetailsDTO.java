@@ -1,10 +1,15 @@
 package com.ahd.backend.carcontracts.appuser.models;
 
 import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.company.model.Company;
+import com.ahd.backend.carcontracts.company.model.CompanyUser;
 import com.ahd.backend.carcontracts.config.ApplicationContextProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
+
+import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -14,6 +19,8 @@ public class UserDetailsDTO {
     private String email;
     private String phone;
     private String fullName;
+    private Long companyUserId;
+    private List<String> roles;
     
     @JsonIgnore
     private String image; // S3 key
@@ -22,7 +29,26 @@ public class UserDetailsDTO {
 
     public static UserDetailsDTO fromAppUser(AppUser user) {
         S3UrlService s3UrlService = ApplicationContextProvider.getApplicationContext().getBean(S3UrlService.class);
-        
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .toList();
+        return UserDetailsDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .fullName(user.getFullName())
+                .image(user.getImage())
+                .roles(roleNames)
+                .imageUrl(s3UrlService.getImageUrl(user.getImage()))
+                .build();
+    }
+
+    public static UserDetailsDTO fromAppUser(AppUser user,Long companyUserId) {
+        S3UrlService s3UrlService = ApplicationContextProvider.getApplicationContext().getBean(S3UrlService.class);
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .toList();
         return UserDetailsDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -31,6 +57,8 @@ public class UserDetailsDTO {
                 .fullName(user.getFullName())
                 .image(user.getImage())
                 .imageUrl(s3UrlService.getImageUrl(user.getImage()))
+                .companyUserId(companyUserId)
+                .roles(roleNames)
                 .build();
     }
 } 

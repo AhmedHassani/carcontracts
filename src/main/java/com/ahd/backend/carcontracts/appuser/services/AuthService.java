@@ -138,4 +138,10 @@ public class AuthService {
     public Optional<AppUser> getUserById(Long userId) {
         return userRepository.findById(userId);
     }
+
+
+    public void updateUser(AppUser user) {
+        userRepository.save(user);
+    }
+
 }
