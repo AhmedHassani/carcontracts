@@ -8,6 +8,8 @@ import org.springframework.http.server.*;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import java.time.Instant;
+
 @ControllerAdvice
 public class ApiResponseWrapper implements ResponseBodyAdvice<Object> {
 
@@ -36,12 +38,13 @@ public class ApiResponseWrapper implements ResponseBodyAdvice<Object> {
         }
         HttpStatus status = HttpStatus.resolve(rawStatus);
         if (status != null && status.is2xxSuccessful()) {
-            return new ApiResponse<>(
-                    true,
-                    "OK",
-                    rawStatus,
-                    body
-            );
+            return ApiResponse.builder()
+                    .success(true)
+                    .message("OK")
+                    .code(rawStatus)
+                    .data(body)
+                    .date(Instant.now())
+                    .build();
         }
         return body;
     }

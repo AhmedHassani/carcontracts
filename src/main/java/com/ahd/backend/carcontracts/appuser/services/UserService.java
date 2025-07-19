@@ -1,10 +1,14 @@
 package com.ahd.backend.carcontracts.appuser.services;
 
-import com.ahd.backend.carcontracts.S3.ImageStorageService;
+import com.ahd.backend.carcontracts.S3.S3FileStorageService;
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.models.UpdateProfileRequest;
 import com.ahd.backend.carcontracts.appuser.models.UserDetailsDTO;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.company.model.Company;
+import com.ahd.backend.carcontracts.company.model.CompanyUser;
+import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +32,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ImageStorageService imageStorageService;
+    private final S3FileStorageService imageStorageService;
+    private final CompanyUserRepository companyUserRepository;
 
     /**
      * Get the currently authenticated user's details
@@ -37,7 +43,19 @@ public class UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         AppUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-        return UserDetailsDTO.fromAppUser(user);
+        if(isSuperAdmin(user.getRoles())){
+            return UserDetailsDTO.fromAppUser(user);
+        }else{
+            CompanyUser companyUsers = companyUserRepository.findByUserId(user.getId());
+            Company company = companyUsers.getCompany();
+            return UserDetailsDTO.fromAppUser(user,company.getId());
+        }
+    }
+
+    private boolean isSuperAdmin(Collection<Role> roles) {
+        return roles.stream()
+                .map(Role::getName)
+                .anyMatch("ROLE_SUPER_ADMIN"::equals);
     }
 
     /**

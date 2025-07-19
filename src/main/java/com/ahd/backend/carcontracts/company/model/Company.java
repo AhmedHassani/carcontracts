@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.company.model;
 
 
+import com.ahd.backend.carcontracts.company.enums.CompanyStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
