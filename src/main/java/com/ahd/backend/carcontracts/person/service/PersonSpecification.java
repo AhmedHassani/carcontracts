@@ -1,30 +1,43 @@
 package com.ahd.backend.carcontracts.person.service;
 
+
 import com.ahd.backend.carcontracts.person.dto.PersonSearchCriteria;
 import com.ahd.backend.carcontracts.person.model.Person;
-import com.ahd.backend.carcontracts.util.base.AbstractSpecification;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import org.springframework.data.jpa.domain.Specification;
+
+import java.util.ArrayList;
 import java.util.List;
 
+public class PersonSpecification {
 
-public class PersonSpecification extends AbstractSpecification<PersonSearchCriteria, Person> {
+    public static Specification<Person> buildSpecification(PersonSearchCriteria criteria) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    public PersonSpecification(PersonSearchCriteria criteria) {
-        super(criteria);
+            if (criteria.keyword() != null && !criteria.keyword().isBlank()) {
+                String pattern = "%" + criteria.keyword().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("firstName")), pattern),
+                        cb.like(cb.lower(root.get("fatherName")), pattern),
+                        cb.like(cb.lower(root.get("fourthName")), pattern),
+                        cb.like(cb.lower(root.get("surname")), pattern)
+                ));
+            }
+            if (criteria.phoneNumber() != null && !criteria.phoneNumber().isBlank()) {
+                String pattern = "%" + criteria.phoneNumber().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("phoneNumber")), pattern));
+            }
+            if (criteria.nationalId() != null && !criteria.nationalId().isBlank()) {
+                String pattern = "%" + criteria.nationalId().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("nationalId")), pattern));
+            }
+            if (criteria.residenceCardNo() != null && !criteria.residenceCardNo().isBlank()) {
+                String pattern = "%" + criteria.residenceCardNo().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("residenceCardNo")), pattern));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
-
-    @Override
-    protected void build(Root<Person> root, CriteriaBuilder cb, List<Predicate> predicates) {
-        keywordSearch(c.keyword(), cb, predicates,
-                root.get("firstName"),
-                root.get("fatherName"),
-                root.get("fourthName"),
-                root.get("surname"));
-        equal(root.get("phoneNumber"), c.phoneNumber(),predicates, cb);
-        equal(root.get("nationalId"),c.nationalId(),predicates, cb);
-        equal(root.get("residenceCardNo"),c.residenceCardNo(),predicates, cb);
-    }
-
 }

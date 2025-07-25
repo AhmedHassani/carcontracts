@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,6 +52,13 @@ public class PersonService {
         uploadAndAttach(person, req.getNationalIdBackFile(), DocType.NATIONAL_ID, DocSide.BACK);
         uploadAndAttach(person, req.getResidenceCardFrontFile(), DocType.RESIDENCE_CARD, DocSide.FRONT);
         uploadAndAttach(person, req.getResidenceCardBackFile(), DocType.RESIDENCE_CARD, DocSide.BACK);
+        if (req.getOthreFiles() != null) {
+            for (MultipartFile file : req.getOthreFiles()) {
+                if (file != null && !file.isEmpty()) {
+                    uploadAndAttach(person, file, DocType.OTHER_FILE , DocSide.OTHER);
+                }
+            }
+        }
         return PersonMapper.toResponse(person);
     }
 
@@ -60,8 +68,7 @@ public class PersonService {
      */
     @Transactional(readOnly = true)
     public Page<PersonResponseDTO> getAllPersonsWithAttachments(PersonSearchCriteria criteria, Pageable pageable) {
-        log.info("Fetching all persons with attachments");
-        Specification<Person> spec = new PersonSpecification(criteria);
+        Specification<Person> spec = PersonSpecification.buildSpecification(criteria);
         Page<Person> persons = personRepository.findAll(spec, pageable);
         return persons.map(PersonMapper::toResponse);
     }
