@@ -50,5 +50,6 @@ public class PersonRequestDTO {
 
     @NotNull(message = "RESIDENCE_CARD_BACK file is required")
     private MultipartFile residenceCardBackFile;
+    private MultipartFile [] othreFiles;
 
 }
