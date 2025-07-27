@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.payment.dto;
 
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
+import com.ahd.backend.carcontracts.payment.model.Installment;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -34,4 +36,6 @@ public class PaymentPlanRequest {
     private Integer installmentPeriodDays;
 
     private LocalDate firstInstallmentDate;
+
+    private List<Installment> Installment;
 }

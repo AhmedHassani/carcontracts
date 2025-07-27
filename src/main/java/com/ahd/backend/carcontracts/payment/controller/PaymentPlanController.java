@@ -55,6 +55,12 @@ public class PaymentPlanController {
         PaymentResponse response = paymentPlanService.processPayment(request);
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/updatePaymentDate")
+    public ResponseEntity<?> updatePaymentDate(
+            @Valid @RequestBody PaymentDateRequest request) {
+        PaymentResponse response = paymentPlanService.updatePaymentDate(request);
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{id}/installments")
     public ResponseEntity<?> getInstallments(@PathVariable Long id) {
