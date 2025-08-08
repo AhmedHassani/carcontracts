@@ -6,6 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -16,6 +19,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE installments SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class Installment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,4 +47,7 @@ public class Installment {
 
     @Column(name = "payment_reference")
     private String paymentReference;
+
+    @Column(nullable = false)
+    private boolean deleted = false;
 }

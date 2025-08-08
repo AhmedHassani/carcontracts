@@ -48,6 +48,7 @@ public class ContractResponse {
         PaymentStatus status;
         BigDecimal totalAmount;
         BigDecimal paidAmount;
+        PaymentType paymentType;
         List<InstallmentDTO> installments;
     }
 

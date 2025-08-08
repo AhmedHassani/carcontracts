@@ -55,10 +55,16 @@ public class PaymentPlanController {
         PaymentResponse response = paymentPlanService.processPayment(request);
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/updatePaymentDate")
+    @PostMapping("/updateInstallmentDate")
     public ResponseEntity<?> updatePaymentDate(
             @Valid @RequestBody PaymentDateRequest request) {
-        PaymentResponse response = paymentPlanService.updatePaymentDate(request);
+        PaymentResponse response = paymentPlanService.updatePInstallmentDate(request);
+        return ResponseEntity.ok(response);
+    }
+    @PutMapping("/{id}/updateInstallmentStatus")
+    public ResponseEntity<?> updatePaymentStatus(
+            @PathVariable Long id) {
+        PaymentResponse response = paymentPlanService.updatePInstallmentStatus(id);
         return ResponseEntity.ok(response);
     }
 

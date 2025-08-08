@@ -18,4 +18,5 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
             "paymentPlan.installments"
     })
     Optional<Contracts> findById(Long id);
+
 }
