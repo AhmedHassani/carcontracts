@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+//import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -155,7 +155,7 @@ public class PaymentPlanService {
                 .amount(request.getAmount())
                 .build();
     }
-    public PaymentResponse updatePaymentDate(PaymentDateRequest request) {
+    public PaymentResponse updatePInstallmentDate(PaymentDateRequest request) {
         Installment installment = installmentRepository.findById(request.getInstallmentId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
         if (installment.getStatus() == InstallmentStatus.PAID) {
@@ -166,7 +166,23 @@ public class PaymentPlanService {
         installmentRepository.save(installment);
         return PaymentResponse.builder()
                 .success(true)
-                .message("Payment processed successfully")
+                .message("Installment processed successfully")
+                .paymentDate(LocalDate.now())
+                .build();
+    }
+
+    public PaymentResponse updatePInstallmentStatus(Long id) {
+        Installment installment = installmentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
+        if (installment.getStatus() == InstallmentStatus.PAID) {
+            throw new IllegalStateException("Installment already paid");
+        }
+
+        installment.setStatus(InstallmentStatus.PAID);
+        installmentRepository.save(installment);
+        return PaymentResponse.builder()
+                .success(true)
+                .message("Installment processed successfully")
                 .paymentDate(LocalDate.now())
                 .build();
     }

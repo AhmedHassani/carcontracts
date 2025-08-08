@@ -7,11 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Entity
 @Table(name = "payment_plans")
@@ -19,6 +21,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE payment_plans SET deleted = true WHERE id = ?")
+@Where(clause = "deleted = false")
 public class PaymentPlan {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -56,13 +60,13 @@ public class PaymentPlan {
     @Builder.Default
     private List<Installment> installments = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (installments == null) {
-            installments = new ArrayList<>();
-        }
     }
 
     @PreUpdate

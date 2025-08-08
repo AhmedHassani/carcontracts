@@ -32,6 +32,7 @@ public final class ContractMapper {
         dto.setBuyer        (toPersonDTO(c.getBuyer()));
         dto.setGuarantor    (toPersonDTO(c.getGuarantor()));
         dto.setCar          (toCarDTO(c.getCar()));
+        dto.setPaymentPlan  (toPaymentPlanDTO(c.getPaymentPlan()));
         return dto;
     }
 
@@ -58,7 +59,7 @@ public final class ContractMapper {
 
         ContractResponse.PersonDTO dto = new ContractResponse.PersonDTO();
         dto.setId        (p.getId());
-        dto.setFullName  (p.getFirstName());
+        dto.setFullName  (p.getFirstName() + " " + p.getFatherName() + " " + p.getFourthName() );
         dto.setPhone     (p.getPhoneNumber());
         dto.setNationalId(p.getNationalId());   // adjust fields as needed
         return dto;
@@ -72,6 +73,22 @@ public final class ContractMapper {
         dto.setModel      (car.getModel());
         dto.setPlateNumber(car.getPlateNumber());
         dto.setColor      (car.getColor());
+        return dto;
+    }
+    private static ContractResponse.PaymentPlanDTO toPaymentPlanDTO(PaymentPlan paymentPlan) {
+        if (paymentPlan == null) return null;
+
+        ContractResponse.PaymentPlanDTO dto = new ContractResponse.PaymentPlanDTO();
+        dto.setId         (paymentPlan.getId());
+        dto.setStatus      (paymentPlan.getStatus());
+        dto.setPaymentType (paymentPlan.getPaymentType());
+        BigDecimal total = paymentPlan.getTotalAmount() != null ? paymentPlan.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal remaining = paymentPlan.getRemainingAmount() != null ? paymentPlan.getRemainingAmount() : BigDecimal.ZERO;
+        BigDecimal paid = total.subtract(remaining);
+        if (paid.compareTo(BigDecimal.ZERO) < 0) {
+            paid = paid.multiply(BigDecimal.valueOf(-1));
+        }
+        dto.setPaidAmount(paid);
         return dto;
     }
 
