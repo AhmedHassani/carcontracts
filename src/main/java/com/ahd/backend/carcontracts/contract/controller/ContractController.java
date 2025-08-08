@@ -12,6 +12,7 @@ import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -36,10 +37,14 @@ public class ContractController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<ContractResponse>>> getAllPersons(
             @ModelAttribute ContractSearchCriteria criteria,              // filters
-            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC)
-            Pageable pageable) {
-        Page<ContractResponse> page = contractService.getAllContract(criteria, pageable);
-        return ResponseEntity.ok(ApiResponse.success(page));
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Page<ContractResponse> contractResponses = contractService.getAllContract(criteria, pageable);
+        return ResponseEntity.ok(ApiResponse.success(contractResponses));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDeleteContract(@PathVariable Long id) {
