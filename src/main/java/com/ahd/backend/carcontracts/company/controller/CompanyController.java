@@ -6,6 +6,7 @@ import com.ahd.backend.carcontracts.company.service.CompanyService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -31,9 +32,15 @@ public class CompanyController {
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse> getAllCompanies(
             CompanySearchCriteria searchCriteria,
-            @PageableDefault(sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         return ResponseEntity.ok(companyService.getAllCompanies(searchCriteria, pageable));
     }
+
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")

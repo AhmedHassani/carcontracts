@@ -79,19 +79,9 @@ public class CompanyService {
 
 
         public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
-        Sort sort = Sort.by(
-            criteria.getSortDirection().equalsIgnoreCase("DESC") ?
-            Sort.Direction.DESC : Sort.Direction.ASC,
-            criteria.getSortBy()
-        );
         Specification<Company> spec = CompanySpecification.buildSpecification(criteria);
         Page<CompanyResponse> pageResult = companyRepository
-                .findAll(spec, PageRequest.of(
-                        pageable.getPageNumber(),
-                        pageable.getPageSize(),
-                        sort
-                )).map(this::mapToDto);
-        // Return response
+                .findAll(spec,pageable).map(this::mapToDto);
         return ApiResponse.<List<CompanyResponse>>builder()
                 .success(true)
                 .message("OK")
