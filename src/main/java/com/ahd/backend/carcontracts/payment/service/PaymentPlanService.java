@@ -174,18 +174,35 @@ public class PaymentPlanService {
     public PaymentResponse updatePInstallmentStatus(Long id) {
         Installment installment = installmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
+
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalStateException("Installment already paid");
         }
 
         installment.setStatus(InstallmentStatus.PAID);
         installmentRepository.save(installment);
+
+        Long paymentPlanId = installment.getPaymentPlan().getId();
+        boolean allPaid = installmentRepository
+                .findByPaymentPlanId(paymentPlanId)
+                .stream()
+                .allMatch(inst -> inst.getStatus() == InstallmentStatus.PAID);
+
+        if (allPaid) {
+            PaymentPlan paymentPlan = paymentPlanRepository.findById(paymentPlanId)
+                    .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
+
+            paymentPlan.setStatus(PaymentStatus.COMPLETED);
+            paymentPlanRepository.save(paymentPlan);
+        }
+
         return PaymentResponse.builder()
                 .success(true)
                 .message("Installment processed successfully")
                 .paymentDate(LocalDate.now())
                 .build();
     }
+
     public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
         PaymentPlan paymentPlan = paymentPlanRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
