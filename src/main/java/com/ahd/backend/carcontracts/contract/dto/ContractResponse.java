@@ -24,6 +24,7 @@ public class ContractResponse {
     private CarDTO car;
     private PaymentPlanDTO paymentPlan;
 
+
     @Getter @Setter
     public static class PersonDTO {
         Long id;
