@@ -74,4 +74,15 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
 
     @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = 'PAID' ORDER BY i.paidDate DESC")
     List<Installment> findPaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
+
+    @Query("""
+    SELECT COUNT(i) 
+    FROM Installment i 
+    WHERE i.status = :status 
+      AND i.paidDate BETWEEN :start AND :end
+""")
+    long countByStatusAndDateRange(@Param("status") InstallmentStatus status,
+                                   @Param("start") LocalDate start,
+                                   @Param("end") LocalDate end);
+
 }
