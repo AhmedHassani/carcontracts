@@ -43,7 +43,15 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
     @Query("SELECT p FROM PaymentPlan p LEFT JOIN FETCH p.installments WHERE p.id = :id")
     Optional<PaymentPlan> findByIdWithInstallments(@Param("id") Long id);
 
-    @Modifying
-    @Query("UPDATE PaymentPlan p SET p.status = :status WHERE p.id = :id")
-    int updateStatusById(@Param("id") Long id, @Param("status") PaymentStatus status);
+    @Query("""
+    SELECT COUNT(p)
+    FROM PaymentPlan p
+    WHERE p.status = :status
+      AND p.createdAt BETWEEN :start AND :end
+""")
+    long countByStatusAndDateRange(@Param("status") PaymentStatus status,
+                                   @Param("start") LocalDateTime start,
+                                   @Param("end") LocalDateTime end);
+
+
 }

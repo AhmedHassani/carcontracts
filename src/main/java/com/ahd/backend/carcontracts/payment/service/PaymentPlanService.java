@@ -180,6 +180,8 @@ public class PaymentPlanService {
         }
 
         installment.setStatus(InstallmentStatus.PAID);
+        installment.setPaidDate(LocalDate.now());
+
         installmentRepository.save(installment);
 
         Long paymentPlanId = installment.getPaymentPlan().getId();
