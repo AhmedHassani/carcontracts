@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DashbordResponseDTO {
+public class DashboardResponseDTO {
     private Integer totalCar;
     private Integer allPaidCar;
     private Integer allPaidInstallment;
