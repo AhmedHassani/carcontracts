@@ -31,7 +31,6 @@ public class AuditAspect {
                 .operation(auditable.operation())
                 .method(pjp.getSignature().toShortString())
                 .success(false);
-
         // serialize params
         try {
             String paramsJson = mapper.writeValueAsString(pjp.getArgs());

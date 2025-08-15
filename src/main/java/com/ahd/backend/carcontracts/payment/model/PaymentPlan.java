@@ -2,6 +2,7 @@ package com.ahd.backend.carcontracts.payment.model;
 
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +59,7 @@ public class PaymentPlan {
 
     @OneToMany(mappedBy = "paymentPlan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
+    @JsonManagedReference
     private List<Installment> installments = new ArrayList<>();
 
     @Column(nullable = false)

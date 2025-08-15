@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.payment.model;
 
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,6 +29,7 @@ public class Installment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_plan_id")
+    @JsonBackReference
     private PaymentPlan paymentPlan;
 
     @Column(name = "installment_number")
