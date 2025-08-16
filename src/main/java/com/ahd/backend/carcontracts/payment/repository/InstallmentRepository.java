@@ -77,7 +77,7 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
     List<Installment> findPaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
 
     @Query("""
-    SELECT COUNT(i) 
+    SELECT COALESCE(SUM(i.amount), 0) 
     FROM Installment i 
     WHERE i.status = :status 
       AND i.paidDate BETWEEN :start AND :end
@@ -85,6 +85,7 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
     long countByStatusAndDateRange(@Param("status") InstallmentStatus status,
                                    @Param("start") LocalDate start,
                                    @Param("end") LocalDate end);
+
 
     @Query(value = """
     SELECT DATEPART(HOUR, i.paid_date) AS hour, COUNT(*)
@@ -100,7 +101,7 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
 
 
     @Query("""
-    SELECT i.paidDate as day, COUNT(i) 
+    SELECT i.paidDate as day, SUM(i.amount) 
     FROM Installment i 
     WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
     GROUP BY i.paidDate
@@ -110,7 +111,7 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
                               @Param("start") LocalDate start,
                               @Param("end") LocalDate end);
     @Query("""
-    SELECT FUNCTION('MONTH', i.paidDate) as month, COUNT(i) 
+    SELECT FUNCTION('MONTH', i.paidDate) as month, SUM(i.amount) 
     FROM Installment i 
     WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
     GROUP BY FUNCTION('MONTH', i.paidDate)
