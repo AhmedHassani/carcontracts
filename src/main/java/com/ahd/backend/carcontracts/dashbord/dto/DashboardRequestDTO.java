@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class DashbordRequestDTO {
+public class DashboardRequestDTO {
     private LocalDate StartDate;
     private DateType dateType;
 }

@@ -20,7 +20,8 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class DashbordService {
+public class DashboardService {
+
     private final ContractsRepository contractsRepository;
     private final PaymentPlanRepository paymentPlanRepository;
     private final InstallmentRepository installmentRepository;

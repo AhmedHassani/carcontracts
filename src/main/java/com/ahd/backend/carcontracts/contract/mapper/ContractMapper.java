@@ -4,17 +4,20 @@ package com.ahd.backend.carcontracts.contract.mapper;
 
 
 import com.ahd.backend.carcontracts.car.model.Car;
+import com.ahd.backend.carcontracts.contract.dto.ContractPaymentsResponse;
 import com.ahd.backend.carcontracts.contract.dto.ContractRequest;
 import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.payment.model.Installment;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.person.model.Person;
+import org.springframework.lang.Contract;
 
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -89,6 +92,32 @@ public final class ContractMapper {
             paid = paid.multiply(BigDecimal.valueOf(-1));
         }
         dto.setPaidAmount(paid);
+        return dto;
+    }
+
+
+
+    public static ContractPaymentsResponse toPayments(Contracts contract) {
+        ContractPaymentsResponse dto = new ContractPaymentsResponse();
+        dto.setContractId(contract.getId());
+        String customerName = Optional.ofNullable(contract.getSeller())
+                .map(seller ->
+                        Optional.ofNullable(seller.getFirstName()).orElse("") + " " +
+                        Optional.ofNullable(seller.getFatherName()).orElse("")
+                ).orElse("").trim();
+        dto.setCustomerName(customerName);
+        dto.setCarName(Optional.ofNullable(contract.getCar())
+                .map(Car::getName)
+                .orElse(null));
+        Optional.ofNullable(contract.getPaymentPlan()).ifPresent(plan -> {
+            dto.setTotalAmount(plan.getTotalAmount());
+            dto.setPaymentPlanCreationDate(plan.getCreatedAt().toLocalDate());
+            dto.setDownPayment(plan.getDownPayment());
+            dto.setRemainingAmount(plan.getRemainingAmount());
+            dto.setStatus(Optional.ofNullable(plan.getStatus()).map(Enum::name).orElse(null));
+            dto.setPaymentType(Optional.ofNullable(plan.getPaymentType()).map(Enum::name).orElse(null));
+            dto.setInstallments(plan.getInstallments());
+        });
         return dto;
     }
 
