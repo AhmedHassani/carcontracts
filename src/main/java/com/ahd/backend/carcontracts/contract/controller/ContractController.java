@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.contract.controller;
 
 
+import com.ahd.backend.carcontracts.contract.dto.ContractPaymentsSearchCriteria;
 import com.ahd.backend.carcontracts.contract.dto.ContractRequest;
 import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
@@ -35,8 +36,8 @@ public class ContractController {
         return contractService.addContract(request);
     }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ContractResponse>>> getAllPersons(
-            @ModelAttribute ContractSearchCriteria criteria,              // filters
+    public ResponseEntity<ApiResponse<List<ContractResponse>>> getAllContract(
+            @ModelAttribute ContractSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -46,6 +47,20 @@ public class ContractController {
         Page<ContractResponse> contractResponses = contractService.getAllContract(criteria, pageable);
         return ResponseEntity.ok(ApiResponse.success(contractResponses));
     }
+
+    @GetMapping("/payments")
+    public ResponseEntity<?> getAllContract2(
+            @ModelAttribute ContractPaymentsSearchCriteria criteria,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        var contractResponses = contractService.getAllContractPayments(criteria, pageable);
+        return ResponseEntity.ok(contractResponses);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDeleteContract(@PathVariable Long id) {
         contractService.softDeleteContract(id);

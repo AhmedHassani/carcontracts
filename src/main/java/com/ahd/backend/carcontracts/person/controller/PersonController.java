@@ -31,7 +31,7 @@ public class PersonController {
     private final PersonService personService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity create(@ModelAttribute @Valid PersonRequestDTO person) {
+    public ResponseEntity<?> create(@ModelAttribute @Valid PersonRequestDTO person) {
         personService.addPersonWithAttachments(person);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                 .success(true)

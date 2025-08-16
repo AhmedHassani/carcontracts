@@ -20,7 +20,6 @@ public class AuditLog {
     private Long userId;
     private String operation;
     private String method;
-
     @Lob
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String params;
