@@ -6,7 +6,7 @@ import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
 import com.ahd.backend.carcontracts.contract.service.ContractService;
 import com.ahd.backend.carcontracts.dashbord.enums.DateType;
-import com.ahd.backend.carcontracts.dashbord.service.DashbordService;
+import com.ahd.backend.carcontracts.dashbord.service.DashboardService;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
@@ -24,11 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("${application.api.base-path}/Dashbord")
+@RequestMapping("${application.api.base-path}/dashboard")
 @RequiredArgsConstructor
 public class DashboardController  {
 
-    private final DashbordService dashbordService;
+    private final DashboardService dashbordService;
 
 
     @GetMapping("")
