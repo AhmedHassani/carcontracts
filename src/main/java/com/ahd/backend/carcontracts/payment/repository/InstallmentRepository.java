@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -84,5 +85,41 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
     long countByStatusAndDateRange(@Param("status") InstallmentStatus status,
                                    @Param("start") LocalDate start,
                                    @Param("end") LocalDate end);
+
+    @Query(value = """
+    SELECT DATEPART(HOUR, i.paid_date) AS hour, COUNT(*)
+    FROM installment i
+    WHERE i.status = 'PAID'
+      AND i.paid_date BETWEEN :start AND :end
+    GROUP BY DATEPART(HOUR, i.paid_date)
+    ORDER BY hour
+""", nativeQuery = true)
+    List<Object[]> countHourly(
+                               @Param("start") LocalDateTime start,
+                               @Param("end") LocalDateTime end);
+
+
+    @Query("""
+    SELECT i.paidDate as day, COUNT(i) 
+    FROM Installment i 
+    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
+    GROUP BY i.paidDate
+    ORDER BY i.paidDate
+""")
+    List<Object[]> countByDay(
+                              @Param("start") LocalDate start,
+                              @Param("end") LocalDate end);
+    @Query("""
+    SELECT FUNCTION('MONTH', i.paidDate) as month, COUNT(i) 
+    FROM Installment i 
+    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
+    GROUP BY FUNCTION('MONTH', i.paidDate)
+    ORDER BY month
+""")
+    List<Object[]> countByMonth(
+                                @Param("start") LocalDate start,
+                                @Param("end") LocalDate end);
+
+
 
 }
