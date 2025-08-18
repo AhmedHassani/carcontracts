@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class DashboardController  {
                 return ResponseEntity.ok(monthly);
             case "year":
                 end = start.plusMonths(12);
-                Map<Integer, Long> year = dashbordService.getInstallmentsMonthly(start, end);
+                Map<String, BigDecimal> year = dashbordService.getInstallmentsMonthly(start, end);
                 return ResponseEntity.ok(year);
 
             default:
