@@ -11,6 +11,7 @@ import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -83,13 +84,16 @@ public class DashboardService {
         return result;
     }
 
-    public Map<Integer, Long> getInstallmentsMonthly( LocalDate start, LocalDate end) {
-        Map<Integer, Long> result = new LinkedHashMap<>();
-        for (Object[] row : installmentRepository.countByMonth( start, end)) {
-            result.put(((Number) row[0]).intValue(), ((Number) row[1]).longValue());
+    public Map<String, BigDecimal> getInstallmentsMonthly(LocalDate start, LocalDate end) {
+        Map<String, BigDecimal> result = new LinkedHashMap<>();
+        for (Object[] row : installmentRepository.countByMonth(start, end)) {
+            String month = (String) row[0];
+            BigDecimal total = (BigDecimal) row[1];
+            result.put(month, total);
         }
         return result;
     }
+
 
     public Map<LocalDate, Long> getContractDaily( LocalDate start, LocalDate end) {
         Map<LocalDate, Long> result = new LinkedHashMap<>();
@@ -99,13 +103,12 @@ public class DashboardService {
         return result;
     }
 
-    public Map<Integer, Long> getContractMonthly( LocalDate start, LocalDate end) {
-        Map<Integer, Long> result = new LinkedHashMap<>();
-        for (Object[] row : contractsRepository.countByMonth( start, end)) {
-            result.put(((Number) row[0]).intValue(), ((Number) row[1]).longValue());
+    public Map<String, Long> getContractMonthly(LocalDate start, LocalDate end) {
+        Map<String, Long> result = new LinkedHashMap<>();
+        for (Object[] row : contractsRepository.countByMonth(start, end)) {
+            result.put((String) row[0], ((Number) row[1]).longValue());
         }
         return result;
     }
-
 
 }

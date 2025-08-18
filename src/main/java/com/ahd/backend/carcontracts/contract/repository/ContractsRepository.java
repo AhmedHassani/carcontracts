@@ -27,24 +27,24 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
                                     @Param("endDate") LocalDate endDate);
 
     @Query("""
-    SELECT i.contractDate as day, COUNT(i) 
-    FROM Contracts i 
-    WHERE  i.contractDate BETWEEN :start AND :end
-    GROUP BY i.contractDate
-    ORDER BY i.contractDate
+     SELECT contractDate as day, COUNT(id)
+                    FROM Contracts
+                    WHERE  contractDate BETWEEN :start AND :end
+                    GROUP BY contractDate
+                    ORDER BY contractDate
 """)
     List<Object[]> countByDay(
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
-    @Query("""
-    SELECT FUNCTION('MONTH', i.contractDate) as month, COUNT(i) 
-    FROM Contracts i 
-    WHERE  i.contractDate BETWEEN :start AND :end
-    GROUP BY FUNCTION('MONTH', i.contractDate)
+    @Query(value = """
+    SELECT 
+        FORMAT(contract_date, 'yyyy-MM') AS month,
+        COUNT(id) AS total_contracts
+    FROM car_contracts
+    WHERE contract_date BETWEEN :start AND :end
+    GROUP BY FORMAT(contract_date, 'yyyy-MM')
     ORDER BY month
-""")
-    List<Object[]> countByMonth(
-            @Param("start") LocalDate start,
-            @Param("end") LocalDate end);
+""", nativeQuery = true)
+    List<Object[]> countByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
 }

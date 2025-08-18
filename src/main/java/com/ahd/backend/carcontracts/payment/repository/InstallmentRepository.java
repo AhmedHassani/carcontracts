@@ -110,16 +110,16 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
     List<Object[]> countByDay(
                               @Param("start") LocalDate start,
                               @Param("end") LocalDate end);
-    @Query("""
-    SELECT FUNCTION('MONTH', i.paidDate) as month, SUM(i.amount) 
-    FROM Installment i 
-    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
-    GROUP BY FUNCTION('MONTH', i.paidDate)
+    @Query(value = """
+    SELECT FORMAT(paid_date, 'yyyy-MM') AS month, SUM(amount) AS total_amount
+    FROM installments
+    WHERE status = 'PAID' AND paid_date BETWEEN :start AND :end
+    GROUP BY FORMAT(paid_date, 'yyyy-MM')
     ORDER BY month
-""")
-    List<Object[]> countByMonth(
-                                @Param("start") LocalDate start,
+""", nativeQuery = true)
+    List<Object[]> countByMonth(@Param("start") LocalDate start,
                                 @Param("end") LocalDate end);
+;
 
 
 
