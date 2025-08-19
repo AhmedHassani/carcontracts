@@ -328,6 +328,14 @@ public class CompanyService {
                 .orElse(false);
     }
 
+    public Optional<Company> findCompanyByUserName(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    CompanyUser companyUser = companyUserRepository.findByUserId(user.getId());
+                    return companyUser != null ? companyUser.getCompany() : null;
+                });
+    }
+
 
     /* ----------------------------------------------------
      * update user in a company
