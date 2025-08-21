@@ -126,13 +126,13 @@ public class PersonService {
     }
 
     @Transactional
-    public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file) {
+    public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file ,long id) {
         if (file == null || file.isEmpty())
             throw new BadRequestException("A non-empty file must be supplied");
         Person person = personRepository.findById(personId)
                 .orElseThrow(() -> new RuntimeException("Person not found: " + personId));
         PersonAttachment att = personAttachmentRepository
-                .findByPersonIdAndDocTypeAndDocSide(personId, type, side)
+                .findByPersonIdAndDocTypeAndDocSideAndId(personId, type, side ,id)
                 .orElseGet(() -> PersonAttachment.builder()
                         .person(person)
                         .docType(type)

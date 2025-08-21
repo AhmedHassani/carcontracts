@@ -28,8 +28,10 @@ public class AuthorizationService {
 
     @Transactional(readOnly = true)
     public Page<AuthorizationResponse> list(Pageable pageable, AuthorizationSearchCriteria searchCriteria) {
-        return authorizationRepository.findAll(pageable)
-                .map(AuthorizationMapper::toResponse);
+        return authorizationRepository.findAll(
+                AuthorizationSpecification.buildSpecification(searchCriteria),
+                pageable
+        ).map(AuthorizationMapper::toResponse);
     }
 
     @Transactional(readOnly = true)

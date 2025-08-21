@@ -14,5 +14,7 @@ public record AuthorizationSearchCriteria(
         /* -specific filters */
         Long authorizationNumber,
         String companyAgent,
-        LocalDate authorizationDate
+        LocalDate authorizationDateStart,
+        LocalDate authorizationDateEnd
+
 ) implements BaseCriteria { }
