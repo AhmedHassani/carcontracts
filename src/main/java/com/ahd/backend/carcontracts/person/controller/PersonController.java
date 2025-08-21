@@ -87,16 +87,17 @@ public class PersonController {
 
 
     @PutMapping(
-            path = "{personId}/attachment/{docType}/{docSide}",
+            path = "{personId}/attachment/{docType}/{docSide}/{id}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PersonAttachmentResponse> upsert(
             @PathVariable Long personId,
             @PathVariable DocType docType,
             @PathVariable DocSide docSide,
+            @PathVariable Long id,
             @RequestPart("file") MultipartFile file) {
 
         PersonAttachmentResponse resp =
-                personService.upsertAttachment(personId, docType, docSide, file);
+                personService.upsertAttachment(personId, docType, docSide, file , id);
         return ResponseEntity.ok(resp);
     }
 

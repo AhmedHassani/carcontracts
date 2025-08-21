@@ -3,6 +3,8 @@ package com.ahd.backend.carcontracts.contract.service;
 
 import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -14,14 +16,42 @@ public class ContractSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (criteria.BuyerName() != null && !criteria.BuyerName().isBlank()) {
-                String pattern = "%" + criteria.BuyerName().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.join("buyer").get("firstName")), pattern),
-                        cb.like(cb.lower(root.join("buyer").get("fatherName")), pattern),
-                        cb.like(cb.lower(root.join("buyer").get("fourthName")), pattern),
-                        cb.like(cb.lower(root.join("buyer").get("surname")), pattern)
-                ));
+            if (criteria.keyword() != null && !criteria.keyword().isBlank()) {
+                String pattern = "%" + criteria.keyword().toLowerCase() + "%";
+                var buyer = root.join("buyer", JoinType.LEFT);
+
+                // concatenate buyer's full name
+                Expression<String> buyerFullName = cb.concat(
+                        cb.concat(
+                                cb.concat(cb.coalesce(cb.lower(buyer.get("firstName")), ""), " "),
+                                cb.concat(cb.coalesce(cb.lower(buyer.get("fatherName")), ""), " ")
+                        ),
+                        cb.concat(
+                                cb.concat(cb.coalesce(cb.lower(buyer.get("fourthName")), ""), " "),
+                                cb.coalesce(cb.lower(buyer.get("surname")), "")
+                        )
+                );
+
+                predicates.add(cb.like(buyerFullName, pattern));
+            }
+
+            if (criteria.SellerName() != null && !criteria.SellerName().isBlank()) {
+                String pattern = "%" + criteria.SellerName().toLowerCase() + "%";
+                var seller = root.join("seller", JoinType.LEFT);
+
+                // concatenate seller's full name
+                Expression<String> sellerFullName = cb.concat(
+                        cb.concat(
+                                cb.concat(cb.coalesce(cb.lower(seller.get("firstName")), ""), " "),
+                                cb.concat(cb.coalesce(cb.lower(seller.get("fatherName")), ""), " ")
+                        ),
+                        cb.concat(
+                                cb.concat(cb.coalesce(cb.lower(seller.get("fourthName")), ""), " "),
+                                cb.coalesce(cb.lower(seller.get("surname")), "")
+                        )
+                );
+
+                predicates.add(cb.like(sellerFullName, pattern));
             }
 
             if (criteria.BuyerPhone() != null && !criteria.BuyerPhone().isBlank()) {
@@ -31,15 +61,7 @@ public class ContractSpecification {
                 ));
             }
 
-            if (criteria.SellerName() != null && !criteria.SellerName().isBlank()) {
-                String pattern = "%" + criteria.SellerName().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.join("seller").get("firstName")), pattern),
-                        cb.like(cb.lower(root.join("seller").get("fatherName")), pattern),
-                        cb.like(cb.lower(root.join("seller").get("fourthName")), pattern),
-                        cb.like(cb.lower(root.join("seller").get("surname")), pattern)
-                ));
-            }
+
 
 
 

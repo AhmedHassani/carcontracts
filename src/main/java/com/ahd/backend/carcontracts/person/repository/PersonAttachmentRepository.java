@@ -17,10 +17,11 @@ public interface PersonAttachmentRepository
     List<PersonAttachment> findByPersonId(Long personId);
     Optional<PersonAttachment> findByIdAndPersonId(Long id, Long personId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)          // ← lock here
-    Optional<PersonAttachment> findByPersonIdAndDocTypeAndDocSide(
+    Optional<PersonAttachment> findByPersonIdAndDocTypeAndDocSideAndId(
             Long personId,
             DocType docType,
-            DocSide docSide
+            DocSide docSide,
+            Long id
     );
 
 }
