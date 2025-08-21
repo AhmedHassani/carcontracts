@@ -20,15 +20,12 @@ public class BranchService {
     public BranchResponseDTO createBranch(BranchRequestDTO dto) {
         Company company = companyRepository.findById(dto.getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
-
         Branch branch = Branch.builder()
                 .name(dto.getName())
                 .address(dto.getAddress())
                 .company(company)
                 .build();
-
         branch = branchRepository.save(branch);
-
         return BranchResponseDTO.builder()
                 .id(branch.getId())
                 .name(branch.getName())
