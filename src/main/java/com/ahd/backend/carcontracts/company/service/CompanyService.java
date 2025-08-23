@@ -29,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
@@ -36,6 +37,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import com.ahd.backend.carcontracts.notification.NotificationService ;
 
 
 import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreateUserRequest;
@@ -52,8 +54,7 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final CompanyMapper companyMapper;
     private final PasswordEncoder passwordEncoder;
-
-
+    private final NotificationService notificationService;
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
@@ -69,6 +70,11 @@ public class CompanyService {
                 .role(CompanyUserRole.OWNER)
                 .build();
         companyUserRepository.save(relation);
+
+        notificationService.sendNotificationToDevice(
+                "إضافة شركة جديدة",
+                "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
+        );
         return companyMapper.toResponse(
                 savedCompany,
                 request.companyPassword(),
@@ -130,6 +136,10 @@ public class CompanyService {
         AppUser user = updateOwnerUser(company, request);
         userRepository.save(user);
         Company saved = companyRepository.save(company);
+        notificationService.sendNotificationToDevice(
+                "التعديل معلومات الشركة",
+                "لقد تغير معلومات شركة" + company.getCompanyName() + "بنجاح "
+        );
         return companyMapper.toResponse(
                 saved,
                 request.companyUsername().orElse(null),
@@ -172,6 +182,10 @@ public class CompanyService {
         if (req.expirationDate().isEmpty()) return false;
         company.setExpirationDate(req.expirationDate().get());
         company.setSubscriptionDate(LocalDate.now());
+        notificationService.sendNotificationToDevice(
+                "تغير تاريخ نفاذ الصلاحية",
+                "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() + " بنجاح"
+        );
         return true;
     }
 
@@ -180,7 +194,10 @@ public class CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
         companyRepository.delete(company);
-
+        notificationService.sendNotificationToDevice(
+                "حذف شركة",
+                "تم حذف شركة " + company.getCompanyName() + " بنجاح"
+        );
         return ApiResponse.<Void>builder()
                 .success(true)
                 .message("Company deleted successfully.")
@@ -188,7 +205,21 @@ public class CompanyService {
                 .date(Instant.now())
                 .build();
     }
+    @Scheduled(cron = "0 0 0 * * ?")
+    public void checkExpiredCompanies() {
+        LocalDate today = LocalDate.now();
+        List<Company> expiredCompanies = companyRepository.findByExpirationDateBefore(today);
 
+        for (Company company : expiredCompanies) {
+            company.setStatus(CompanyStatus.EXPIRED);
+            companyRepository.save(company);
+
+            notificationService.sendNotificationToDevice(
+                    "انتهاء صلاحية ",
+                    "لقد نفذت صلاحية شركة" + company.getCompanyName()
+            );
+        }
+    }
     /* ----------------------------------------------------
      * Add a user to a company
      * -------------------------------------------------- */
