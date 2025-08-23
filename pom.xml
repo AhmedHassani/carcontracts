@@ -102,6 +102,12 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.google.firebase</groupId>
+			<artifactId>firebase-admin</artifactId>
+			<version>9.5.0</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

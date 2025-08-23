@@ -31,18 +31,15 @@ public class AuditAspect {
                 .operation(auditable.operation())
                 .method(pjp.getSignature().toShortString())
                 .success(false);
-        // serialize params
         try {
             String paramsJson = mapper.writeValueAsString(pjp.getArgs());
             builder.params(paramsJson);
         } catch(Exception e) {
             builder.params("[unserializable]");
         }
-
         Object result = null;
         try {
             result = pjp.proceed();
-            // serialize result
             try {
                 String resJson = mapper.writeValueAsString(result);
                 builder.result(resJson);
@@ -56,7 +53,6 @@ public class AuditAspect {
             throw ex;
         } finally {
             builder.timestamp(LocalDateTime.now());
-            long duration = System.currentTimeMillis() - start;
             auditRepo.save(builder.build());
         }
     }

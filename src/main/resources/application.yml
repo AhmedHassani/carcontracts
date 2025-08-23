@@ -1,7 +1,7 @@
 server:
   port: 8082
   ssl:
-    enabled: true
+    enabled: false
     key-store: classpath:keystore.p12
     key-store-password: yourPassword
     key-store-type: PKCS12
