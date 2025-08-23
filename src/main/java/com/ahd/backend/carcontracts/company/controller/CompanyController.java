@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.company.controller;
 
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.company.dto.*;
 import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 import com.ahd.backend.carcontracts.company.service.CompanyService;
