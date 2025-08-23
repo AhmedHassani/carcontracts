@@ -28,7 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.ahd.backend.carcontracts.notification.NotificationService;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,6 +40,7 @@ public class ContractService {
     private final PersonRepository personRepo;
     private final CarRepository carRepo;
     private final PaymentPlanRepository planRepo;
+    private final NotificationService notificationService;
 
 
     @Transactional
@@ -60,6 +61,10 @@ public class ContractService {
         contract.setCar(car);
         contract.setPaymentPlan(paymentPlan);
         contract = contractRepo.save(contract);
+        notificationService.sendNotificationToDevice(
+                "اضافة عقد",
+                "تم اضافة العقد رقم" + contract.getId() + " بنجاح "
+        );
         return ContractMapper.toDetails(contract);
     }
 
@@ -93,6 +98,10 @@ public class ContractService {
                     .forEach(i -> i.setDeleted(true));
         }
         contract.setDeleted(true);
+        notificationService.sendNotificationToDevice(
+                "حذف عقد",
+                "تم حذف العقد رقم" + contract.getId() + " بنجاح "
+        );
         contractRepo.save(contract);
     }
 

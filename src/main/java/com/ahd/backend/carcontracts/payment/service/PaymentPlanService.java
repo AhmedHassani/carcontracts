@@ -4,6 +4,7 @@ import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
+import com.ahd.backend.carcontracts.notification.NotificationService;
 import com.ahd.backend.carcontracts.payment.model.Installment;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
@@ -32,6 +33,7 @@ public class PaymentPlanService {
     @Autowired
     private InstallmentRepository installmentRepository;
 
+    private NotificationService notificationService;
 
     public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
         PaymentPlan paymentPlan = PaymentPlan.builder()
@@ -61,6 +63,7 @@ public class PaymentPlanService {
 
         PaymentPlan savedPaymentPlan = paymentPlanRepository.findByIdWithInstallments(paymentPlan.getId())
                 .orElse(paymentPlan);
+
         return mapToResponse(savedPaymentPlan);
     }
 
@@ -146,6 +149,10 @@ public class PaymentPlanService {
         installment.setPaidDate(LocalDate.now());
         installment.setPaymentReference(request.getPaymentReference());
         installmentRepository.save(installment);
+        notificationService.sendNotificationToDevice(
+                " دفع قسط",
+                "تم دفع القسط رقم" + installment.getId() + " بنجاح "
+        );
         checkAndUpdatePaymentPlanStatus(installment.getPaymentPlan());
         return PaymentResponse.builder()
                 .success(true)
@@ -164,6 +171,10 @@ public class PaymentPlanService {
 
         installment.setDueDate(request.getDueDate());
         installmentRepository.save(installment);
+        notificationService.sendNotificationToDevice(
+                "تعديل عقد",
+                "تم تغير تاريخ القسط رقم" + installment.getId() + " بنجاح "
+        );
         return PaymentResponse.builder()
                 .success(true)
                 .message("Installment processed successfully")
@@ -185,6 +196,11 @@ public class PaymentPlanService {
         installmentRepository.save(installment);
 
         Long paymentPlanId = installment.getPaymentPlan().getId();
+
+        notificationService.sendNotificationToDevice(
+                "دفع قسط",
+                "تم دفع القسط رقم" + installment.getId() + " بنجاح "
+        );
         boolean allPaid = installmentRepository
                 .findByPaymentPlanId(paymentPlanId)
                 .stream()
@@ -220,6 +236,10 @@ public class PaymentPlanService {
         if (allPaid) {
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
             paymentPlanRepository.save(paymentPlan);
+            notificationService.sendNotificationToDevice(
+                    "اكمال اقساط",
+                    "تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح "
+            );
         } else if (paymentPlan.getStatus() == PaymentStatus.PENDING) {
             paymentPlan.setStatus(PaymentStatus.ACTIVE);
             paymentPlanRepository.save(paymentPlan);

@@ -8,21 +8,39 @@ import java.util.List;
 @Service
 public class NotificationService {
 
-    public void sendNotificationToDevice(String deviceToken, String title, String body) {
+//    public void sendNotificationToDevice(String deviceToken, String title, String body) {
+//        try {
+//            Message message = Message.builder()
+//                    .setToken(deviceToken)
+//                    .setNotification(Notification.builder()
+//                            .setTitle(title)
+//                            .setBody(body)
+//                            .build())
+//                    .build();
+//            String response = FirebaseMessaging.getInstance().send(message);
+//            System.out.println("Successfully sent message: " + response);
+//        } catch (FirebaseMessagingException e) {
+//            e.printStackTrace();
+//        }
+//    }
+
+    public void sendNotificationToDevice(String title, String body) {
         try {
             Message message = Message.builder()
-                    .setToken(deviceToken)
+                    .setTopic("all_users")
                     .setNotification(Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build())
                     .build();
+
             String response = FirebaseMessaging.getInstance().send(message);
             System.out.println("Successfully sent message: " + response);
         } catch (FirebaseMessagingException e) {
             e.printStackTrace();
         }
     }
+
 
     public void sendNotificationToMultipleDevices(List<String> deviceTokens, String title, String body) {
         try {
@@ -60,7 +78,7 @@ public class NotificationService {
 
 /*
  super admin notification
- 1- add  , remove , update , new company
+ 1- add  , remove , update
  2- Subscription renewal
  3- Subscription expired
 
