@@ -56,3 +56,20 @@ public class NotificationService {
         }
     }
 }
+
+
+/*
+ super admin notification
+ 1- add  , remove , update , new company
+ 2- Subscription renewal
+ 3- Subscription expired
+
+ -------------------------------------
+ company
+ 1- Subscription renewal & expired
+ 2- Contract (Add, delete, update)
+ 3- Payment (All)
+ 4- when update Installment
+ 5- when delete Installment
+ 7- when create Installment
+ */
