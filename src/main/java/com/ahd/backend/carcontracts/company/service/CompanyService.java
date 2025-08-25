@@ -15,6 +15,7 @@ import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.exception.ConflictException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
 import jakarta.persistence.criteria.Expression;
@@ -28,16 +29,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import com.ahd.backend.carcontracts.notification.NotificationService ;
+import com.ahd.backend.carcontracts.notification.service.NotificationService;
 
 
 import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreateUserRequest;
@@ -75,6 +76,14 @@ public class CompanyService {
                 "إضافة شركة جديدة",
                 "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("إضافة شركة جديدة");
+        notif.setBody("تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+       // notif.setCompany(savedCompany);
+        notif.setPermisson("ADMIN");
+
+        notificationService.insertNotificationAsync(notif);
         return companyMapper.toResponse(
                 savedCompany,
                 request.companyPassword(),
@@ -140,6 +149,14 @@ public class CompanyService {
                 "التعديل معلومات الشركة",
                 "لقد تغير معلومات شركة" + company.getCompanyName() + "بنجاح "
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("لتعديل معلومات الشركة");
+        notif.setBody("لقد تغير معلومات شركة" + company.getCompanyName() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+      //  notif.setCompany(company);
+        notif.setPermisson("ADMIN");
+        notificationService.insertNotificationAsync(notif);
+
         return companyMapper.toResponse(
                 saved,
                 request.companyUsername().orElse(null),
@@ -184,8 +201,16 @@ public class CompanyService {
         company.setSubscriptionDate(LocalDate.now());
         notificationService.sendNotificationToDevice(
                 "تغير تاريخ نفاذ الصلاحية",
-                "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() + " بنجاح"
+                "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName()
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("تغير تاريخ نفاذ الصلاحية");
+        notif.setBody("تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() );
+        notif.setNotificationDate(LocalDateTime.now());
+      //  notif.setCompany(company);
+        notif.setPermisson("ADMIN");
+        notificationService.insertNotificationAsync(notif);
+
         return true;
     }
 
@@ -198,6 +223,14 @@ public class CompanyService {
                 "حذف شركة",
                 "تم حذف شركة " + company.getCompanyName() + " بنجاح"
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("حذف شركة");
+        notif.setBody("تم حذف شركة " + company.getCompanyName() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+     //   notif.setCompany(company);
+        notif.setPermisson("ADMIN");
+        notificationService.insertNotificationAsync(notif);
+
         return ApiResponse.<Void>builder()
                 .success(true)
                 .message("Company deleted successfully.")

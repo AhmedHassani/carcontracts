@@ -1,10 +1,11 @@
 package com.ahd.backend.carcontracts.payment.service;
 
+import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
-import com.ahd.backend.carcontracts.notification.NotificationService;
+import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.payment.model.Installment;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 //import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -153,6 +155,13 @@ public class PaymentPlanService {
                 " دفع قسط",
                 "تم دفع القسط رقم" + installment.getId() + " بنجاح "
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("حذف عقد");
+        notif.setBody("تم حذف العقد رقم " + installment.getId() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+        //    notif.setCompany(savedCompany);
+        notif.setPermisson("CompanyUsers");
+        notificationService.insertNotificationAsync(notif);
         checkAndUpdatePaymentPlanStatus(installment.getPaymentPlan());
         return PaymentResponse.builder()
                 .success(true)
@@ -175,6 +184,13 @@ public class PaymentPlanService {
                 "تعديل عقد",
                 "تم تغير تاريخ القسط رقم" + installment.getId() + " بنجاح "
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("تعديل عقد");
+        notif.setBody("تم تغير تاريخ القسط رقم " + installment.getId() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+        //    notif.setCompany(savedCompany);
+        notif.setPermisson("CompanyUsers");
+        notificationService.insertNotificationAsync(notif);
         return PaymentResponse.builder()
                 .success(true)
                 .message("Installment processed successfully")
@@ -201,6 +217,14 @@ public class PaymentPlanService {
                 "دفع قسط",
                 "تم دفع القسط رقم" + installment.getId() + " بنجاح "
         );
+
+        AppNotification notif = new AppNotification();
+        notif.setTitle("دفع قسط");
+        notif.setBody("تم دفع القسط رقم " + installment.getId() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+        //    notif.setCompany(savedCompany);
+        notif.setPermisson("CompanyUsers");
+        notificationService.insertNotificationAsync(notif);
         boolean allPaid = installmentRepository
                 .findByPaymentPlanId(paymentPlanId)
                 .stream()
@@ -240,6 +264,14 @@ public class PaymentPlanService {
                     "اكمال اقساط",
                     "تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح "
             );
+
+            AppNotification notif = new AppNotification();
+            notif.setTitle("اكمال اقساط");
+            notif.setBody("تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح");
+            notif.setNotificationDate(LocalDateTime.now());
+            //    notif.setCompany(savedCompany);
+            notif.setPermisson("CompanyUsers");
+            notificationService.insertNotificationAsync(notif);
         } else if (paymentPlan.getStatus() == PaymentStatus.PENDING) {
             paymentPlan.setStatus(PaymentStatus.ACTIVE);
             paymentPlanRepository.save(paymentPlan);
