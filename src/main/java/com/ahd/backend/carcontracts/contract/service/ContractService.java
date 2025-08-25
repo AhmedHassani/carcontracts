@@ -7,31 +7,21 @@ import com.ahd.backend.carcontracts.contract.dto.*;
 import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
-import com.ahd.backend.carcontracts.payment.dto.ContractPaymentResponse;
-import com.ahd.backend.carcontracts.payment.dto.InstallmentResponse;
-import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
+import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
-import com.ahd.backend.carcontracts.person.dto.PersonResponseDTO;
-import com.ahd.backend.carcontracts.person.dto.PersonSearchCriteria;
-import com.ahd.backend.carcontracts.person.mapper.PersonMapper;
 import com.ahd.backend.carcontracts.person.model.Person;
 import com.ahd.backend.carcontracts.person.repository.PersonRepository;
-import com.ahd.backend.carcontracts.person.service.PersonSpecification;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.ahd.backend.carcontracts.notification.NotificationService;
-import java.time.LocalDate;
+import com.ahd.backend.carcontracts.notification.service.NotificationService;
+
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +55,13 @@ public class ContractService {
                 "اضافة عقد",
                 "تم اضافة العقد رقم" + contract.getId() + " بنجاح "
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("اضافة عقد");
+        notif.setBody("تم اضافة العقد رقم" + contract.getId() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+        //    notif.setCompany(savedCompany);
+        notif.setPermisson("CompanyUsers");
+        notificationService.insertNotificationAsync(notif);
         return ContractMapper.toDetails(contract);
     }
 
@@ -102,6 +99,14 @@ public class ContractService {
                 "حذف عقد",
                 "تم حذف العقد رقم" + contract.getId() + " بنجاح "
         );
+        AppNotification notif = new AppNotification();
+        notif.setTitle("حذف عقد");
+        notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");
+        notif.setNotificationDate(LocalDateTime.now());
+    //    notif.setCompany(savedCompany);
+        notif.setPermisson("CompanyUsers");
+        notificationService.insertNotificationAsync(notif);
+
         contractRepo.save(contract);
     }
 

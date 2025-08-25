@@ -1,12 +1,76 @@
-package com.ahd.backend.carcontracts.notification;
+package com.ahd.backend.carcontracts.notification.service;
 
+import com.ahd.backend.carcontracts.notification.repository.NotificationRepository;
 import com.google.firebase.messaging.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import org.springframework.stereotype.Service;
 
+import java.time.*;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
+
 @Service
+@RequiredArgsConstructor
 public class NotificationService {
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    private ZoneId zone() {
+        return ZoneId.systemDefault();
+    }
+
+    private LocalDateTime startOfToday() {
+        return LocalDate.now(zone()).atStartOfDay();
+    }
+
+    private LocalDateTime endExclusive(LocalDateTime start, Duration length) {
+        return start.plus(length);
+    }
+
+    private LocalDateTime startOfWeekISO() {
+        LocalDate today = LocalDate.now(zone());
+        LocalDate monday = today.with(DayOfWeek.MONDAY);
+        return monday.atStartOfDay();
+    }
+
+    private LocalDateTime startOfMonth() {
+        LocalDate first = LocalDate.now(zone()).with(TemporalAdjusters.firstDayOfMonth());
+        return first.atStartOfDay();
+    }
+
+    private LocalDateTime startOfYear() {
+        LocalDate first = LocalDate.now(zone()).with(TemporalAdjusters.firstDayOfYear());
+        return first.atStartOfDay();
+    }
+
+    public List<AppNotification> getToday() {
+        LocalDateTime start = startOfToday();
+        LocalDateTime end   = start.plusDays(1);
+        return notificationRepository.findByNotificationDateBetween(start, end);
+    }
+
+    public List<AppNotification> getThisWeek() {
+        LocalDateTime start = startOfWeekISO();
+        LocalDateTime end   = startOfToday();
+        return notificationRepository.findByNotificationDateBetween(start, end);
+    }
+
+    public List<AppNotification> getThisMonth() {
+        LocalDateTime start = startOfMonth();
+        LocalDateTime end   = startOfWeekISO();
+        return notificationRepository.findByNotificationDateBetween(start, end);
+    }
+
+    public List<AppNotification> getThisYear() {
+        LocalDateTime start = startOfYear();
+        LocalDateTime end   = startOfMonth();
+        return notificationRepository.findByNotificationDateBetween(start, end);
+    }
+
 
 //    public void sendNotificationToDevice(String deviceToken, String title, String body) {
 //        try {
@@ -24,11 +88,17 @@ public class NotificationService {
 //        }
 //    }
 
+
+    @Async
+    public void insertNotificationAsync(AppNotification notification) {
+        AppNotification saved = notificationRepository.save(notification);
+    }
+
     public void sendNotificationToDevice(String title, String body) {
         try {
             Message message = Message.builder()
                     .setTopic("all_users")
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build())
@@ -46,7 +116,7 @@ public class NotificationService {
         try {
             MulticastMessage message = MulticastMessage.builder()
                     .addAllTokens(deviceTokens)
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build())
@@ -62,7 +132,7 @@ public class NotificationService {
         try {
             Message message = Message.builder()
                     .setTopic(topic)
-                    .setNotification(Notification.builder()
+                    .setNotification(com.google.firebase.messaging.Notification.builder()
                             .setTitle(title)
                             .setBody(body)
                             .build())
@@ -91,3 +161,7 @@ public class NotificationService {
  5- when delete Installment
  7- when create Installment
  */
+
+
+
+
