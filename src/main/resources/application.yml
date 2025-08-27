@@ -13,6 +13,9 @@ server:
       enabled: true
 
 spring:
+  messages:
+    basename: i18n/strings
+    encoding: UTF-8
   mail:
     host: smtp.gmail.com
     port: 587

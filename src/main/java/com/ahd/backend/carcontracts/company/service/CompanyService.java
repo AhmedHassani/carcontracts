@@ -57,6 +57,8 @@ public class CompanyService {
     private final CompanyMapper companyMapper;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
+
+
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
@@ -83,7 +85,6 @@ public class CompanyService {
         notif.setNotificationDate(LocalDateTime.now());
        // notif.setCompany(savedCompany);
         notif.setPermisson("ADMIN");
-
         notificationService.insertNotificationAsync(notif);
         return companyMapper.toResponse(
                 savedCompany,
@@ -208,7 +209,7 @@ public class CompanyService {
         notif.setTitle("تغير تاريخ نفاذ الصلاحية");
         notif.setBody("تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() );
         notif.setNotificationDate(LocalDateTime.now());
-      //  notif.setCompany(company);
+        //  notif.setCompany(company);
         notif.setPermisson("ADMIN");
         notificationService.insertNotificationAsync(notif);
 
@@ -239,6 +240,7 @@ public class CompanyService {
                 .date(Instant.now())
                 .build();
     }
+
     @Scheduled(cron = "0 0 0 * * ?")
     public void checkExpiredCompanies() {
         LocalDate today = LocalDate.now();

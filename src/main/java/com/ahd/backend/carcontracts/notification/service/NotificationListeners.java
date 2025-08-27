@@ -42,9 +42,15 @@ public class NotificationListeners {
                     )
                     .build();
 
-            FirebaseMessaging.getInstance().send(message);
+            String response = FirebaseMessaging.getInstance().send(message);
+            System.out.println("Notification sent successfully: " + response);
         } catch (FirebaseMessagingException e) {
+            System.err.println("Failed to send notification: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("Unexpected error: " + e.getMessage());
             e.printStackTrace();
         }
     }
+
 }
