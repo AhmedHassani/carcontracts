@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.payment.service;
-
+import lombok.RequiredArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
@@ -11,7 +12,6 @@ import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @Slf4j
+@RequiredArgsConstructor
 public class PaymentPlanService {
 
     @Autowired
@@ -34,8 +35,7 @@ public class PaymentPlanService {
 
     @Autowired
     private InstallmentRepository installmentRepository;
-
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
         PaymentPlan paymentPlan = PaymentPlan.builder()

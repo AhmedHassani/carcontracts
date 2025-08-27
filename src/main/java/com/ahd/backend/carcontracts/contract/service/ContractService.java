@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.notification.service.NotificationService;
 
@@ -25,6 +26,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ContractService {
     private final ContractsRepository contractRepo;
     private final PersonRepository personRepo;
@@ -33,7 +35,8 @@ public class ContractService {
     private final NotificationService notificationService;
 
 
-    @Transactional
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ContractResponse addContract(ContractRequest request) {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
@@ -50,7 +53,7 @@ public class ContractService {
         contract.setGuarantor(guarantor);
         contract.setCar(car);
         contract.setPaymentPlan(paymentPlan);
-        contract = contractRepo.save(contract);
+        contract = contractRepo.saveAndFlush(contract);
         notificationService.sendNotificationToDevice(
                 "اضافة عقد",
                 "تم اضافة العقد رقم" + contract.getId() + " بنجاح "
