@@ -1,4 +1,5 @@
 package com.ahd.backend.carcontracts.company.service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.models.CreateUserRequest;
@@ -20,7 +21,6 @@ import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -46,6 +46,7 @@ import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreate
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class CompanyService {
 
     private final CompanyRepository companyRepository;

@@ -1,13 +1,25 @@
 package com.ahd.backend.carcontracts.notification.service;
 
+import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
+import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
+import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
+import com.ahd.backend.carcontracts.contract.model.Contracts;
+import com.ahd.backend.carcontracts.contract.service.ContractSpecification;
+import com.ahd.backend.carcontracts.notification.event.NotificationSaveEvent;
+import com.ahd.backend.carcontracts.notification.event.NotificationSendEvent;
 import com.ahd.backend.carcontracts.notification.repository.NotificationRepository;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -16,6 +28,8 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
+    private final ApplicationEventPublisher publisher;
+
     @Autowired
     private NotificationRepository notificationRepository;
 
@@ -29,6 +43,12 @@ public class NotificationService {
 
     private LocalDateTime endExclusive(LocalDateTime start, Duration length) {
         return start.plus(length);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AppNotification> getAllNotification( Pageable pageable) {
+        Page<AppNotification> notification = notificationRepository.findAll(pageable);
+        return notification;
     }
 
     private LocalDateTime startOfWeekISO() {
@@ -89,28 +109,28 @@ public class NotificationService {
 //    }
 
 
-    @Async
-    public void insertNotificationAsync(AppNotification notification) {
-        AppNotification saved = notificationRepository.save(notification);
-    }
+//    @Async
+//    public void insertNotificationAsync(AppNotification notification) {
+//        AppNotification saved = notificationRepository.save(notification);
+//    }
 
-    public void sendNotificationToDevice(String title, String body) {
-        try {
-            Message message = Message.builder()
-                    .setTopic("all_users")
-                    .setNotification(com.google.firebase.messaging.Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .build())
-                    .build();
-
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Successfully sent message: " + response);
-        } catch (FirebaseMessagingException e) {
-            e.printStackTrace();
-        }
-    }
-
+//    public void sendNotificationToDevice(String title, String body) {
+//        try {
+//            Message message = Message.builder()
+//                    .setTopic("all_users")
+//                    .setNotification(com.google.firebase.messaging.Notification.builder()
+//                            .setTitle(title)
+//                            .setBody(body)
+//                            .build())
+//                    .build();
+//
+//            String response = FirebaseMessaging.getInstance().send(message);
+//            System.out.println("Successfully sent message: " + response);
+//        } catch (FirebaseMessagingException e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
 
     public void sendNotificationToMultipleDevices(List<String> deviceTokens, String title, String body) {
         try {
@@ -142,6 +162,19 @@ public class NotificationService {
         } catch (FirebaseMessagingException e) {
             e.printStackTrace();
         }
+    }
+//    public NotificationService(ApplicationEventPublisher publisher) {
+//        this.publisher = publisher;
+//    }
+
+    // Called as before; now just publishes an event
+    public void sendNotificationToDevice(String title, String body) {
+        publisher.publishEvent(new NotificationSendEvent(title, body));
+    }
+
+    // Called as before; now just publishes an event
+    public void insertNotificationAsync(AppNotification notification) {
+        publisher.publishEvent(new NotificationSaveEvent(notification));
     }
 }
 
