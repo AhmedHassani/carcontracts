@@ -1,8 +1,8 @@
 package com.ahd.backend.carcontracts.appuser.controllers;
 
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
-import com.ahd.backend.carcontracts.appuser.models.UpdateProfileRequest;
-import com.ahd.backend.carcontracts.appuser.models.UserDetailsDTO;
+import com.ahd.backend.carcontracts.appuser.dto.UpdateProfileRequest;
+import com.ahd.backend.carcontracts.appuser.dto.UserDetailsDTO;
 import com.ahd.backend.carcontracts.appuser.services.UserService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
-import java.util.List;
 
 @RestController
 @RequestMapping("${application.api.base-path}/users")

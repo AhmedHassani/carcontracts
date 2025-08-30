@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.appuser.models;
+package com.ahd.backend.carcontracts.appuser.dto;
 
 import lombok.Data;
 

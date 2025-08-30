@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.company.mapper;
 
 
-import com.ahd.backend.carcontracts.appuser.models.CreateUserRequest;
+import com.ahd.backend.carcontracts.appuser.dto.CreateUserRequest;
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.dto.CompanyRequest;

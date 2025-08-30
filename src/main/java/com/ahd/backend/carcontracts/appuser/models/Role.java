@@ -1,11 +1,13 @@
 package com.ahd.backend.carcontracts.appuser.models;
 
+import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
+
 
 
 @Entity
@@ -17,15 +19,39 @@ import java.util.Set;
 @Builder
 public class Role {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "role_seq")
+    @Column(name = "id")
     private Long id;
-    @Column(unique = true, nullable = false)
-    private String name; // e.g. "ROLE_ADMIN"
+
+    @Column(nullable = false)
+    private String name; // e.g., ROLE_COMPANY_123_MANAGER
+
+    @Column(name = "display_name")
+    private String displayName; // User-friendly name
+
+    @Column(name = "display_name_ar")
+    private String displayNameAr; // Arabic display name
+
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role_type")
+    private RoleType roleType; // SYSTEM or COMPANY_SPECIFIC
+
+    // Link to company - NULL for system roles
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
+
+    @ManyToMany(mappedBy = "roles")
+    private Set<AppUser> users = new HashSet<>();
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "roles_permissions",
+            name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
+    @Builder.Default  // This is important!
     private Set<Permission> permissions = new HashSet<>();
 }

@@ -15,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class PersonController {
     private final PersonService personService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('PERSON_CREATE')")
     public ResponseEntity<?> create(@ModelAttribute @Valid PersonRequestDTO person) {
         personService.addPersonWithAttachments(person);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -41,9 +43,11 @@ public class PersonController {
                 .build());
     }
 
+
     @GetMapping
+    @PreAuthorize("hasAuthority('PERSON_READ')")
     public ResponseEntity<ApiResponse<List<PersonResponseDTO>>> getAllPersons(
-            @ModelAttribute PersonSearchCriteria criteria,              // filters
+            @ModelAttribute PersonSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
@@ -55,6 +59,7 @@ public class PersonController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('PERSON_DELETE')")
     public ResponseEntity<ApiResponse<?>> deletePersons(@PathVariable Long id) {
         personService.deletePerson(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -66,6 +71,7 @@ public class PersonController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PERSON_READ')")
     public ResponseEntity<ApiResponse<?>> getPersonByID(@PathVariable Long id) {
         PersonResponseDTO response = personService.getPersonById(id);
         return ResponseEntity.ok(ApiResponse.builder()
@@ -79,6 +85,7 @@ public class PersonController {
 
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
     public ResponseEntity<PersonAttachmentResponse> replace(
             @Valid @ModelAttribute UpdatePersonAttachment request) {
         PersonAttachmentResponse resp = personService.replaceAttachment(request);
@@ -89,6 +96,7 @@ public class PersonController {
     @PutMapping(
             path = "{personId}/attachment/{docType}/{docSide}/{id}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('PERSON_UPDATE')")
     public ResponseEntity<PersonAttachmentResponse> upsert(
             @PathVariable Long personId,
             @PathVariable DocType docType,
@@ -103,6 +111,7 @@ public class PersonController {
 
 
     @PutMapping(path = "/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('PERSON_UPDATE')")
     public ResponseEntity<PersonAttachmentResponse> replaceAttachment(
             @ModelAttribute @Valid UpdatePersonAttachment dto) {
         return ResponseEntity.ok(personService.replaceAttachment(dto));

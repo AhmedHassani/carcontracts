@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.appuser.models;
+package com.ahd.backend.carcontracts.appuser.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
