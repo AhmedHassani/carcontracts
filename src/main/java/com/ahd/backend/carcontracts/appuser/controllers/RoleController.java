@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/roles")
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ROLE_COMPANY') ")
 @RequiredArgsConstructor
 public class RoleController {
 
