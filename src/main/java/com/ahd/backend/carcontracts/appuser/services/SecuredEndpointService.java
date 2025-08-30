@@ -7,7 +7,6 @@ import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.SecuredEndpointRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 
@@ -38,19 +37,16 @@ public class SecuredEndpointService {
                 .build();
         return endpointRepo.save(se);
     }
-
     public SecuredEndpoint update(Long id, SecuredEndpoint dto) {
         SecuredEndpoint existing = endpointRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "SecuredEndpoint not found with id " + id));
         existing.setHttpMethod(dto.getHttpMethod());
         existing.setPattern(dto.getPattern());
-
         Role role = roleRepo.findById(dto.getRole().getId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Role not found with id " + dto.getRole().getId()));
         existing.setRole(role);
-
         return endpointRepo.save(existing);
     }
 

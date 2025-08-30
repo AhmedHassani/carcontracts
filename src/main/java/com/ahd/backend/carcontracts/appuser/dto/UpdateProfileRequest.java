@@ -1,4 +1,4 @@
-package com.ahd.backend.carcontracts.appuser.models;
+package com.ahd.backend.carcontracts.appuser.dto;
 
 import com.ahd.backend.carcontracts.util.annotation.AtLeastOneFieldNotNull;
 

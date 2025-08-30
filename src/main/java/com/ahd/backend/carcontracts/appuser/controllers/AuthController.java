@@ -1,10 +1,9 @@
 package com.ahd.backend.carcontracts.appuser.controllers;
 
-import com.ahd.backend.carcontracts.appuser.models.AuthResponse;
-import com.ahd.backend.carcontracts.appuser.models.AuthRequest;
-import com.ahd.backend.carcontracts.appuser.models.RefreshRequest;
-import com.ahd.backend.carcontracts.appuser.models.CreateUserRequest;
-import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.appuser.dto.AuthResponse;
+import com.ahd.backend.carcontracts.appuser.dto.AuthRequest;
+import com.ahd.backend.carcontracts.appuser.dto.RefreshRequest;
+import com.ahd.backend.carcontracts.appuser.dto.CreateUserRequest;
 import com.ahd.backend.carcontracts.appuser.services.AuthService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import lombok.*;

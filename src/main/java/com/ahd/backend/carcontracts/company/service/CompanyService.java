@@ -1,8 +1,9 @@
 package com.ahd.backend.carcontracts.company.service;
+import com.ahd.backend.carcontracts.appuser.services.RolePermissionService;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
-import com.ahd.backend.carcontracts.appuser.models.CreateUserRequest;
+import com.ahd.backend.carcontracts.appuser.dto.CreateUserRequest;
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
@@ -57,7 +58,7 @@ public class CompanyService {
     private final CompanyMapper companyMapper;
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
-
+    private final RolePermissionService rolePermissionService;
 
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
@@ -74,7 +75,6 @@ public class CompanyService {
                 .role(CompanyUserRole.OWNER)
                 .build();
         companyUserRepository.save(relation);
-
         notificationService.sendNotificationToDevice(
                 "إضافة شركة جديدة",
                 "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
@@ -83,7 +83,6 @@ public class CompanyService {
         notif.setTitle("إضافة شركة جديدة");
         notif.setBody("تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح");
         notif.setNotificationDate(LocalDateTime.now());
-       // notif.setCompany(savedCompany);
         notif.setPermisson("ADMIN");
         notificationService.insertNotificationAsync(notif);
         return companyMapper.toResponse(

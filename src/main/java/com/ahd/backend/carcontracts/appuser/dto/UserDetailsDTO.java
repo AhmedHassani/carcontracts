@@ -1,15 +1,14 @@
-package com.ahd.backend.carcontracts.appuser.models;
+package com.ahd.backend.carcontracts.appuser.dto;
 
 import com.ahd.backend.carcontracts.S3.S3UrlService;
-import com.ahd.backend.carcontracts.company.model.Company;
-import com.ahd.backend.carcontracts.company.model.CompanyUser;
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.config.ApplicationContextProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
-import java.util.Set;
 
 @Data
 @Builder
