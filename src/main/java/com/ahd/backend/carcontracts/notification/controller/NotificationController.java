@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,6 +29,7 @@ public class NotificationController {
     private final NotificationService service;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<AppNotification>>> getAllNotification(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,6 +43,7 @@ public class NotificationController {
 
 
     @GetMapping("/test")
+    @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS')")
     public ResponseEntity<Map<String, Object>> testFirebase() {
         Map<String, Object> response = new HashMap<>();
         try {

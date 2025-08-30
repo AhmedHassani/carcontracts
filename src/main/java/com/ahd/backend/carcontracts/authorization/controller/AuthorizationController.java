@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -32,6 +33,7 @@ public class AuthorizationController {
     private final AuthorizationService service;
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<AuthorizationResponse>>> getAllAuthorizations(
             @ModelAttribute AuthorizationSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
@@ -46,6 +48,7 @@ public class AuthorizationController {
 
 
     @PostMapping
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<ApiResponse<?>> create(@Valid @RequestBody AuthorizationUpsertRequest request) {
         service.create(request);
@@ -60,6 +63,7 @@ public class AuthorizationController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
         AuthorizationResponse result = service.get(id);
         return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()
@@ -72,6 +76,7 @@ public class AuthorizationController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

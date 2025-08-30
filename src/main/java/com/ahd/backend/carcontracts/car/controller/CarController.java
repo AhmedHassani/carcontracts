@@ -16,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ public class CarController {
     private final CarService carService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('CREATE_CAR') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<CarResponseDTO> create(@ModelAttribute @Valid CarRequestDTO car, @RequestPart(value = "files", required = false) List<MultipartFile> files) {
         CarResponseDTO res = carService.createCar(car, files == null ? List.of() : files);
         return ResponseEntity.status(HttpStatus.CREATED).body(res);
@@ -37,12 +39,14 @@ public class CarController {
 
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('UPDATE_CAR') or hasRole('SUPER_ADMIN')")
     public CarResponseDTO update(@PathVariable Long id,
                                  @RequestBody @Valid UpdateCarRequestDTO body) {
         return carService.updateCar(id, body);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DELETE_CAR') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         carService.softDeleteCar(id);
         return ResponseEntity.noContent().build();
@@ -51,12 +55,14 @@ public class CarController {
 
     @PostMapping(path = "/{carId}/attachments",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('CREATE_CAR') or hasRole('SUPER_ADMIN')")
     public CarResponseDTO addAttachments(@PathVariable Long carId,
                                          @RequestPart("files") List<MultipartFile> files) {
         return carService.addAttachments(carId, files);
     }
 
     @DeleteMapping("/{carId}/attachments/{attId}")
+    @PreAuthorize("hasAuthority('DELETE_CAR') or hasRole('SUPER_ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity deleteAttachment(@PathVariable Long carId,
                                  @PathVariable Long attId) {
@@ -70,11 +76,13 @@ public class CarController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('GET_CAR') or hasRole('SUPER_ADMIN')")
     public CarResponseDTO get(@PathVariable Long id) {
         return carService.getCar(id);
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('GET_CAR') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> list(CarSearchCriteria criteria,
                                  @PageableDefault(sort = "id", direction = Sort.Direction.ASC)
                                  Pageable pageable) {

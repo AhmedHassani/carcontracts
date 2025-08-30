@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,10 +29,12 @@ public class ContractController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('ADD_CONTRSCT') or hasRole('SUPER_ADMIN')")
     public ContractResponse addContract(@Valid @RequestBody ContractRequest request) {
         return contractService.addContract(request);
     }
     @GetMapping
+    @PreAuthorize("hasAuthority('GET_CONTRACT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<ContractResponse>>> getAllContract(
             @ModelAttribute ContractSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
@@ -45,6 +48,7 @@ public class ContractController {
     }
 
     @GetMapping("/payments")
+    @PreAuthorize("hasAuthority('GET_CONTRACT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getAllContract2(
             @ModelAttribute ContractPaymentsSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
@@ -58,6 +62,7 @@ public class ContractController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DELETE_CONTRACT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> softDeleteContract(@PathVariable Long id) {
         contractService.softDeleteContract(id);
         return ResponseEntity.noContent().build();
