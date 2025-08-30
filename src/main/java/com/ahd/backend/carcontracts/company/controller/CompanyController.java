@@ -24,13 +24,13 @@ public class CompanyController {
     private final CompanyService companyService;
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<CompanyResponse> createCompany(@Valid  @RequestBody CompanyRequest dto) {
         return ResponseEntity.ok(companyService.createCompany(dto));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse> getAllCompanies(
             CompanySearchCriteria searchCriteria,
             @RequestParam(defaultValue = "0") int page,
@@ -44,7 +44,7 @@ public class CompanyController {
 
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<CompanyResponse> getCompany(@PathVariable Long id) {
         return ResponseEntity.ok(companyService.getCompanyById(id));
     }
@@ -57,7 +57,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') ")
     public ResponseEntity<ApiResponse<Void>> deleteCompany(@PathVariable Long id) {
         ApiResponse<Void> response = companyService.deleteCompany(id);
         return ResponseEntity.ok(response);
@@ -116,6 +116,7 @@ public class CompanyController {
 
 
     @PutMapping("/updateUserInCompany")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse> updateUserInCompany(@RequestBody @Valid UpdateUserInCompanyRequest req) {
         companyService.updateUserInCompany(req);
         return ResponseEntity.ok(ApiResponse.<Void>builder()

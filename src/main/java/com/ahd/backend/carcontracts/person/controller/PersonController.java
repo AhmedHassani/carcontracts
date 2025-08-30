@@ -59,7 +59,7 @@ public class PersonController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('PERSON_DELETE')")
+    @PreAuthorize("hasAuthority('PERSON_DELETE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> deletePersons(@PathVariable Long id) {
         personService.deletePerson(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -71,7 +71,7 @@ public class PersonController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('PERSON_READ')")
+    @PreAuthorize("hasAuthority('PERSON_READ') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> getPersonByID(@PathVariable Long id) {
         PersonResponseDTO response = personService.getPersonById(id);
         return ResponseEntity.ok(ApiResponse.builder()
@@ -85,7 +85,7 @@ public class PersonController {
 
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-
+    @PreAuthorize("hasAuthority('PERSON_UPDATE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<PersonAttachmentResponse> replace(
             @Valid @ModelAttribute UpdatePersonAttachment request) {
         PersonAttachmentResponse resp = personService.replaceAttachment(request);
@@ -96,7 +96,7 @@ public class PersonController {
     @PutMapping(
             path = "{personId}/attachment/{docType}/{docSide}/{id}",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('PERSON_UPDATE')")
+    @PreAuthorize("hasAuthority('PERSON_UPDATE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<PersonAttachmentResponse> upsert(
             @PathVariable Long personId,
             @PathVariable DocType docType,
@@ -111,7 +111,7 @@ public class PersonController {
 
 
     @PutMapping(path = "/attachments", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('PERSON_UPDATE')")
+    @PreAuthorize("hasAuthority('PERSON_UPDATE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<PersonAttachmentResponse> replaceAttachment(
             @ModelAttribute @Valid UpdatePersonAttachment dto) {
         return ResponseEntity.ok(personService.replaceAttachment(dto));
@@ -119,6 +119,7 @@ public class PersonController {
 
 
     @DeleteMapping("attachments/{id}")
+    @PreAuthorize("hasRole('PERSON_DELETE') or hasRole('SUPER_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> deleteAttachment(@PathVariable Long id) {
         personService.deleteAttachmentById(id);
@@ -132,6 +133,7 @@ public class PersonController {
 
 
     @PutMapping(value = "/{id}")
+    @PreAuthorize("hasAuthority('PERSON_UPDATE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updatePerson(@PathVariable Long id, @Valid @RequestBody UpdatePerson personRequest) {
         PersonResponseDTO dto = personService.updatePerson(id, personRequest);
         return ResponseEntity.ok(ApiResponse.builder()

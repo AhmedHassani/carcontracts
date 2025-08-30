@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ public class DashboardController  {
 
 
     @GetMapping("")
+    @PreAuthorize("hasAuthority('GET_DASHBOARD') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Map<String, Map<String, Long>>> getDashboardStats(
             @RequestParam(required = false) LocalDate start,
             @RequestParam(required = false) DateType dateType) {
@@ -41,6 +43,7 @@ public class DashboardController  {
         return ResponseEntity.ok(stats);
     }
     @GetMapping("/installments")
+    @PreAuthorize("hasAuthority('GET_DASHBOARD') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getInstallmentStats(
             @RequestParam LocalDate start,
             @RequestParam String period) {
@@ -72,6 +75,7 @@ public class DashboardController  {
         }
 }
     @GetMapping("/contracts")
+    @PreAuthorize("hasAuthority('GET_DASHBOARD') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> getContractsStats(
             @RequestParam LocalDate start,
             @RequestParam String period) {
