@@ -50,6 +50,14 @@ public class RoleService {
     }
 
 
+    public List<RoleDTO> getCompanyRoles(Long companyId) {
+        Company company = companyRepository.findById(companyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+        List<Role> roles = roleRepository.findByCompanyId(companyId);
+        return roles.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
 
 
     public RoleDTO createCompanyRole(Long companyId, CreateRoleRequest request) {
