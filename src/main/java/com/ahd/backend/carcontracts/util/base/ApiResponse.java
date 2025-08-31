@@ -41,4 +41,21 @@ public class ApiResponse<T> {
                 .build();
     }
 
+    public static ApiResponse<Void> successMessage(String message) {
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .message(message)
+                .code(HttpStatus.OK.value())
+                .date(Instant.now())
+                .build();
+    }
+
+    public static ApiResponse<Void> errorMessage(String message, HttpStatus status) {
+        return ApiResponse.<Void>builder()
+                .success(false)
+                .message(message)
+                .code(status.value())
+                .date(Instant.now())
+                .build();
+    }
 }
