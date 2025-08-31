@@ -11,11 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("${application.api.base-path}/roles")
 @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ROLE_COMPANY') ")
 @RequiredArgsConstructor
 public class RoleController {
@@ -37,10 +36,18 @@ public class RoleController {
         return svc.update(id, r);
     }
 
+
+    @GetMapping("/company/{companyId}")
+    public ResponseEntity<List<RoleDTO>> getCompanyRoles(@PathVariable Long companyId) {
+        return ResponseEntity.ok(svc.getCompanyRoles(companyId));
+    }
+
+
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         svc.delete(id);
     }
+
 
     @PostMapping("/company/{companyId}")
     public ResponseEntity<RoleDTO> createCompanyRole(

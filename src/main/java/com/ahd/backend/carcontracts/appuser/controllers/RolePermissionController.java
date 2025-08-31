@@ -18,11 +18,13 @@ import java.util.List;
 public class RolePermissionController {
     private final RolePermissionService rolePermissionService;
 
+
     @GetMapping("/{roleId}/role")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('COMPANY')")
     public ResponseEntity<RolePermissionDTO> getRolePermissions(@PathVariable Long roleId) {
         return ResponseEntity.ok(rolePermissionService.getRolePermissions(roleId));
     }
+
 
 
     @GetMapping
@@ -38,7 +40,7 @@ public class RolePermissionController {
         return ResponseEntity.ok(rolePermissionService.togglePermission(roleId, permissionId));
     }
 
-    @PostMapping("/{roleId}/permissions/toggle-all")
+    @PostMapping("/{roleId}/toggle-all")
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('COMPANY')")
     public ResponseEntity<RolePermissionDTO> toggleAllPermissions(
             @PathVariable Long roleId,

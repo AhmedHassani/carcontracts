@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.appuser.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.*;
@@ -27,6 +28,7 @@ public class Permission {
     @Builder.Default
     private Boolean isSystemOnly = false;
     @ManyToMany(mappedBy = "permissions")
+    @JsonIgnore
     private Set<Role> roles = new HashSet<>();
 
     // Helper method to safely check if system only
