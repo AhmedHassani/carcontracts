@@ -5,10 +5,12 @@ import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.dto.UpdateProfileRequest;
 import com.ahd.backend.carcontracts.appuser.dto.UserDetailsDTO;
+import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.model.CompanyUser;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,6 +36,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final S3FileStorageService imageStorageService;
+    private final RoleRepository roleRepo;
     private final CompanyUserRepository companyUserRepository;
 
     /**
@@ -112,4 +116,44 @@ public class UserService {
         log.info("Updating profile photo for user: {}", user.getUsername());
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
+    @Transactional
+    public void removeRoleFromUser(Long userId) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+        user.getRoles().clear();
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void replaceUserRoles(Long userId, Long roleId) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+
+        Role role = roleRepo.findById(roleId)
+                .orElseThrow(() -> new EntityNotFoundException("Role not found: " + roleId));
+
+        user.getRoles().clear();
+        user.getRoles().add(role);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void mapUserToRole(Long userId, Long roleId) {
+        AppUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
+
+        Role role = roleRepo.findById(roleId)
+                .orElseThrow(() -> new EntityNotFoundException("Role not found: " + roleId));
+
+        if (user.getRoles() == null) {
+            user.setRoles(new HashSet<>());
+        }
+        if (user.getRoles().contains(role)) {
+            throw new IllegalStateException("User already has role id=" + roleId);
+        }
+
+        user.getRoles().add(role);
+        userRepository.save(user);
+    }
+
 } 
