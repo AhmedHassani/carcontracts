@@ -22,4 +22,6 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, Compan
     @Query("SELECT cu FROM CompanyUser cu WHERE cu.company.id = ?1 AND cu.role = 'OWNER'")
     Optional<CompanyUser> findCompanyOwner(Long companyId);
     boolean existsByCompanyIdAndUserId(Long companyId, Long userId);
+    @Query("SELECT cu.company.id FROM CompanyUser cu WHERE cu.user.id = :userId")
+    Optional<Long> findCompanyIdByUserId(Long userId);
 } 
