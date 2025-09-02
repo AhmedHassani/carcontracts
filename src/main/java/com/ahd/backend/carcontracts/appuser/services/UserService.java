@@ -13,6 +13,7 @@ import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -67,11 +66,35 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public UserDetailsDTO getUserByUsername(String username) {
+
         AppUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
         return UserDetailsDTO.fromAppUser(user);
     }
 
+    @Transactional(readOnly = true)
+    public UserDetailsDTO getUserByUsernameOfCompany(String username) {
+        final String requesterUsername =
+                SecurityContextHolder.getContext().getAuthentication().getName();
+
+        AppUser user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+
+        AppUser requester = userRepository.findByUsername(requesterUsername)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Owner not found"));
+
+        Long userCompanyId = companyUserRepository.findCompanyIdByUserId(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "User has no company"));
+
+        Long requesterCompanyId = companyUserRepository.findCompanyIdByUserId(requester.getId())
+                .orElseThrow(() -> new ResponseStatusException(FORBIDDEN, "Requester has no company"));
+
+        if (!Objects.equals(userCompanyId, requesterCompanyId)) {
+            throw new ResponseStatusException(FORBIDDEN, "Not in the same company");
+        }
+
+        return UserDetailsDTO.fromAppUser(user);
+    }
     /**
      * Get all users in the system
      */

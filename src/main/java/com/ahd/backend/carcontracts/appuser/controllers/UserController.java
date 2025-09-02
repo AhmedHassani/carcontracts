@@ -28,10 +28,15 @@ public class UserController {
         return ResponseEntity.ok(userService.getCurrentUserDetails());
     }
 
-    @GetMapping("/{username}")
-    @PreAuthorize("hasRole('SUPER_ADMIN') or @companyService.isUserInCompany(authentication.principal.username, #companyId)")
-    public ResponseEntity<UserDetailsDTO> getUserByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.getUserByUsername(username));
+//    @GetMapping("/{username}")
+//    @PreAuthorize("hasRole('SUPER_ADMIN') or @companyService.isUserInCompany(authentication.principal.username, #companyId)")
+//    public ResponseEntity<UserDetailsDTO> getUserByUsername(@PathVariable String username) {
+//        return ResponseEntity.ok(userService.getUserByUsername(username));
+//    }
+    @GetMapping("CompanyUserRol/{username}")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasAuthority('GET_USER_INFO')")
+    public ResponseEntity<UserDetailsDTO> getUserByUsernameOfCompany(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getUserByUsernameOfCompany(username));
     }
 
     @PutMapping("/me/profile")
