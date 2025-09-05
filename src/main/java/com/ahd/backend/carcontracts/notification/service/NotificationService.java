@@ -1,34 +1,49 @@
 package com.ahd.backend.carcontracts.notification.service;
 
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
 import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.service.ContractSpecification;
+import com.ahd.backend.carcontracts.notification.dto.NotificationWithSeenDTO;
 import com.ahd.backend.carcontracts.notification.event.NotificationSaveEvent;
 import com.ahd.backend.carcontracts.notification.event.NotificationSendEvent;
+import com.ahd.backend.carcontracts.notification.model.SeenNotification;
 import com.ahd.backend.carcontracts.notification.repository.NotificationRepository;
+import com.ahd.backend.carcontracts.notification.repository.SeenNotificationRepository;
 import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
     private final ApplicationEventPublisher publisher;
+    private final UserRepository userRepository;
+    private final SeenNotificationRepository seenRepo;
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -46,11 +61,14 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<AppNotification> getAllNotification( Pageable pageable) {
-        Page<AppNotification> notification = notificationRepository.findAll(pageable);
-        return notification;
-    }
+    public Page<NotificationWithSeenDTO> getAllNotification(Pageable pageable) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"))
+                .getId();
 
+        return notificationRepository.findAllWithSeen(userId, pageable);
+    }
     private LocalDateTime startOfWeekISO() {
         LocalDate today = LocalDate.now(zone());
         LocalDate monday = today.with(DayOfWeek.MONDAY);
