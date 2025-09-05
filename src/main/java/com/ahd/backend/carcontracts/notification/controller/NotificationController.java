@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.notification.controller;
 
+import com.ahd.backend.carcontracts.notification.dto.NotificationWithSeenDTO;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.util.Messages.*;
@@ -30,14 +31,14 @@ public class NotificationController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<List<AppNotification>>> getAllNotification(
+    public ResponseEntity<ApiResponse<List<NotificationWithSeenDTO>>> getAllNotification(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDirection) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        Page<AppNotification> notification = service.getAllNotification( pageable);
+        Page<NotificationWithSeenDTO> notification = service.getAllNotification( pageable);
         return ResponseEntity.ok(ApiResponse.success(notification));
     }
 
