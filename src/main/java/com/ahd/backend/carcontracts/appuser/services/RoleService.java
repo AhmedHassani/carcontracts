@@ -40,9 +40,14 @@ public class RoleService {
     private final Helper helper;
 
     @Transactional
-    public List<Role> findAll() { return roleRepository.findAll(); }
+    public List<Role> findAll() {
+        return roleRepository.findAll();
+    }
 
     public Role create(Role r) {
+//        if(getCompanyId(r.getCompany().getId())){
+//            throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
+//        }
         if (roleRepository.findByName(r.getName()).isPresent()) {
             throw new IllegalArgumentException("Role already exists");
         }
@@ -51,8 +56,10 @@ public class RoleService {
 
 
     public List<RoleDTO> getCompanyRoles(Long companyId) {
-        Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
+
+        if(getCompanyId(companyId)){
+            throw new ResourceNotFoundException("Company authorization not found: " + companyId);
+        }
         List<Role> roles = roleRepository.findByCompanyId(companyId);
         return roles.stream()
                 .map(this::convertToDTO)
@@ -61,6 +68,9 @@ public class RoleService {
 
 
     public RoleDTO createCompanyRole(Long companyId, CreateRoleRequest request) {
+        if(getCompanyId(companyId)){
+            throw new ResourceNotFoundException("Company authorization not found: " + companyId);
+        }
         AppUser currentUser = helper.getCurrentUser();
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found"));
@@ -94,6 +104,9 @@ public class RoleService {
     }
 
     private String generateCompanyRoleName(Long companyId, String displayName) {
+//        if(getCompanyId(companyId)){
+//            throw new ResourceNotFoundException("Company authorization not found: " + companyId);
+//        }
         String baseName = displayName.toUpperCase()
                 .replaceAll("[^A-Z0-9]", "_")
                 .replaceAll("_{2,}", "_")
@@ -104,6 +117,9 @@ public class RoleService {
 
 
     private void validateCompanyRoleCreationPermission(AppUser user, Company company) {
+//        if(getCompanyId(company.getId())){
+//            throw new ResourceNotFoundException("Company authorization not found: " + company.getId());
+//        }
         boolean isSuperAdmin = user.getRoles().stream()
                 .anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"));
         if (isSuperAdmin) {
@@ -118,6 +134,9 @@ public class RoleService {
     }
 
     public Role update(Long id, Role r) {
+        if(getCompanyId(r.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
+        }
         Role existing = roleRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Role not found"));
         existing.setName(r.getName());
@@ -125,7 +144,13 @@ public class RoleService {
         return roleRepository.save(existing);
     }
 
-    public void delete(Long id) { roleRepository.deleteById(id); }
+    public void delete(Long id) {
+        Role role = roleRepository.getById(id);
+
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
+        roleRepository.deleteById(id); }
 
 
     private RoleDTO convertToDTO(Role role) {
@@ -150,5 +175,11 @@ public class RoleService {
                 .permissions(permissions)
                 .userCount(role.getUsers().size())
                 .build();
+    }
+    public Boolean getCompanyId (Long companyId){
+        if(companyId == helper.getCurrentCompanyId() ){
+            return true;
+        }
+        return false ;
     }
 }

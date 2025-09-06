@@ -1,5 +1,7 @@
 package com.ahd.backend.carcontracts.car.model;
 
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -63,7 +65,8 @@ public class Car {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
+    @Column(name = "companyId")
+    private Long companyId;
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

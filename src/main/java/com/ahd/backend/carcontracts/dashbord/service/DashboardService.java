@@ -8,6 +8,7 @@ import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
+import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,8 @@ public class DashboardService {
     private final ContractsRepository contractsRepository;
     private final PaymentPlanRepository paymentPlanRepository;
     private final InstallmentRepository installmentRepository;
+    private final Helper helper;
+
 
     public Map<String, Map<String, Long>> getStats() {
         LocalDate today = LocalDate.now();
@@ -46,11 +49,11 @@ public class DashboardService {
             start = entry.getValue()[0];
             end = entry.getValue()[1];
 
-            long contractsCount = contractsRepository.countContractsBetweenDates(start, end);  // LocalDate
+            long contractsCount = contractsRepository.countContractsBetweenDates(start, end , getCompanyId());
             long completedPlansCount = paymentPlanRepository
-                    .countByStatusAndDateRange(PaymentStatus.COMPLETED, start.atStartOfDay(), end.atTime(LocalTime.MAX));  // LocalDateTime
+                    .countByStatusAndDateRange(PaymentStatus.COMPLETED, start.atStartOfDay(), end.atTime(LocalTime.MAX) , getCompanyId());
             long paidInstallmentsCount = installmentRepository
-                    .countByStatusAndDateRange(InstallmentStatus.PAID, start, end);  // LocalDate
+                    .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
             stats.put(periodName, Map.of(
                    "contractsCount", contractsCount ,
@@ -62,23 +65,10 @@ public class DashboardService {
         return stats;
 
     }
-    public Map<Integer, Long> getInstallmentsHourly(LocalDate start, LocalDate end) {
-        Map<Integer, Long> result = new LinkedHashMap<>();
-
-        LocalDateTime startDateTime = start.atStartOfDay(); // 00:00:00
-        LocalDateTime endDateTime = end.atTime(LocalTime.MAX); // 23:59:59.999999999
-
-        for (Object[] row : installmentRepository.countHourly(startDateTime, endDateTime)) {
-            result.put(((Number) row[0]).intValue(), ((Number) row[1]).longValue());
-        }
-        return result;
-    }
-
-
 
     public Map<LocalDate, Long> getInstallmentsDaily( LocalDate start, LocalDate end) {
         Map<LocalDate, Long> result = new LinkedHashMap<>();
-        for (Object[] row : installmentRepository.countByDay( start, end)) {
+        for (Object[] row : installmentRepository.countByDay( start, end , getCompanyId())) {
             result.put((LocalDate) row[0], ((Number) row[1]).longValue());
         }
         return result;
@@ -86,7 +76,7 @@ public class DashboardService {
 
     public Map<String, BigDecimal> getInstallmentsMonthly(LocalDate start, LocalDate end) {
         Map<String, BigDecimal> result = new LinkedHashMap<>();
-        for (Object[] row : installmentRepository.countByMonth(start, end)) {
+        for (Object[] row : installmentRepository.countByMonth(start, end , getCompanyId())) {
             String month = (String) row[0];
             BigDecimal total = (BigDecimal) row[1];
             result.put(month, total);
@@ -94,10 +84,9 @@ public class DashboardService {
         return result;
     }
 
-
     public Map<LocalDate, Long> getContractDaily( LocalDate start, LocalDate end) {
         Map<LocalDate, Long> result = new LinkedHashMap<>();
-        for (Object[] row : contractsRepository.countByDay( start, end)) {
+        for (Object[] row : contractsRepository.countByDay( start, end , getCompanyId())) {
             result.put((LocalDate) row[0], ((Number) row[1]).longValue());
         }
         return result;
@@ -105,10 +94,14 @@ public class DashboardService {
 
     public Map<String, Long> getContractMonthly(LocalDate start, LocalDate end) {
         Map<String, Long> result = new LinkedHashMap<>();
-        for (Object[] row : contractsRepository.countByMonth(start, end)) {
+        for (Object[] row : contractsRepository.countByMonth(start, end , getCompanyId())) {
             result.put((String) row[0], ((Number) row[1]).longValue());
         }
         return result;
+    }
+
+    public Long getCompanyId (){
+        return  helper.getCurrentCompanyId();
     }
 
 }

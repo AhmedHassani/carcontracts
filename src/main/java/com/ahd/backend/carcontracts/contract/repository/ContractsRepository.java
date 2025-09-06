@@ -13,6 +13,7 @@ import java.util.Optional;
 
 
 public interface ContractsRepository extends JpaRepository<Contracts, Long>, JpaSpecificationExecutor<Contracts> {
+
     @EntityGraph(attributePaths = {
             "seller",
             "buyer",
@@ -21,30 +22,41 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
             "paymentPlan",
             "paymentPlan.installments"
     })
-    Optional<Contracts> findById(Long id);
-    @Query("SELECT COUNT(c) FROM Contracts c WHERE c.contractDate BETWEEN :startDate AND :endDate")
-    long countContractsBetweenDates(@Param("startDate") LocalDate startDate,
-                                    @Param("endDate") LocalDate endDate);
+    Optional<Contracts> findByIdAndCompanyId(Long id, Long companyId);
 
     @Query("""
-     SELECT contractDate as day, COUNT(id)
-                    FROM Contracts
-                    WHERE  contractDate BETWEEN :start AND :end
-                    GROUP BY contractDate
-                    ORDER BY contractDate
-""")
-    List<Object[]> countByDay(
-            @Param("start") LocalDate start,
-            @Param("end") LocalDate end);
-    @Query(value = """
-    SELECT 
-        FORMAT(contract_date, 'yyyy-MM') AS month,
-        COUNT(id) AS total_contracts
-    FROM car_contracts
-    WHERE contract_date BETWEEN :start AND :end
-    GROUP BY FORMAT(contract_date, 'yyyy-MM')
-    ORDER BY month
-""", nativeQuery = true)
-    List<Object[]> countByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
+           SELECT COUNT(c)
+           FROM Contracts c
+           WHERE c.contractDate BETWEEN :startDate AND :endDate
+             AND c.companyId = :companyId
+           """)
+    long countContractsBetweenDates(@Param("startDate") LocalDate startDate,
+                                    @Param("endDate") LocalDate endDate,
+                                    @Param("companyId") Long companyId);
 
+    @Query("""
+           SELECT c.contractDate AS day, COUNT(c.id)
+           FROM Contracts c
+           WHERE c.contractDate BETWEEN :start AND :end
+             AND c.companyId = :companyId
+           GROUP BY c.contractDate
+           ORDER BY c.contractDate
+           """)
+    List<Object[]> countByDay(@Param("start") LocalDate start,
+                              @Param("end") LocalDate end,
+                              @Param("companyId") Long companyId);
+
+    @Query(value = """
+        SELECT 
+            FORMAT(contract_date, 'yyyy-MM') AS month,
+            COUNT(id) AS total_contracts
+        FROM car_contracts
+        WHERE contract_date BETWEEN :start AND :end
+          AND companyId = :companyId
+        GROUP BY FORMAT(contract_date, 'yyyy-MM')
+        ORDER BY month
+    """, nativeQuery = true)
+    List<Object[]> countByMonth(@Param("start") LocalDate start,
+                                @Param("end") LocalDate end,
+                                @Param("companyId") Long companyId);
 }

@@ -39,6 +39,7 @@ public class PersonRequestDTO {
     private String houseNo;
     private String issuingAuthority;
     private String infoOffice;
+    private Long companyId;
     @NotNull(message = "NATIONAL_ID_FRONT file is required")
     private MultipartFile nationalIdFrontFile;
 

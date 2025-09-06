@@ -58,6 +58,11 @@ public class PersonSpecification {
                 String pattern = "%" + criteria.residenceCardNo().toLowerCase() + "%";
                 predicates.add(cb.like(cb.lower(root.get("residenceCardNo")), pattern));
             }
+            //if (criteria.residenceCardNo() != null && !criteria.residenceCardNo().isBlank()) {
+          //  if (criteria.companyId() != null) {
+                predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
+          //  }
+           // }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

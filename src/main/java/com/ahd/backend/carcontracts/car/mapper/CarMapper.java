@@ -33,6 +33,7 @@ public final class CarMapper {
                 .cylinderCount(dto.getCylinderCount())
                 .passengerCount(dto.getPassengerCount())
                 .engineType(dto.getEngineType())
+                .companyId(dto.getCompnayId())
                 .origin(dto.getOrigin())
                 .attachments(new ArrayList<>())
                 .build();

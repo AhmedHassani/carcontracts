@@ -30,4 +30,5 @@ public class CarRequestDTO {
     private String engineType;
     @Size(max = 50)
     private String origin;
+    private Long compnayId;
 }

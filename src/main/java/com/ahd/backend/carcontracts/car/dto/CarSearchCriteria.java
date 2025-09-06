@@ -19,5 +19,8 @@ public record CarSearchCriteria(
         Integer minKm,
         Integer maxKm,
         Integer minCylinders,
-        Integer maxCylinders
+        Integer maxCylinders,
+        Long companyId
+
+
 ) implements BaseCriteria { }

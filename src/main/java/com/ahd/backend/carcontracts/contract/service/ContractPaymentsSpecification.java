@@ -51,6 +51,7 @@ public class ContractPaymentsSpecification {
                     predicates.add(cb.lessThanOrEqualTo(installments.get("dueDate"), end));
                 }
             }
+            predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

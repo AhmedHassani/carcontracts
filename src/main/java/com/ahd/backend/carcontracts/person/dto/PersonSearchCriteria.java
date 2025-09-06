@@ -12,5 +12,6 @@ public record PersonSearchCriteria(
         /* Car-specific filters */
         String phoneNumber,
         String nationalId,
-        String residenceCardNo
+        String residenceCardNo,
+        Long companyId
 ) implements BaseCriteria { }

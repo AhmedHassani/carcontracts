@@ -52,4 +52,7 @@ public class Installment {
 
     @Column(nullable = false)
     private boolean deleted = false;
+    @Column(name = "companyId")
+    private Long companyId;
+
 }

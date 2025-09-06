@@ -28,5 +28,6 @@ public class ContractRequest {
 
     /** Choose ONE of the following */
     private Long paymentId;
+    private Long companyId;
 
 }

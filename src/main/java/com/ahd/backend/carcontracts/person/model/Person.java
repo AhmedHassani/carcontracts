@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.person.model;
 
+import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -65,7 +66,8 @@ public class Person {
 
     @Column(name = "info_office", length = 100)
     private String infoOffice;          // مكتب المعلومات
-
+    @Column(name = "companyId")
+    private Long companyId;
     @OneToMany(mappedBy = "person",
             cascade = CascadeType.ALL,
             orphanRemoval = true)

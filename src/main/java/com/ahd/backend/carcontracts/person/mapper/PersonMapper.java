@@ -27,6 +27,7 @@ public final class PersonMapper {
                 .houseNo         (req.getHouseNo())
                 .issuingAuthority(req.getIssuingAuthority())
                 .infoOffice      (req.getInfoOffice())
+                .companyId       (req.getCompanyId())
                 .build();
     }
 
