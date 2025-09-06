@@ -43,6 +43,7 @@ public class CompanySpecification {
                     criteria.getExpirationDateTo()));
             }
 
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }

@@ -2,6 +2,7 @@ package com.ahd.backend.carcontracts.person.service;
 
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
 import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.car.dto.CarSearchCriteria;
 import com.ahd.backend.carcontracts.exception.BadRequestException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import com.ahd.backend.carcontracts.person.dto.*;
@@ -12,6 +13,7 @@ import com.ahd.backend.carcontracts.person.model.Person;
 import com.ahd.backend.carcontracts.person.model.PersonAttachment;
 import com.ahd.backend.carcontracts.person.repository.PersonAttachmentRepository;
 import com.ahd.backend.carcontracts.person.repository.PersonRepository;
+import com.ahd.backend.carcontracts.util.Helper;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +42,14 @@ public class PersonService {
     private final S3FileStorageService fileStorageService;
     private final S3UrlService s3UrlService;
     private final PersonAttachmentRepository personAttachmentRepository;
-
+    private final Helper helper;
     /**
      * Add person with attachments
      */
 
     @Transactional
     public PersonResponseDTO addPersonWithAttachments(PersonRequestDTO req) {
+        req.setCompanyId(getCompanyId());
         Person person = personRepository.save(PersonMapper.toEntity(req));
         uploadAndAttach(person, req.getNationalIdFrontFile(), DocType.NATIONAL_ID, DocSide.FRONT);
         uploadAndAttach(person, req.getNationalIdBackFile(), DocType.NATIONAL_ID, DocSide.BACK);
@@ -69,6 +72,17 @@ public class PersonService {
     @Transactional(readOnly = true)
     public Page<PersonResponseDTO> getAllPersonsWithAttachments(PersonSearchCriteria criteria, Pageable pageable) {
         Specification<Person> spec = PersonSpecification.buildSpecification(criteria);
+        PersonSearchCriteria enrichedCriteria = PersonSearchCriteria.builder()
+                .keyword(criteria.keyword())
+                .sortBy(criteria.sortBy())
+                .sortDirection(criteria.sortDirection())
+                .phoneNumber(criteria.phoneNumber())
+                .nationalId(criteria.nationalId())
+                .residenceCardNo(criteria.residenceCardNo())
+                .companyId(getCompanyId())
+                .build();
+        spec = PersonSpecification.buildSpecification(enrichedCriteria);
+        System.out.println("the company id : " + getCompanyId());
         Page<Person> persons = personRepository.findAll(spec, pageable);
         return persons.map(PersonMapper::toResponse);
     }
@@ -79,7 +93,7 @@ public class PersonService {
     @Transactional(readOnly = true)
     public PersonResponseDTO getPersonById(Long id) {
         log.info("Fetching person by id: {}", id);
-        Person person = personRepository.findById(id)
+        Person person = personRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
         return PersonMapper.toResponse(person);
     }
@@ -96,6 +110,8 @@ public class PersonService {
                 .findByIdAndPersonId(dto.getAttachmentId(), dto.getId())
                 .orElseThrow(() -> new RuntimeException(
                         "Attachment %d not found for person %d".formatted(dto.getAttachmentId(), dto.getId())));
+        Person testAuth = personRepository.findByIdAndCompanyId(att.getPerson().getId() , getCompanyId())
+                .orElseThrow(() -> new RuntimeException("Person not found with id: " + att.getPerson().getId()));
         try { fileStorageService.delete(att.getOriginalName()); }
         catch (Exception ex) { log.warn("Cannot delete old object: {}", ex.getMessage()); }
         String key = fileStorageService.upload(dto.getFile());
@@ -115,9 +131,12 @@ public class PersonService {
 
     @Transactional
     public void deleteAttachmentById(Long attachmentId) {
+
         PersonAttachment att = personAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Attachment " + attachmentId + " not found"));
+        Person testAuth = personRepository.findByIdAndCompanyId(att.getPerson().getId() , getCompanyId())
+                .orElseThrow(() -> new RuntimeException("Person not found with id: " + att.getPerson().getId()));
         Optional.ofNullable(att.getOriginalName()).ifPresent(original -> {
             try { fileStorageService.delete(original); }
             catch (Exception ex) { log.warn("Cannot delete old object: {}", ex.getMessage()); }
@@ -129,7 +148,7 @@ public class PersonService {
     public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file ,long id) {
         if (file == null || file.isEmpty())
             throw new BadRequestException("A non-empty file must be supplied");
-        Person person = personRepository.findById(personId)
+        Person person = personRepository.findByIdAndCompanyId(personId , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Person not found: " + personId));
         PersonAttachment att = personAttachmentRepository
                 .findByPersonIdAndDocTypeAndDocSideAndId(personId, type, side ,id)
@@ -162,7 +181,7 @@ public class PersonService {
      */
     public PersonResponseDTO updatePerson(Long id, UpdatePerson personRequest) {
         log.info("Updating person with id: {}", id);
-        Person existingPerson = personRepository.findById(id)
+        Person existingPerson = personRepository.findByIdAndCompanyId(id ,  getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
         Person updatedPerson = PersonMapper.merge(personRequest, existingPerson);
         updatedPerson = personRepository.save(updatedPerson);
@@ -173,8 +192,8 @@ public class PersonService {
      * Delete person (cascades to attachments)
      */
     public void deletePerson(Long id) {
-        log.info("Deleting person with id: {}", id);
-        Person person = personRepository.findById(id)
+       // log.info("Deleting person with id: {}", id);
+        Person person = personRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
         person.getAttachments().forEach(attachment -> {
             try {
@@ -192,8 +211,11 @@ public class PersonService {
     @Transactional(readOnly = true)
     public PersonAttachmentResponse getAttachmentById(Long attachmentId) {
         log.info("Fetching attachment with id: {}", attachmentId);
+
         PersonAttachment attachment = personAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new RuntimeException("Attachment not found with id: " + attachmentId));
+        Person testAuth = personRepository.findByIdAndCompanyId(attachment.getPerson().getId() , getCompanyId())
+                .orElseThrow(() -> new RuntimeException("Person not found with id: " + attachment.getPerson().getId()));
         return PersonAttachmentResponse.builder()
                 .id(attachment.getId())
                 .personId(attachment.getPerson().getId())
@@ -211,6 +233,8 @@ public class PersonService {
     private PersonAttachment uploadAndAttach(Person person, MultipartFile file, DocType type, DocSide side) {
         if (file == null || file.isEmpty())
             throw new BadRequestException("Failed to upload customer file to storage.");
+        Person testAuth = personRepository.findByIdAndCompanyId(person.getId() , getCompanyId())
+                .orElseThrow(() -> new RuntimeException("Person not found with id: " + person.getId()));
         String key = fileStorageService.upload(file);
         String url = s3UrlService.getImageUrl(key);
         PersonAttachment attachment = PersonAttachment.builder()
@@ -222,5 +246,7 @@ public class PersonService {
                 .build();
         return personAttachmentRepository.save(attachment);
     }
-
+    public Long getCompanyId (){
+        return  helper.getCurrentCompanyId();
+    }
 }

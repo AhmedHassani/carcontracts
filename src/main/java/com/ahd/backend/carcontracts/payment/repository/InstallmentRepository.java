@@ -19,106 +19,111 @@ import java.util.Optional;
 @Repository
 public interface InstallmentRepository extends JpaRepository<Installment, Long> {
 
-    List<Installment> findByPaymentPlanId(Long paymentPlanId);
+    List<Installment> findByPaymentPlanIdAndCompanyId(Long paymentPlanId , Long companyId);
+    Optional<Installment> findByIdAndCompanyId(Long id , Long companyId);
 
     List<Installment> findByStatus(InstallmentStatus status);
 
-    List<Installment> findByPaymentPlanIdOrderByInstallmentNumber(Long paymentPlanId);
+    List<Installment> findByPaymentPlanIdAndCompanyIdOrderByInstallmentNumber( Long paymentPlanId , Long CompnayId );
 
-    @Query("SELECT i FROM Installment i WHERE i.dueDate BETWEEN :startDate AND :endDate")
-    List<Installment> findByDueDateBetween(@Param("startDate") LocalDate startDate,
-                                           @Param("endDate") LocalDate endDate);
+//    @Query("SELECT i FROM Installment i WHERE i.dueDate BETWEEN :startDate AND :endDate")
+//    List<Installment> findByDueDateBetween(@Param("startDate") LocalDate startDate,
+//                                           @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT i FROM Installment i WHERE i.dueDate < :date AND i.status = :status")
-    List<Installment> findOverdueInstallments(@Param("date") LocalDate date,
-                                              @Param("status") InstallmentStatus status);
+    @Query("SELECT i FROM Installment i WHERE i.dueDate < :date AND i.status = :status AND i.companyId = :companyId")
+    List<Installment> findOverdueInstallmentsByCompanyId(@Param("date") LocalDate date,
+                                              @Param("status") InstallmentStatus status,
+                                                         @Param("companyId") Long companyId);
 
-    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
-    List<Installment> findByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
-                                                   @Param("status") InstallmentStatus status);
-
-    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.installmentNumber = :installmentNumber")
-    Optional<Installment> findByPaymentPlanIdAndInstallmentNumber(@Param("paymentPlanId") Long paymentPlanId,
-                                                                  @Param("installmentNumber") Integer installmentNumber);
-
-    @Query("SELECT COUNT(i) FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
-    Long countByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
-                                       @Param("status") InstallmentStatus status);
-
-    @Query("SELECT SUM(i.amount) FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
-    BigDecimal sumAmountByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
-                                                 @Param("status") InstallmentStatus status);
-
-    @Query("SELECT i FROM Installment i WHERE i.paymentReference = :paymentReference")
-    Optional<Installment> findByPaymentReference(@Param("paymentReference") String paymentReference);
-
-    @Query("SELECT i FROM Installment i WHERE i.dueDate = :dueDate AND i.status = :status")
-    List<Installment> findByDueDateAndStatus(@Param("dueDate") LocalDate dueDate,
-                                             @Param("status") InstallmentStatus status);
-
-    @Query("SELECT i FROM Installment i JOIN i.paymentPlan p WHERE p.status = :planStatus AND i.status = :installmentStatus")
-    List<Installment> findByPaymentPlanStatusAndInstallmentStatus(@Param("planStatus") PaymentStatus planStatus,
-                                                                  @Param("installmentStatus") InstallmentStatus installmentStatus);
-
-    @Modifying
-    @Query("UPDATE Installment i SET i.status = :status WHERE i.id = :id")
-    int updateStatusById(@Param("id") Long id, @Param("status") InstallmentStatus status);
-
-    @Modifying
-    @Query("UPDATE Installment i SET i.status = :newStatus WHERE i.dueDate < :date AND i.status = :currentStatus")
-    int updateOverdueInstallments(@Param("date") LocalDate date,
-                                  @Param("currentStatus") InstallmentStatus currentStatus,
-                                  @Param("newStatus") InstallmentStatus newStatus);
-
-    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status != 'PAID' ORDER BY i.installmentNumber")
-    List<Installment> findUnpaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
-
-    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = 'PAID' ORDER BY i.paidDate DESC")
-    List<Installment> findPaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
+//    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
+//    List<Installment> findByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
+//                                                   @Param("status") InstallmentStatus status);
+//
+//    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.installmentNumber = :installmentNumber")
+//    Optional<Installment> findByPaymentPlanIdAndInstallmentNumber(@Param("paymentPlanId") Long paymentPlanId,
+//                                                                  @Param("installmentNumber") Integer installmentNumber);
+//
+//    @Query("SELECT COUNT(i) FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
+//    Long countByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
+//                                       @Param("status") InstallmentStatus status);
+//
+//    @Query("SELECT SUM(i.amount) FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = :status")
+//    BigDecimal sumAmountByPaymentPlanIdAndStatus(@Param("paymentPlanId") Long paymentPlanId,
+//                                                 @Param("status") InstallmentStatus status);
+//
+//    @Query("SELECT i FROM Installment i WHERE i.paymentReference = :paymentReference")
+//    Optional<Installment> findByPaymentReference(@Param("paymentReference") String paymentReference);
+//
+//    @Query("SELECT i FROM Installment i WHERE i.dueDate = :dueDate AND i.status = :status")
+//    List<Installment> findByDueDateAndStatus(@Param("dueDate") LocalDate dueDate,
+//                                             @Param("status") InstallmentStatus status);
+//
+//    @Query("SELECT i FROM Installment i JOIN i.paymentPlan p WHERE p.status = :planStatus AND i.status = :installmentStatus")
+//    List<Installment> findByPaymentPlanStatusAndInstallmentStatus(@Param("planStatus") PaymentStatus planStatus,
+//                                                                  @Param("installmentStatus") InstallmentStatus installmentStatus);
+//
+//    @Modifying
+//    @Query("UPDATE Installment i SET i.status = :status WHERE i.id = :id")
+//    int updateStatusById(@Param("id") Long id, @Param("status") InstallmentStatus status);
+//
+//    @Modifying
+//    @Query("UPDATE Installment i SET i.status = :newStatus WHERE i.dueDate < :date AND i.status = :currentStatus")
+//    int updateOverdueInstallments(@Param("date") LocalDate date,
+//                                  @Param("currentStatus") InstallmentStatus currentStatus,
+//                                  @Param("newStatus") InstallmentStatus newStatus);
+//
+//    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status != 'PAID' ORDER BY i.installmentNumber")
+//    List<Installment> findUnpaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
+//
+//    @Query("SELECT i FROM Installment i WHERE i.paymentPlan.id = :paymentPlanId AND i.status = 'PAID' ORDER BY i.paidDate DESC")
+//    List<Installment> findPaidInstallmentsByPaymentPlanId(@Param("paymentPlanId") Long paymentPlanId);
 
     @Query("""
     SELECT COALESCE(SUM(i.amount), 0) 
     FROM Installment i 
     WHERE i.status = :status 
-      AND i.paidDate BETWEEN :start AND :end
+      AND i.paidDate BETWEEN :start AND :end AND companyId = :companyId
 """)
     long countByStatusAndDateRange(@Param("status") InstallmentStatus status,
                                    @Param("start") LocalDate start,
-                                   @Param("end") LocalDate end);
+                                   @Param("end") LocalDate end ,
+                                   @Param("companyId") Long companyId);
 
 
-    @Query(value = """
-    SELECT DATEPART(HOUR, i.paid_date) AS hour, COUNT(*)
-    FROM installment i
-    WHERE i.status = 'PAID'
-      AND i.paid_date BETWEEN :start AND :end
-    GROUP BY DATEPART(HOUR, i.paid_date)
-    ORDER BY hour
-""", nativeQuery = true)
-    List<Object[]> countHourly(
-                               @Param("start") LocalDateTime start,
-                               @Param("end") LocalDateTime end);
-
+//    @Query(value = """
+//    SELECT DATEPART(HOUR, i.paid_date) AS hour, COUNT(*)
+//    FROM installment i
+//    WHERE i.status = 'PAID'
+//      AND i.paid_date BETWEEN :start AND :end
+//    GROUP BY DATEPART(HOUR, i.paid_date)
+//    ORDER BY hour
+//""", nativeQuery = true)
+//    List<Object[]> countHourly(
+//                               @Param("start") LocalDateTime start,
+//                               @Param("end") LocalDateTime end);
+//
 
     @Query("""
     SELECT i.paidDate as day, SUM(i.amount) 
     FROM Installment i 
-    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end
+    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end AND companyId = :companyId
     GROUP BY i.paidDate
     ORDER BY i.paidDate
 """)
     List<Object[]> countByDay(
                               @Param("start") LocalDate start,
-                              @Param("end") LocalDate end);
+                              @Param("end") LocalDate end ,
+                              @Param("companyId") Long companyId);
     @Query(value = """
     SELECT FORMAT(paid_date, 'yyyy-MM') AS month, SUM(amount) AS total_amount
     FROM installments
-    WHERE status = 'PAID' AND paid_date BETWEEN :start AND :end
+    WHERE status = 'PAID' AND paid_date BETWEEN :start AND :end AND companyId = :companyId
     GROUP BY FORMAT(paid_date, 'yyyy-MM')
     ORDER BY month
 """, nativeQuery = true)
     List<Object[]> countByMonth(@Param("start") LocalDate start,
-                                @Param("end") LocalDate end);
+                                @Param("end") LocalDate end,
+                                @Param("companyId") Long companyId);
 ;
 
 

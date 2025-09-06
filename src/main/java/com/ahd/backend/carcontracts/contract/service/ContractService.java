@@ -10,8 +10,11 @@ import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
+import com.ahd.backend.carcontracts.person.dto.PersonSearchCriteria;
 import com.ahd.backend.carcontracts.person.model.Person;
 import com.ahd.backend.carcontracts.person.repository.PersonRepository;
+import com.ahd.backend.carcontracts.person.service.PersonSpecification;
+import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +36,7 @@ public class ContractService {
     private final CarRepository carRepo;
     private final PaymentPlanRepository planRepo;
     private final NotificationService notificationService;
+    private final Helper helper;
 
 
 
@@ -53,6 +57,7 @@ public class ContractService {
         contract.setGuarantor(guarantor);
         contract.setCar(car);
         contract.setPaymentPlan(paymentPlan);
+        contract.setCompanyId(getCompanyId());
         contract = contractRepo.saveAndFlush(contract);
         notificationService.sendNotificationToDevice(
                 "اضافة عقد",
@@ -72,6 +77,21 @@ public class ContractService {
     @Transactional(readOnly = true)
     public Page<ContractResponse> getAllContract(ContractSearchCriteria criteria, Pageable pageable) {
         Specification<Contracts> spec = ContractSpecification.buildSpecification(criteria);
+        ContractSearchCriteria enrichedCriteria = ContractSearchCriteria.builder()
+                .keyword(criteria.keyword())
+                .sortBy(criteria.sortBy())
+                .sortDirection(criteria.sortDirection())
+                .carType(criteria.carType())
+                .carNumber(criteria.carNumber())
+                .StatusPaymant(criteria.StatusPaymant())
+                .BuyerName(criteria.BuyerName())
+                .BuyerPhone(criteria.BuyerPhone())
+                .SellerName(criteria.SellerName())
+                .SellerPhone(criteria.SellerPhone())
+                .companyId(getCompanyId())
+                .build();
+
+        spec = ContractSpecification.buildSpecification(enrichedCriteria);
         Page<Contracts> contracts = contractRepo.findAll(spec, pageable);
         return contracts.map(ContractMapper::toDetails);
     }
@@ -80,6 +100,17 @@ public class ContractService {
     @Transactional(readOnly = true)
     public  List<ContractPaymentsResponse>  getAllContractPayments(ContractPaymentsSearchCriteria criteria, Pageable pageable) {
         Specification<Contracts> spec = ContractPaymentsSpecification.buildSpecification(criteria);
+        ContractPaymentsSearchCriteria enrichedCriteria = ContractPaymentsSearchCriteria.builder()
+                .keyword(criteria.keyword())
+                .sortBy(criteria.sortBy())
+                .sortDirection(criteria.sortDirection())
+                .startDate(criteria.startDate())
+                .endDate(criteria.endDate())
+                .status(criteria.status())
+                .companyId(getCompanyId())
+                .build();
+
+        spec = ContractPaymentsSpecification.buildSpecification(enrichedCriteria);
         Page<Contracts> contracts = contractRepo.findAll(spec, pageable);
         return contracts.getContent().stream()
                 .map(ContractMapper::toPayments)
@@ -88,7 +119,7 @@ public class ContractService {
 
     @Transactional
     public void softDeleteContract(Long contractId) {
-        Contracts contract = contractRepo.findById(contractId)
+        Contracts contract = contractRepo.findByIdAndCompanyId(contractId , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
 
         if (contract.getPaymentPlan() != null) {
@@ -113,7 +144,7 @@ public class ContractService {
         contractRepo.save(contract);
     }
 
-
-
-
+    public Long getCompanyId (){
+        return  helper.getCurrentCompanyId();
+    }
 }

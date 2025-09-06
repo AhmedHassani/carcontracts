@@ -21,7 +21,8 @@ import java.util.List;
 public class PaymentPlanRequest {
     @NotNull
     private PaymentType paymentType;
-
+    @NotNull
+    private Long companyid;
     @NotNull
     @DecimalMin(value = "0.01", message = "Total amount must be greater than 0")
     private BigDecimal totalAmount;

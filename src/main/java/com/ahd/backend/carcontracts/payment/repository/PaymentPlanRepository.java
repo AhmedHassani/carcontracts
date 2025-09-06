@@ -18,40 +18,32 @@ import java.util.Optional;
 @Repository
 public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> {
 
-    List<PaymentPlan> findByStatus(PaymentStatus status);
+    List<PaymentPlan> findByCompanyId(Long companyId);
+    Optional<PaymentPlan> findByIdAndCompanyId(Long id , Long companyId);
 
-    List<PaymentPlan> findByPaymentType(PaymentType paymentType);
+    List<PaymentPlan> findByStatusAndCompanyId(PaymentStatus status , Long companyId);
 
-    @Query("SELECT p FROM PaymentPlan p WHERE p.createdAt BETWEEN :startDate AND :endDate")
-    List<PaymentPlan> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate,
-                                             @Param("endDate") LocalDateTime endDate);
-
-    @Query("SELECT p FROM PaymentPlan p WHERE p.totalAmount BETWEEN :minAmount AND :maxAmount")
-    List<PaymentPlan> findByTotalAmountBetween(@Param("minAmount") BigDecimal minAmount,
-                                               @Param("maxAmount") BigDecimal maxAmount);
-
-    @Query("SELECT p FROM PaymentPlan p WHERE p.status = :status AND p.paymentType = :paymentType")
-    List<PaymentPlan> findByStatusAndPaymentType(@Param("status") PaymentStatus status,
-                                                 @Param("paymentType") PaymentType paymentType);
-
-    @Query("SELECT COUNT(p) FROM PaymentPlan p WHERE p.status = :status")
-    Long countByStatus(@Param("status") PaymentStatus status);
-
-    @Query("SELECT SUM(p.totalAmount) FROM PaymentPlan p WHERE p.status = :status")
-    BigDecimal sumTotalAmountByStatus(@Param("status") PaymentStatus status);
-
-    @Query("SELECT p FROM PaymentPlan p LEFT JOIN FETCH p.installments WHERE p.id = :id")
-    Optional<PaymentPlan> findByIdWithInstallments(@Param("id") Long id);
 
     @Query("""
-    SELECT COUNT(p)
-    FROM PaymentPlan p
-    WHERE p.status = :status
-      AND p.createdAt BETWEEN :start AND :end
-""")
+       SELECT p
+       FROM PaymentPlan p
+       LEFT JOIN FETCH p.installments
+       WHERE p.id = :id
+         AND p.companyId = :companyId
+       """)
+    Optional<PaymentPlan> findByIdAndCompanyIdWithInstallments(@Param("id") Long id,
+                                                               @Param("companyId") Long companyId);
+
+    @Query("""
+       SELECT COUNT(p)
+       FROM PaymentPlan p
+       WHERE p.status = :status
+         AND p.createdAt BETWEEN :start AND :end
+         AND p.companyId = :companyId
+       """)
     long countByStatusAndDateRange(@Param("status") PaymentStatus status,
                                    @Param("start") LocalDateTime start,
-                                   @Param("end") LocalDateTime end);
-
+                                   @Param("end") LocalDateTime end,
+                                   @Param("companyId") Long companyId);
 
 }

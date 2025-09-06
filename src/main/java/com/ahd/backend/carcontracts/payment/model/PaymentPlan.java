@@ -64,7 +64,8 @@ public class PaymentPlan {
 
     @Column(nullable = false)
     private boolean deleted = false;
-
+    @Column(name = "companyId")
+    private Long companyId;
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

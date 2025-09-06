@@ -10,6 +10,8 @@ import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.model.CompanyUser;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
+import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.util.Helper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,7 @@ public class UserService {
     private final S3FileStorageService imageStorageService;
     private final RoleRepository roleRepo;
     private final CompanyUserRepository companyUserRepository;
+    private final Helper helper;
 
     /**
      * Get the currently authenticated user's details
@@ -64,13 +67,13 @@ public class UserService {
     /**
      * Get user details by username
      */
-    @Transactional(readOnly = true)
-    public UserDetailsDTO getUserByUsername(String username) {
-
-        AppUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
-        return UserDetailsDTO.fromAppUser(user);
-    }
+//    @Transactional(readOnly = true)
+//    public UserDetailsDTO getUserByUsername(String username) {
+//
+//        AppUser user = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+//        return UserDetailsDTO.fromAppUser(user);
+//    }
 
     @Transactional(readOnly = true)
     public UserDetailsDTO getUserByUsernameOfCompany(String username) {
@@ -98,12 +101,12 @@ public class UserService {
     /**
      * Get all users in the system
      */
-    @Transactional(readOnly = true)
-    public List<UserDetailsDTO> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(UserDetailsDTO::fromAppUser)
-                .collect(Collectors.toList());
-    }
+//    @Transactional(readOnly = true)
+//    public List<UserDetailsDTO> getAllUsers() {
+//        return userRepository.findAll().stream()
+//                .map(UserDetailsDTO::fromAppUser)
+//                .collect(Collectors.toList());
+//    }
 
     /**
      * Update the current user's profile
@@ -154,7 +157,9 @@ public class UserService {
 
         Role role = roleRepo.findById(roleId)
                 .orElseThrow(() -> new EntityNotFoundException("Role not found: " + roleId));
-
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         user.getRoles().clear();
         user.getRoles().add(role);
         userRepository.save(user);
@@ -178,5 +183,10 @@ public class UserService {
         user.getRoles().add(role);
         userRepository.save(user);
     }
-
+    public Boolean getCompanyId (Long companyId){
+        if(companyId == helper.getCurrentCompanyId() ){
+            return true;
+        }
+        return false ;
+    }
 } 

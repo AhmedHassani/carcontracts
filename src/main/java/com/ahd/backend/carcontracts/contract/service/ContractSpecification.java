@@ -90,6 +90,7 @@ public class ContractSpecification {
                         "%" + criteria.carType().toLowerCase() + "%"
                 ));
             }
+            predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

@@ -16,6 +16,7 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
 
     @Override
     protected void build(Root<Car> root, CriteriaBuilder cb, List<Predicate> p) {
+
         keywordSearch(c.keyword(), cb, p,
                 root.get("name"),
                 root.get("model"),
@@ -26,7 +27,11 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
         between(root.get("kilometers"),
                 c.minKm(), c.maxKm(),
                 p, cb);
-        if (c.deleted() != null)
+        if (c.deleted() != null){
             equal(root.get("deleted"), c.deleted(), p, cb);
+            }
+        equal(root.get("companyId"), c.companyId(), p, cb);
+
+
     }
 }

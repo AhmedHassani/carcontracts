@@ -1,4 +1,5 @@
 package com.ahd.backend.carcontracts.payment.service;
+import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
@@ -32,6 +33,7 @@ public class PaymentPlanService {
 
     @Autowired
     private PaymentPlanRepository paymentPlanRepository;
+    private final Helper helper;
 
     @Autowired
     private InstallmentRepository installmentRepository;
@@ -43,6 +45,7 @@ public class PaymentPlanService {
                 .totalAmount(request.getTotalAmount())
                 .downPayment(request.getDownPayment() != null ? request.getDownPayment() : BigDecimal.ZERO)
                 .installmentPeriodDays(request.getInstallmentPeriodDays())
+                .companyId(getCompanyId())
                 .status(PaymentStatus.PENDING)
                 .installments(new ArrayList<>())
                 .build();
@@ -54,6 +57,7 @@ public class PaymentPlanService {
             List<Installment> installments = request.getInstallment().stream()
                     .map(installment -> {
                         installment.setPaymentPlan(savedPlan);
+                        installment.setCompanyId(getCompanyId());
                         return installment;
                     })
                     .toList();
@@ -63,49 +67,21 @@ public class PaymentPlanService {
             paymentPlan = paymentPlanRepository.save(paymentPlan);
         }
 
-        PaymentPlan savedPaymentPlan = paymentPlanRepository.findByIdWithInstallments(paymentPlan.getId())
+        PaymentPlan savedPaymentPlan = paymentPlanRepository.findByIdAndCompanyIdWithInstallments(paymentPlan.getId() , getCompanyId())
                 .orElse(paymentPlan);
 
         return mapToResponse(savedPaymentPlan);
     }
 
 
-//    private List<Installment> generateInstallments(PaymentPlan paymentPlan, LocalDate firstInstallmentDate) {
-//        List<Installment> installments = new ArrayList<>();
-//        BigDecimal installmentAmount = paymentPlan.getRemainingAmount()
-//                .divide(BigDecimal.valueOf(paymentPlan.getNumberOfInstallments()), 2, RoundingMode.HALF_UP);
-//        LocalDate currentDate = firstInstallmentDate != null ? firstInstallmentDate :
-//                LocalDate.now().plusDays(paymentPlan.getInstallmentPeriodDays());
-//        for (int i = 1; i <= paymentPlan.getNumberOfInstallments(); i++) {
-//            Installment installment = Installment.builder()
-//                    .paymentPlan(paymentPlan)
-//                    .installmentNumber(i)
-//                    .amount(installmentAmount)
-//                    .dueDate(currentDate)
-//                    .status(InstallmentStatus.PENDING)
-//                    .build();
-//            // Adjust last installment for any rounding differences
-//            if (i == paymentPlan.getNumberOfInstallments()) {
-//                BigDecimal totalCalculated = installmentAmount.multiply(BigDecimal.valueOf(paymentPlan.getNumberOfInstallments()));
-//                BigDecimal difference = paymentPlan.getRemainingAmount().subtract(totalCalculated);
-//                installment.setAmount(installmentAmount.add(difference));
-//            }
-//            installment = installmentRepository.save(installment);
-//            installments.add(installment);
-//            currentDate = currentDate.plusDays(paymentPlan.getInstallmentPeriodDays());
-//        }
-//        return installments;
-//    }
-
-
     public PaymentPlanResponse getPaymentPlan(Long id) {
-        PaymentPlan paymentPlan = paymentPlanRepository.findByIdWithInstallments(id)
+        PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyIdWithInstallments(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Payment plan not found with id: " + id));
         return mapToResponse(paymentPlan);
     }
 
     public List<PaymentPlanResponse> getAllPaymentPlans() {
-        List<PaymentPlan> paymentPlans = paymentPlanRepository.findAll();
+        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByCompanyId(getCompanyId());
         return paymentPlans.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -113,7 +89,8 @@ public class PaymentPlanService {
 
 
     public List<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status) {
-        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByStatus(status);
+
+        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByStatusAndCompanyId(status , getCompanyId());
         return paymentPlans.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -121,7 +98,8 @@ public class PaymentPlanService {
 
 
     public List<InstallmentResponse> getInstallments(Long paymentPlanId) {
-        List<Installment> installments = installmentRepository.findByPaymentPlanIdOrderByInstallmentNumber(paymentPlanId);
+
+        List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyIdOrderByInstallmentNumber(   paymentPlanId , getCompanyId());
         return installments.stream()
                 .map(this::mapInstallmentToResponse)
                 .collect(Collectors.toList());
@@ -129,17 +107,16 @@ public class PaymentPlanService {
 
 
     public List<InstallmentResponse> getOverdueInstallments() {
-        List<Installment> overdueInstallments = installmentRepository.findOverdueInstallments(
-                LocalDate.now(), InstallmentStatus.PENDING);
+          List<Installment> overdueInstallments = installmentRepository.findOverdueInstallmentsByCompanyId(
+                LocalDate.now(), InstallmentStatus.PENDING ,  getCompanyId());
         return overdueInstallments.stream()
                 .map(this::mapInstallmentToResponse)
                 .collect(Collectors.toList());
     }
 
 
-
     public PaymentResponse processPayment(PaymentRequest request) {
-        Installment installment = installmentRepository.findById(request.getInstallmentId())
+        Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalStateException("Installment already paid");
@@ -171,8 +148,9 @@ public class PaymentPlanService {
                 .amount(request.getAmount())
                 .build();
     }
+
     public PaymentResponse updatePInstallmentDate(PaymentDateRequest request) {
-        Installment installment = installmentRepository.findById(request.getInstallmentId())
+        Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalStateException("Installment already paid");
@@ -199,7 +177,7 @@ public class PaymentPlanService {
     }
 
     public PaymentResponse updatePInstallmentStatus(Long id) {
-        Installment installment = installmentRepository.findById(id)
+        Installment installment = installmentRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
 
         if (installment.getStatus() == InstallmentStatus.PAID) {
@@ -226,7 +204,7 @@ public class PaymentPlanService {
         notif.setPermisson("CompanyUsers");
         notificationService.insertNotificationAsync(notif);
         boolean allPaid = installmentRepository
-                .findByPaymentPlanId(paymentPlanId)
+                .findByPaymentPlanIdAndCompanyId(paymentPlanId , getCompanyId())
                 .stream()
                 .allMatch(inst -> inst.getStatus() == InstallmentStatus.PAID);
 
@@ -246,16 +224,15 @@ public class PaymentPlanService {
     }
 
     public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
-        PaymentPlan paymentPlan = paymentPlanRepository.findById(id)
+        PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
         paymentPlan.setStatus(status);
         paymentPlan = paymentPlanRepository.save(paymentPlan);
         return mapToResponse(paymentPlan);
     }
 
-
     private void checkAndUpdatePaymentPlanStatus(PaymentPlan paymentPlan) {
-        List<Installment> installments = installmentRepository.findByPaymentPlanId(paymentPlan.getId());
+        List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyId(paymentPlan.getId() , getCompanyId());
         boolean allPaid = installments.stream().allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
         if (allPaid) {
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
@@ -307,6 +284,9 @@ public class PaymentPlanService {
                 .status(installment.getStatus())
                 .paymentReference(installment.getPaymentReference())
                 .build();
+    }
+    public Long getCompanyId (){
+        return  helper.getCurrentCompanyId();
     }
 }
 

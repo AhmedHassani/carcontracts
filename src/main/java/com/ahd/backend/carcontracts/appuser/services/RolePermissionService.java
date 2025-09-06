@@ -37,6 +37,9 @@ public class RolePermissionService {
     public RolePermissionDTO getRolePermissions(Long roleId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         List<Permission> allPermissions = permissionRepository.findAll();
         Set<Long> rolePermissionIds = role.getPermissions().stream()
                 .map(Permission::getId)
@@ -69,6 +72,9 @@ public class RolePermissionService {
     public RolePermissionDTO togglePermission(Long roleId, Long permissionId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         Permission permission = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found with id: " + permissionId));
         if (role.getPermissions().contains(permission)) {
@@ -84,6 +90,9 @@ public class RolePermissionService {
     public RolePermissionDTO toggleAllPermissions(Long roleId, boolean enableAll) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         if (enableAll) {
             List<Permission> allPermissions = permissionRepository.findAll();
             role.getPermissions().clear();
@@ -102,6 +111,9 @@ public class RolePermissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         validatePermissionLinkAccess(currentUser, role, permission);
         if (role.getPermissions().contains(permission)) {
             return buildRolePermissionResponse(role, "Permission already linked");
@@ -119,6 +131,9 @@ public class RolePermissionService {
         AppUser currentUser = helper.getCurrentUser();
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         List<Permission> permissions = permissionRepository.findByIdIn(permissionIds);
         if (permissions.size() != permissionIds.size()) {
             throw new BadRequestException("Some permission IDs are invalid");
@@ -145,6 +160,9 @@ public class RolePermissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         if (!role.getPermissions().contains(permission)) {
             return buildRolePermissionResponse(role, "Permission was not linked");
         }
@@ -161,6 +179,9 @@ public class RolePermissionService {
         AppUser currentUser = helper.getCurrentUser();
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         List<Permission> permissions = permissionRepository.findByIdIn(permissionIds);
         int removedCount = 0;
         for (Permission permission : permissions) {
@@ -178,6 +199,9 @@ public class RolePermissionService {
         AppUser currentUser = helper.getCurrentUser();
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         role.getPermissions().clear();
         if (permissionIds != null && !permissionIds.isEmpty()) {
             List<Permission> permissions = permissionRepository.findByIdIn(permissionIds);
@@ -198,6 +222,9 @@ public class RolePermissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Permission not found"));
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+        if(getCompanyId(role.getCompany().getId())){
+            throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
+        }
         validatePermissionLinkAccess(currentUser, role, permission);
         boolean added;
         if (role.getPermissions().contains(permission)) {
@@ -232,19 +259,19 @@ public class RolePermissionService {
         return user.getRoles().stream()
                 .anyMatch(r -> r.getName().equals("ROLE_SUPER_ADMIN"));
     }
-    private void validateRoleAccess(AppUser user, Role role) {
-        if (isSuperAdmin(user)) {
-            return;
-        }
-        if (role.getCompany() != null) {
-            boolean hasAccess = companyUserRepository
-                    .findByCompanyIdAndUserId(role.getCompany().getId(), user.getId())
-                    .isPresent();
-            if (!hasAccess) {
-                throw new BadRequestException("You don't have access to this role");
-            }
-        }
-    }
+//    private void validateRoleAccess(AppUser user, Role role) {
+//        if (isSuperAdmin(user)) {
+//            return;
+//        }
+//        if (role.getCompany() != null) {
+//            boolean hasAccess = companyUserRepository
+//                    .findByCompanyIdAndUserId(role.getCompany().getId(), user.getId())
+//                    .isPresent();
+//            if (!hasAccess) {
+//                throw new BadRequestException("You don't have access to this role");
+//            }
+//        }
+//    }
 
     private void validatePermissionLinkAccess(AppUser user, Role role, Permission permission) {
         if (permission.isSystemOnly() && !isSuperAdmin(user)) {
@@ -286,6 +313,13 @@ public class RolePermissionService {
                 .totalPermissions(permissions.size())
                 .message(message)
                 .build();
+    }
+
+    public Boolean getCompanyId (Long companyId){
+        if(companyId == helper.getCurrentCompanyId() ){
+            return true;
+        }
+        return false ;
     }
 
 

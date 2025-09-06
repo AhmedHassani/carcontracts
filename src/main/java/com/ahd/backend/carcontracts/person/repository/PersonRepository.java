@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface PersonRepository extends JpaRepository<Person, Long>,
         JpaSpecificationExecutor<Person> {
-    Optional<Person> findById(Long id);
+    Optional<Person> findByIdAndCompanyId(Long id , Long companyId);
 }

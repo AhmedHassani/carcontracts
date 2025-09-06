@@ -38,4 +38,7 @@ public class Contracts {
 
     @Column(nullable = false)
     private boolean deleted = false;
+
+    @Column(name = "companyId")
+    private Long companyId;
 }
