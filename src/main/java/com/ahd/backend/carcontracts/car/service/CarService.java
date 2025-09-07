@@ -50,14 +50,13 @@ public class CarService {
     @Transactional
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
-        if (carRepository.existsByChassisNumber(dto.getChassisNumber())) {
-            throw new DuplicateResourceException(
-                    "chassisNumber", dto.getChassisNumber(), "Car with this chassis number already exists");
+        if(carRepository.existsByChassisNumber(dto.getChassisNumber())
+        && carRepository.existsByCompanyId(getCompanyId())
+        && carRepository.existsByPlateNumber(dto.getPlateNumber())){
+                throw new DuplicateResourceException(
+                        "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
         }
-        if (carRepository.existsByPlateNumber(dto.getPlateNumber())) {
-            throw new DuplicateResourceException(
-                    "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
-        }
+
         Car car = CarMapper.toEntity(dto);
         if (files != null && !files.isEmpty()) {
             for (MultipartFile f : files) {
@@ -174,7 +173,10 @@ public class CarService {
                 .maxKm(criteria.maxKm())
                 .minCylinders(criteria.minCylinders())
                 .maxCylinders(criteria.maxCylinders())
-                .companyId(getCompanyId()) // 🔐
+                .companyId(getCompanyId())
+                .plateNumber(criteria.plateNumber())
+                .chassisNumber((criteria.chassisNumber()))
+                .model(criteria.model())
                 .build();
 
         Specification<Car> spec = new CarSpecification(enrichedCriteria);

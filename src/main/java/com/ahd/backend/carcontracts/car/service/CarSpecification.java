@@ -18,20 +18,22 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
     protected void build(Root<Car> root, CriteriaBuilder cb, List<Predicate> p) {
 
         keywordSearch(c.keyword(), cb, p,
-                root.get("name"),
-                root.get("model"),
-                root.get("plateNumber"),
-                root.get("chassisNumber"));
-        equal(root.get("type"), c.type(),p, cb);
-        equal(root.get("color"),c.color(),p, cb);
-        between(root.get("kilometers"),
-                c.minKm(), c.maxKm(),
-                p, cb);
-        if (c.deleted() != null){
+                root.get("name")
+        );
+        equal(root.get("model"),        c.model(),        p, cb);
+        equal(root.get("plateNumber"),  c.plateNumber(),  p, cb);
+        equal(root.get("chassisNumber"),c.chassisNumber(),p, cb);
+        equal(root.get("type"),         c.type(),         p, cb);
+        equal(root.get("color"),        c.color(),        p, cb);
+        equal(root.get("engineType"),   c.engineType(),   p, cb);
+        equal(root.get("origin"),       c.origin(),       p, cb);
+        between(root.get("kilometers"),     c.minKm(),        c.maxKm(),        p, cb);
+        between(root.get("cylinderCount"),  c.minCylinders(), c.maxCylinders(), p, cb);
+        if (c.deleted() != null) {
             equal(root.get("deleted"), c.deleted(), p, cb);
-            }
-        equal(root.get("companyId"), c.companyId(), p, cb);
-
+        }
+         equal(root.get("companyId"), c.companyId(), p, cb);
 
     }
+
 }
