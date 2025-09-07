@@ -14,6 +14,7 @@ public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificatio
     Optional<Car> findByIdAndCompanyIdAndDeletedFalse(Long id , Long CompanyId);
     //Optional<Car> findById(Long id);
     boolean existsByChassisNumber(String chassisNumber);
+    boolean existsByCompanyId(Long companyId);
     boolean existsByPlateNumber(String plateNumber);
     @EntityGraph(attributePaths = "attachments")
     Optional<Car> findWithAttachmentsByIdAndCompanyId(Long id , Long CompanyId);

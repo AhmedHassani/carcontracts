@@ -20,7 +20,10 @@ public record CarSearchCriteria(
         Integer maxKm,
         Integer minCylinders,
         Integer maxCylinders,
-        Long companyId
+        Long companyId,
+        String model,
+        String plateNumber,
+        String chassisNumber
 
 
 ) implements BaseCriteria { }

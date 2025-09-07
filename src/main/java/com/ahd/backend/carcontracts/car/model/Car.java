@@ -9,13 +9,20 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
+@Table(
+        name = "car",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        columnNames = {"companyId", "chassis_number", "plate_number"}
+                )
+        }
+)
 public class Car {
 
     @Id
@@ -34,10 +41,10 @@ public class Car {
     @Column(length = 50)
     private String model;
 
-    @Column(name = "plate_number", length = 20, unique = true)
+    @Column(name = "plate_number", length = 20)
     private String plateNumber;
 
-    @Column(name = "chassis_number", length = 50, unique = true)
+    @Column(name = "chassis_number", length = 50)
     private String chassisNumber;
 
     private Integer kilometers;
@@ -65,8 +72,10 @@ public class Car {
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-    @Column(name = "companyId")
+
+    @Column(name = "companyId", nullable = false)
     private Long companyId;
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();
