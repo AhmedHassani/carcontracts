@@ -1,6 +1,7 @@
 package com.ahd.backend.carcontracts.company.service;
 import com.ahd.backend.carcontracts.appuser.services.RolePermissionService;
 import com.ahd.backend.carcontracts.util.Helper;
+import jakarta.persistence.EntityManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
@@ -61,7 +62,7 @@ public class CompanyService {
     private final NotificationService notificationService;
     private final RolePermissionService rolePermissionService;
     private final Helper helper;
-
+    private final EntityManager em;
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
@@ -265,7 +266,7 @@ public class CompanyService {
 
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + request.companyId()));
-        if(getCompanyId(request.companyId())){
+        if(!getCompanyId(request.companyId())){
             throw new ResourceNotFoundException("Company authorization not found: " + request.companyId());
         }
         long currentUserCount = companyUserRepository.countByCompanyId(request.companyId());
@@ -283,19 +284,21 @@ public class CompanyService {
                 .roleIds(Set.of(companyRole.getId()))
                 .build();
         var user = authService.createUser(userInfo);
+        em.flush();
         CompanyUser companyUser = CompanyUser.builder()
                 .company(company)
                 .user(user)
                 .role(CompanyUserRole.EMPLOYEE)
                 .build();
         companyUserRepository.save(companyUser);
+        em.flush();
     }
 
     @Transactional
     public void removeUserFromCompany(Long companyId, Long userId) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        if(getCompanyId(companyId)){
+        if(!getCompanyId(companyId)){
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
@@ -309,7 +312,7 @@ public class CompanyService {
     public void updateUserCompanyRole(Long companyId, Long userId, CompanyUserRole newRole) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        if(getCompanyId(companyId)){
+        if(!getCompanyId(companyId)){
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
@@ -325,7 +328,8 @@ public class CompanyService {
             CompanyUserSearchCriteria criteria,
             Pageable pageable
     ) {
-        if(getCompanyId(companyId)){
+        if(!getCompanyId(companyId)){
+
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         Pageable sortedPageable = PageRequest.of(
@@ -382,28 +386,28 @@ public class CompanyService {
     }
 
 
-//    public boolean isUserInCompany(String username, Long companyId) {
-//        return userRepository.findByUsername(username)
-//                .map(user -> companyUserRepository.existsByCompanyIdAndUserId(companyId, user.getId()))
-//                .orElse(false);
-//    }
-//
-//
-//    public boolean isUserInCompanyWithRole(String username, Long companyId, CompanyUserRole role) {
-//        return userRepository.findByUsername(username)
-//                .map(user -> companyUserRepository.findByCompanyIdAndUserId(companyId, user.getId())
-//                        .map(cu -> cu.getRole() == role)
-//                        .orElse(false))
-//                .orElse(false);
-//    }
-//
-//    public Optional<Company> findCompanyByUserName(String username) {
-//        return userRepository.findByUsername(username)
-//                .map(user -> {
-//                    CompanyUser companyUser = companyUserRepository.findByUserId(user.getId());
-//                    return companyUser != null ? companyUser.getCompany() : null;
-//                });
-//    }
+    public boolean isUserInCompany(String username, Long companyId) {
+        return userRepository.findByUsername(username)
+                .map(user -> companyUserRepository.existsByCompanyIdAndUserId(companyId, user.getId()))
+                .orElse(false);
+    }
+
+
+    public boolean isUserInCompanyWithRole(String username, Long companyId, CompanyUserRole role) {
+        return userRepository.findByUsername(username)
+                .map(user -> companyUserRepository.findByCompanyIdAndUserId(companyId, user.getId())
+                        .map(cu -> cu.getRole() == role)
+                        .orElse(false))
+                .orElse(false);
+    }
+
+    public Optional<Company> findCompanyByUserName(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> {
+                    CompanyUser companyUser = companyUserRepository.findByUserId(user.getId());
+                    return companyUser != null ? companyUser.getCompany() : null;
+                });
+    }
 
 
     public void updateUserInCompany(UpdateUserInCompanyRequest req) {
@@ -412,7 +416,7 @@ public class CompanyService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User " + req.userId() + " not in company " + req.companyId()));
 
-        if(getCompanyId(req.companyId())){
+        if(!getCompanyId(req.companyId())){
             throw new ResourceNotFoundException("Company authorization not found: " + req.companyId());
         }
         AppUser appUser = cu.getUser();
