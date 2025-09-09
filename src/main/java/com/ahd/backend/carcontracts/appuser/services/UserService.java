@@ -157,7 +157,7 @@ public class UserService {
 
         Role role = roleRepo.findById(roleId)
                 .orElseThrow(() -> new EntityNotFoundException("Role not found: " + roleId));
-        if(getCompanyId(role.getCompany().getId())){
+        if(!getCompanyId(role.getCompany().getId())){
             throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
         }
         user.getRoles().clear();
