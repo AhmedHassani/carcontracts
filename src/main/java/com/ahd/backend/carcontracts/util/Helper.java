@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 public class Helper {
 
     private final UserRepository appUserRepository;
-
     private final CompanyUserRepository companyUserRepository;
 
     public AppUser getCurrentUser() {
@@ -26,8 +25,8 @@ public class Helper {
     }
 
     public long getCurrentCompanyId(){
-        long userId = this.getCurrentUser().getId();
-        CompanyUser companyUser = companyUserRepository.findByUserId(userId);
+        AppUser currentUser = this.getCurrentUser();
+        CompanyUser companyUser = companyUserRepository.findByUserId(currentUser.getId());
         return companyUser.getCompany().getId();
     }
 
