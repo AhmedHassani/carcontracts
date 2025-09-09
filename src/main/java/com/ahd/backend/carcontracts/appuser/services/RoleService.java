@@ -45,7 +45,7 @@ public class RoleService {
     }
 
     public Role create(Role r) {
-//        if(getCompanyId(r.getCompany().getId())){
+//        if(!getCompanyId(r.getCompany().getId())){
 //            throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
 //        }
         if (roleRepository.findByName(r.getName()).isPresent()) {
@@ -57,7 +57,7 @@ public class RoleService {
 
     public List<RoleDTO> getCompanyRoles(Long companyId) {
 
-        if(getCompanyId(companyId)){
+        if(!getCompanyId(companyId)){
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         List<Role> roles = roleRepository.findByCompanyId(companyId);
@@ -68,7 +68,7 @@ public class RoleService {
 
 
     public RoleDTO createCompanyRole(Long companyId, CreateRoleRequest request) {
-        if(getCompanyId(companyId)){
+        if(!getCompanyId(companyId)){
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         AppUser currentUser = helper.getCurrentUser();
@@ -117,7 +117,7 @@ public class RoleService {
 
 
     private void validateCompanyRoleCreationPermission(AppUser user, Company company) {
-//        if(getCompanyId(company.getId())){
+//        if(!getCompanyId(company.getId())){
 //            throw new ResourceNotFoundException("Company authorization not found: " + company.getId());
 //        }
         boolean isSuperAdmin = user.getRoles().stream()
@@ -134,7 +134,7 @@ public class RoleService {
     }
 
     public Role update(Long id, Role r) {
-        if(getCompanyId(r.getCompany().getId())){
+        if(!getCompanyId(r.getCompany().getId())){
             throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
         }
         Role existing = roleRepository.findById(id)
@@ -147,7 +147,7 @@ public class RoleService {
     public void delete(Long id) {
         Role role = roleRepository.getById(id);
 
-        if(getCompanyId(role.getCompany().getId())){
+        if(!getCompanyId(role.getCompany().getId())){
             throw new ResourceNotFoundException("Company authorization not found: " + role.getCompany().getId());
         }
         roleRepository.deleteById(id); }
