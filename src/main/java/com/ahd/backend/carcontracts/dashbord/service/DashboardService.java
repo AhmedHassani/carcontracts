@@ -34,7 +34,7 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
         LocalDate start;
         LocalDate end;
-
+        System.out.println("today : " + today);
         Map<String, LocalDate[]> periods = Map.of(
                 "day",   new LocalDate[]{ today, today },
                 "week",  new LocalDate[]{ today.with(DayOfWeek.MONDAY), today.with(DayOfWeek.SUNDAY) },
@@ -51,7 +51,7 @@ public class DashboardService {
 
             long contractsCount = contractsRepository.countContractsBetweenDates(start, end , getCompanyId());
             long completedPlansCount = paymentPlanRepository
-                    .countByStatusAndDateRange(PaymentStatus.COMPLETED, start.atStartOfDay(), end.atTime(LocalTime.MAX) , getCompanyId());
+                    .countByStatusAndDateRangeCompleted(PaymentStatus.COMPLETED, start, end , getCompanyId());
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 

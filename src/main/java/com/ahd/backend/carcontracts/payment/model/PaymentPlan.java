@@ -12,6 +12,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +53,8 @@ public class PaymentPlan {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
+    @Column(name = "complete_date")
+    private LocalDate complete_date;
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private PaymentStatus status;

@@ -213,6 +213,7 @@ public class PaymentPlanService {
                     .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
 
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
+            paymentPlan.setComplete_date(LocalDate.now());
             paymentPlanRepository.save(paymentPlan);
         }
 
@@ -236,6 +237,7 @@ public class PaymentPlanService {
         boolean allPaid = installments.stream().allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
         if (allPaid) {
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
+            paymentPlan.setComplete_date(LocalDate.now());
             paymentPlanRepository.save(paymentPlan);
             notificationService.sendNotificationToDevice(
                     "اكمال اقساط",

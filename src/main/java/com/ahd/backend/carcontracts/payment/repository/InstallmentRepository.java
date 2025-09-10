@@ -115,10 +115,10 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
                               @Param("end") LocalDate end ,
                               @Param("companyId") Long companyId);
     @Query(value = """
-    SELECT FORMAT(paid_date, 'yyyy-MM') AS month, SUM(amount) AS total_amount
+    SELECT FORMAT(paidDate, 'yyyy-MM') AS month, SUM(amount) AS total_amount
     FROM installments
-    WHERE status = 'PAID' AND paid_date BETWEEN :start AND :end AND companyId = :companyId
-    GROUP BY FORMAT(paid_date, 'yyyy-MM')
+    WHERE status = 'PAID' AND paidDate BETWEEN :start AND :end AND companyId = :companyId
+    GROUP BY FORMAT(paidDate, 'yyyy-MM')
     ORDER BY month
 """, nativeQuery = true)
     List<Object[]> countByMonth(@Param("start") LocalDate start,
