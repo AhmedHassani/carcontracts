@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.company.repository;
 
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 
@@ -13,11 +14,12 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
-public interface CompanyUserRepository extends JpaRepository<CompanyUser, CompanyUser.CompanyUserId>,JpaSpecificationExecutor<CompanyUser> {
+public interface CompanyUserRepository extends JpaRepository<CompanyUser,CompanyUser.CompanyUserId>,JpaSpecificationExecutor<CompanyUser> {
     long countByCompanyId(Long companyId);
     Optional<CompanyUser> findByCompanyAndRole(Company company, CompanyUserRole role);
     Page<CompanyUser> findByCompanyId(Long companyId, Pageable pageable);
     CompanyUser findByUserId(Long userId);
+    CompanyUser findByUser(AppUser user);
     Optional<CompanyUser> findByCompanyIdAndUserId(Long companyId, Long userId);
     @Query("SELECT cu FROM CompanyUser cu WHERE cu.company.id = ?1 AND cu.role = 'OWNER'")
     Optional<CompanyUser> findCompanyOwner(Long companyId);
