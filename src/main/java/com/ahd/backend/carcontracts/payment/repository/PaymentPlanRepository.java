@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,17 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
     long countByStatusAndDateRange(@Param("status") PaymentStatus status,
                                    @Param("start") LocalDateTime start,
                                    @Param("end") LocalDateTime end,
+                                   @Param("companyId") Long companyId);
+    @Query("""
+       SELECT COUNT(p)
+       FROM PaymentPlan p
+       WHERE p.status = :status
+         AND p.complete_date BETWEEN :start AND :end
+         AND p.companyId = :companyId
+       """)
+    long countByStatusAndDateRangeCompleted(@Param("status") PaymentStatus status,
+                                   @Param("start") LocalDate start,
+                                   @Param("end") LocalDate end,
                                    @Param("companyId") Long companyId);
 
 }
