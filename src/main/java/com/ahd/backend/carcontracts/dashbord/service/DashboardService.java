@@ -2,6 +2,10 @@ package com.ahd.backend.carcontracts.dashbord.service;
 
 
 
+import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.appuser.repository.UserStatsProjection;
+import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
+import com.ahd.backend.carcontracts.company.repository.CompanyStatsProjection;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.dashbord.enums.DateType;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
@@ -25,10 +29,67 @@ import java.util.Map;
 public class DashboardService {
 
     private final ContractsRepository contractsRepository;
+    private final CompanyRepository companyRepository;
+    private final UserRepository userRepository;
     private final PaymentPlanRepository paymentPlanRepository;
     private final InstallmentRepository installmentRepository;
     private final Helper helper;
 
+    public Map<String, Map<String, Long>> getStatsOfUsers() {
+        LocalDate today = LocalDate.now();
+        LocalDate start;
+        LocalDate end;
+        Map<String, LocalDate[]> periods = Map.of(
+                "day",   new LocalDate[]{ today, today },
+                "week",  new LocalDate[]{ today.with(DayOfWeek.MONDAY), today.with(DayOfWeek.SUNDAY) },
+                "month", new LocalDate[]{ today.withDayOfMonth(1), today.withDayOfMonth(today.lengthOfMonth()) },
+                "year",  new LocalDate[]{ today.withDayOfYear(1), today.withDayOfYear(today.lengthOfYear()) }
+        );
+
+        Map<String, Map<String, Long>> stats = new LinkedHashMap<>();
+
+        for (Map.Entry<String, LocalDate[]> entry : periods.entrySet()) {
+            String periodName = entry.getKey();
+            start = entry.getValue()[0];
+            end = entry.getValue()[1];
+
+            UserStatsProjection userCount = userRepository.getUserStats(start, end);
+
+            stats.put(periodName, Map.of(
+                    "Active count", userCount.getActiveCount() ,
+                    "total count", userCount.getTotalCount()
+            ));
+        }
+        return stats;
+    }
+
+    public Map<String, Map<String, Long>> getStatsOfCompany() {
+        LocalDate today = LocalDate.now();
+        LocalDate start;
+        LocalDate end;
+        Map<String, LocalDate[]> periods = Map.of(
+                "day",   new LocalDate[]{ today, today },
+                "week",  new LocalDate[]{ today.with(DayOfWeek.MONDAY), today.with(DayOfWeek.SUNDAY) },
+                "month", new LocalDate[]{ today.withDayOfMonth(1), today.withDayOfMonth(today.lengthOfMonth()) },
+                "year",  new LocalDate[]{ today.withDayOfYear(1), today.withDayOfYear(today.lengthOfYear()) }
+        );
+
+        Map<String, Map<String, Long>> stats = new LinkedHashMap<>();
+
+        for (Map.Entry<String, LocalDate[]> entry : periods.entrySet()) {
+            String periodName = entry.getKey();
+            start = entry.getValue()[0];
+            end = entry.getValue()[1];
+
+            CompanyStatsProjection companyCount = companyRepository.getCompanyStats(start, end);
+
+            stats.put(periodName, Map.of(
+                    "Active count", companyCount.getActiveCount() ,
+                    "total count", companyCount.getTotalCount()
+            ));
+        }
+        return stats;
+    }
 
     public Map<String, Map<String, Long>> getStats() {
         LocalDate today = LocalDate.now();
@@ -61,9 +122,7 @@ public class DashboardService {
                   "paidInstallmentsCount", paidInstallmentsCount
             ));
         }
-
         return stats;
-
     }
 
     public Map<LocalDate, Long> getInstallmentsDaily( LocalDate start, LocalDate end) {

@@ -7,6 +7,7 @@ import com.ahd.backend.carcontracts.appuser.dto.UpdateProfileRequest;
 import com.ahd.backend.carcontracts.appuser.dto.UserDetailsDTO;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.appuser.repository.UserStatsProjection;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.model.CompanyUser;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -124,10 +126,6 @@ public class UserService {
         log.info("Updating profile for user: {}", user.getUsername());
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
-
-    /**
-     * Update the current user's profile photo
-     */
     @Transactional
     public UserDetailsDTO updateProfilePhoto(MultipartFile photo) {
         AppUser user = userRepository.findByUsername(
@@ -149,7 +147,6 @@ public class UserService {
         user.getRoles().clear();
         userRepository.save(user);
     }
-
     @Transactional
     public void replaceUserRoles(Long userId, Long roleId) {
         AppUser user = userRepository.findById(userId)
@@ -164,7 +161,10 @@ public class UserService {
         user.getRoles().add(role);
         userRepository.save(user);
     }
-
+//    @Transactional
+//    public UserStatsProjection getStats(LocalDate start, LocalDate end) {
+//        return userRepository.getUserStats(start, end);
+//    }
     @Transactional
     public void mapUserToRole(Long userId, Long roleId) {
         AppUser user = userRepository.findById(userId)
@@ -189,4 +189,5 @@ public class UserService {
         }
         return false ;
     }
+
 } 

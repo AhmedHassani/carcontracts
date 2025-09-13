@@ -11,6 +11,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -54,6 +56,16 @@ public class AppUser implements UserDetails {
     private String fullName;
 
     private String image;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDate createdAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = LocalDate.now();
+        }
+    }
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
