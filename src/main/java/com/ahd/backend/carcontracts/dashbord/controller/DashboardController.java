@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,11 +34,24 @@ public class DashboardController  {
     private final DashboardService dashbordService;
 
 
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Map<String, Long>>> userStats(
+    ) {
+        var stats = dashbordService.getStatsOfUsers();
+        return ResponseEntity.ok(stats);
+    }
+    @GetMapping("/companies")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Map<String, Long>>> companyStats(
+    ) {
+        var stats = dashbordService.getStatsOfCompany();
+        return ResponseEntity.ok(stats);
+    }
+
     @GetMapping("")
     @PreAuthorize("hasAuthority('GET_DASHBOARD') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Map<String, Map<String, Long>>> getDashboardStats(
-            @RequestParam(required = false) LocalDate start,
-            @RequestParam(required = false) DateType dateType) {
+    public ResponseEntity<Map<String, Map<String, Long>>> getDashboardStats() {
 
         Map<String, Map<String, Long>> stats = dashbordService.getStats();
         return ResponseEntity.ok(stats);
