@@ -8,6 +8,7 @@ import com.ahd.backend.carcontracts.appuser.dto.UserDetailsDTO;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserStatsProjection;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.model.CompanyUser;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
@@ -114,6 +115,7 @@ public class UserService {
      * Update the current user's profile
      */
     @Transactional
+    @Auditable(operation = "UPDATE_PROFILE", captureArgs = true, captureResult = true)
     public UserDetailsDTO updateProfile(UpdateProfileRequest request) {
         AppUser user = userRepository.findByUsername(
                 SecurityContextHolder.getContext().getAuthentication().getName())
@@ -127,6 +129,7 @@ public class UserService {
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
     @Transactional
+    @Auditable(operation = "UPDATE_PROFILE_PHOTO", captureArgs = true, captureResult = true)
     public UserDetailsDTO updateProfilePhoto(MultipartFile photo) {
         AppUser user = userRepository.findByUsername(
                 SecurityContextHolder.getContext().getAuthentication().getName())
@@ -141,6 +144,7 @@ public class UserService {
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
     @Transactional
+    @Auditable(operation = "DELETE_ROLE_FROM_USER", captureArgs = true, captureResult = true)
     public void removeRoleFromUser(Long userId) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
@@ -148,6 +152,7 @@ public class UserService {
         userRepository.save(user);
     }
     @Transactional
+    @Auditable(operation = "REPLACE_ROLE_TO_USER", captureArgs = true, captureResult = true)
     public void replaceUserRoles(Long userId, Long roleId) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
@@ -166,6 +171,7 @@ public class UserService {
 //        return userRepository.getUserStats(start, end);
 //    }
     @Transactional
+    @Auditable(operation = "MAP_ROLE_FROM_USER", captureArgs = true, captureResult = true)
     public void mapUserToRole(Long userId, Long roleId) {
         AppUser user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));

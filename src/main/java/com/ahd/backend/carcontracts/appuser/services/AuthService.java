@@ -8,6 +8,7 @@ import com.ahd.backend.carcontracts.appuser.dto.CreateUserRequest;
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.config.jwt.JwtProperties;
 import com.ahd.backend.carcontracts.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class AuthService {
      * Authenticate user and issue both access & refresh tokens.
      */
     @Transactional(readOnly = true)
+    @Auditable(operation = "LOGIN", captureArgs = true, captureResult = true)
     public AuthResponse login(AuthRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -108,6 +110,7 @@ public class AuthService {
     /**
      * Create a new user with the specified roles.
      */
+    @Auditable(operation = "CREATE_USER", captureArgs = true, captureResult = true)
     public AppUser createUser(CreateUserRequest request) {
         // Check if username already exists
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -139,7 +142,7 @@ public class AuthService {
         return userRepository.findById(userId);
     }
 
-
+    @Auditable(operation = "UPDATE_USER", captureArgs = true, captureResult = true)
     public void updateUser(AppUser user) {
         userRepository.save(user);
     }

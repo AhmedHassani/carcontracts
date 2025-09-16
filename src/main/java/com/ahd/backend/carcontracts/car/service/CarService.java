@@ -3,6 +3,7 @@ package com.ahd.backend.carcontracts.car.service;
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.car.dto.CarRequestDTO;
 import com.ahd.backend.carcontracts.car.dto.CarResponseDTO;
 import com.ahd.backend.carcontracts.car.dto.CarSearchCriteria;
@@ -48,6 +49,7 @@ public class CarService {
     private final UserRepository userRepository ;
     private final Helper helper;
     @Transactional
+    @Auditable(operation = "CREATE_CAR", captureArgs = true, captureResult = true)
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
         if(carRepository.existsByChassisNumber(dto.getChassisNumber())
@@ -86,6 +88,7 @@ public class CarService {
 
 
     @Transactional
+    @Auditable(operation = "UPDATE_CAR", captureArgs = true, captureResult = true)
     public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
         if (patch == null || patch.isEmpty()) {
             throw new BadRequestException("Update payload must contain at least one field");
@@ -110,7 +113,7 @@ public class CarService {
         Car saved = carRepository.save(carUpdated);
         return CarMapper.toDto(saved);
     }
-
+    @Auditable(operation = "DELETE_CAR", captureArgs = true, captureResult = true)
     public void softDeleteCar(Long id) {
         Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
@@ -119,6 +122,7 @@ public class CarService {
     }
 
     @Transactional
+    @Auditable(operation = "ADD_ATTACHMENT_CAR", captureArgs = true, captureResult = true)
     public CarResponseDTO addAttachments(Long carId, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files provided");
@@ -141,6 +145,7 @@ public class CarService {
     }
 
     @Transactional
+    @Auditable(operation = "DELETE_ATTACHMENT_CAR", captureArgs = true, captureResult = true)
     public CarResponseDTO deleteAttachment(Long carId, Long attachmentId) {
         Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId , getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + carId + " not found"));

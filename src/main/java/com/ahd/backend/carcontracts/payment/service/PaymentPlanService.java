@@ -1,4 +1,5 @@
 package com.ahd.backend.carcontracts.payment.service;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ public class PaymentPlanService {
     private InstallmentRepository installmentRepository;
     private final NotificationService notificationService;
 
+    @Auditable(operation = "CREATE_PAYMENT_PLAN", captureArgs = true, captureResult = true)
     public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
         PaymentPlan paymentPlan = PaymentPlan.builder()
                 .paymentType(request.getPaymentType())
@@ -72,7 +74,6 @@ public class PaymentPlanService {
 
         return mapToResponse(savedPaymentPlan);
     }
-
 
     public PaymentPlanResponse getPaymentPlan(Long id) {
         PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyIdWithInstallments(id , getCompanyId())
@@ -114,7 +115,7 @@ public class PaymentPlanService {
                 .collect(Collectors.toList());
     }
 
-
+    @Auditable(operation = "PROCESS_PAYMENT_PLAN", captureArgs = true, captureResult = true)
     public PaymentResponse processPayment(PaymentRequest request) {
         Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -148,7 +149,7 @@ public class PaymentPlanService {
                 .amount(request.getAmount())
                 .build();
     }
-
+    @Auditable(operation = "UPDATE_INSTALLMENT_DATE", captureArgs = true, captureResult = true)
     public PaymentResponse updatePInstallmentDate(PaymentDateRequest request) {
         Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -175,7 +176,7 @@ public class PaymentPlanService {
                 .paymentDate(LocalDate.now())
                 .build();
     }
-
+    @Auditable(operation = "UPDATE_INSTALLMENT_STATUS", captureArgs = true, captureResult = true)
     public PaymentResponse updatePInstallmentStatus(Long id) {
         Installment installment = installmentRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -223,7 +224,7 @@ public class PaymentPlanService {
                 .paymentDate(LocalDate.now())
                 .build();
     }
-
+    @Auditable(operation = "UPDATE_PAYMENT_STATUS", captureArgs = true, captureResult = true)
     public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
         PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
