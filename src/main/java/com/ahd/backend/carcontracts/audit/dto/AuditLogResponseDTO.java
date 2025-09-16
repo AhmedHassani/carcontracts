@@ -1,6 +1,6 @@
 package com.ahd.backend.carcontracts.audit.dto;
 
-import com.ahd.backend.carcontracts.audit.AuditLog;
+import com.ahd.backend.carcontracts.audit.model.AuditLog;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +16,11 @@ public record AuditLogResponseDTO(
         String errorMsg,
         LocalDateTime timestamp
 ) {
-    public static AuditLogResponseDTO fromEntity(AuditLog log, String username) {
+    public static AuditLogResponseDTO fromEntity(AuditLog log , String userName) {
         return new AuditLogResponseDTO(
                 log.getId(),
                 log.getCompanyId(),
-                username,
+                userName,
                 log.getOperation(),
                 log.getMethod(),
                 log.getParams(),

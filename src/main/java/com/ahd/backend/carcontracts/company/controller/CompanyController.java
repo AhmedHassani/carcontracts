@@ -1,6 +1,5 @@
 package com.ahd.backend.carcontracts.company.controller;
 
-import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.company.dto.*;
 import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
 import com.ahd.backend.carcontracts.company.service.CompanyService;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
-import java.util.List;
 
 @RestController
 @RequestMapping("${application.api.base-path}/companies")

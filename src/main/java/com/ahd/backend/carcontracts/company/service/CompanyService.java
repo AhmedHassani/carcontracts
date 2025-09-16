@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.company.service;
 import com.ahd.backend.carcontracts.appuser.services.RolePermissionService;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.util.Helper;
 import jakarta.persistence.EntityManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +64,8 @@ public class CompanyService {
     private final RolePermissionService rolePermissionService;
     private final Helper helper;
     private final EntityManager em;
+
+    @Auditable(operation = "CREATE_COMPANY", captureArgs = true, captureResult = true)
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
@@ -138,6 +141,7 @@ public class CompanyService {
     }
 
     @Transactional
+    @Auditable(operation = "UPDATE_COMPANY", captureArgs = true, captureResult = true)
     public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
         final Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
@@ -219,6 +223,7 @@ public class CompanyService {
     }
 
     @Transactional
+    @Auditable(operation = "DELETE_COMPANY", captureArgs = true, captureResult = true)
     public ApiResponse<Void> deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
@@ -262,6 +267,7 @@ public class CompanyService {
      * Add a user to a company
      * -------------------------------------------------- */
     @Transactional
+    @Auditable(operation = "ADD_COMPANY_USER", captureArgs = true, captureResult = true)
     public void addUserToCompany(AddUserToCompanyRequest request) {
 
         Company company = companyRepository.findById(request.companyId())
@@ -295,6 +301,7 @@ public class CompanyService {
     }
 
     @Transactional
+    @Auditable(operation = "DELETE_COMPANY_USER", captureArgs = true, captureResult = true)
     public void removeUserFromCompany(Long companyId, Long userId) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
@@ -309,6 +316,7 @@ public class CompanyService {
 
 
     @Transactional
+    @Auditable(operation = "UPDATE_ROLL_USER", captureArgs = true, captureResult = true)
     public void updateUserCompanyRole(Long companyId, Long userId, CompanyUserRole newRole) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
@@ -409,7 +417,7 @@ public class CompanyService {
                 });
     }
 
-
+    @Auditable(operation = "UPDATE_USER_COMPANY", captureArgs = true, captureResult = true)
     public void updateUserInCompany(UpdateUserInCompanyRequest req) {
         CompanyUser cu = companyUserRepository
                 .findByCompanyIdAndUserId(req.companyId(), req.userId())

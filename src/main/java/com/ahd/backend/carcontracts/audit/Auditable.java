@@ -1,13 +1,13 @@
 package com.ahd.backend.carcontracts.audit;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
+@Documented
 public @interface Auditable {
-    /** مثال: "CREATE_CONTRACT", "DELETE_USER"… */
     String operation();
+    String method() default "";
+    boolean captureArgs() default false;
+    boolean captureResult() default false;
 }

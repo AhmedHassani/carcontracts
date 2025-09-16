@@ -2,7 +2,9 @@ package com.ahd.backend.carcontracts.person.service;
 
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
 import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.car.dto.CarSearchCriteria;
+
 import com.ahd.backend.carcontracts.exception.BadRequestException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
 import com.ahd.backend.carcontracts.person.dto.*;
@@ -48,6 +50,7 @@ public class PersonService {
      */
 
     @Transactional
+    @Auditable(operation = "PERSON_CREATE", captureArgs = true, captureResult = true)
     public PersonResponseDTO addPersonWithAttachments(PersonRequestDTO req) {
         req.setCompanyId(getCompanyId());
         Person person = personRepository.save(PersonMapper.toEntity(req));
@@ -66,9 +69,6 @@ public class PersonService {
     }
 
 
-    /**
-     * Get all persons with attachments (paginated)
-     */
     @Transactional(readOnly = true)
     public Page<PersonResponseDTO> getAllPersonsWithAttachments(PersonSearchCriteria criteria, Pageable pageable) {
         Specification<Person> spec = PersonSpecification.buildSpecification(criteria);
@@ -87,9 +87,7 @@ public class PersonService {
         return persons.map(PersonMapper::toResponse);
     }
 
-    /**
-     * Get person by ID with attachments
-     */
+
     @Transactional(readOnly = true)
     public PersonResponseDTO getPersonById(Long id) {
         log.info("Fetching person by id: {}", id);
@@ -98,10 +96,7 @@ public class PersonService {
         return PersonMapper.toResponse(person);
     }
 
-    /**
-     * Replace ONE existing attachment file.
-     * <p>Exactly one of the four MultipartFile fields must be present in the request.</p>
-     */
+    @Auditable(operation = "PERSON_REPLACE_ATTACHMENT", captureArgs = true, captureResult = true)
     @Transactional
     public PersonAttachmentResponse replaceAttachment(UpdatePersonAttachment dto) {
         if (dto.getFile() == null || dto.getFile().isEmpty())
@@ -130,6 +125,7 @@ public class PersonService {
 
 
     @Transactional
+    @Auditable(operation = "PERSON_DELETE_ATTACHMENT", captureArgs = true, captureResult = true)
     public void deleteAttachmentById(Long attachmentId) {
 
         PersonAttachment att = personAttachmentRepository.findById(attachmentId)
@@ -145,6 +141,7 @@ public class PersonService {
     }
 
     @Transactional
+    @Auditable(operation = "PERSON_UPSERT_ATTACHMENT", captureArgs = true, captureResult = true)
     public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file ,long id) {
         if (file == null || file.isEmpty())
             throw new BadRequestException("A non-empty file must be supplied");
@@ -179,6 +176,7 @@ public class PersonService {
     /**
      * Update person information
      */
+    @Auditable(operation = "PERSON_UPDATE", captureArgs = true, captureResult = true)
     public PersonResponseDTO updatePerson(Long id, UpdatePerson personRequest) {
         log.info("Updating person with id: {}", id);
         Person existingPerson = personRepository.findByIdAndCompanyId(id ,  getCompanyId())
