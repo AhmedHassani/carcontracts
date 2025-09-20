@@ -28,6 +28,8 @@ public class UpdateCarRequestDTO {
     private String engineType;
     @Size(max = 50)
     private String origin;
+    private String walletNumber;
+    private String typeOfCarPlate;
 
     public boolean isEmpty() {
         return  name            == null &&
@@ -40,6 +42,8 @@ public class UpdateCarRequestDTO {
                 cylinderCount   == null &&
                 passengerCount  == null &&
                 engineType      == null &&
-                origin          == null;
+                origin          == null &&
+                walletNumber == null &&
+                typeOfCarPlate == null ;
     }
 }
