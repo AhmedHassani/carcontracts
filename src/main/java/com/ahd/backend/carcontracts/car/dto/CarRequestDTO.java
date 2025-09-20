@@ -31,4 +31,6 @@ public class CarRequestDTO {
     @Size(max = 50)
     private String origin;
     private Long compnayId;
+    private String walletNumber;
+    private String typeOfCarPlate;
 }

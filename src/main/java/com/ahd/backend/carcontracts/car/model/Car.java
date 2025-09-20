@@ -29,22 +29,22 @@ public class Car {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50, nullable = false)
+    @Column(length = 50, nullable = false , columnDefinition = "NVARCHAR(50)")
     private String name;
 
-    @Column(length = 50)
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String type;
 
-    @Column(length = 50)
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String color;
 
-    @Column(length = 50)
+    @Column(columnDefinition = "NVARCHAR(50)")
     private String model;
 
-    @Column(name = "plate_number", length = 20)
+    @Column(name = "plate_number" , columnDefinition = "NVARCHAR(50)")
     private String plateNumber;
 
-    @Column(name = "chassis_number", length = 50)
+    @Column(name = "chassis_number" , columnDefinition = "NVARCHAR(50)")
     private String chassisNumber;
 
     private Integer kilometers;
@@ -55,10 +55,10 @@ public class Car {
     @Column(name = "passenger_count")
     private Integer passengerCount;
 
-    @Column(name = "engine_type", length = 50)
+    @Column(name = "engine_type",  columnDefinition = "NVARCHAR(50)")
     private String engineType;
 
-    @Column(length = 50)
+    @Column( columnDefinition = "NVARCHAR(50)")
     private String origin;
 
     @OneToMany(mappedBy = "car",
@@ -75,6 +75,12 @@ public class Car {
 
     @Column(name = "companyId", nullable = false)
     private Long companyId;
+
+    @Column(name = "type_of_car_plate", columnDefinition = "NVARCHAR(20)")
+    private String typeOfCarPlate;
+
+    @Column(name = "wallet_number", columnDefinition = "NVARCHAR(20)")
+    private String walletNumber;
 
     @PrePersist
     void onCreate() {

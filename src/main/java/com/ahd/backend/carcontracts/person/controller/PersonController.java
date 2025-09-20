@@ -119,7 +119,7 @@ public class PersonController {
 
 
     @DeleteMapping("attachments/{id}")
-    @PreAuthorize("hasRole('PERSON_DELETE') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('PERSON_DELETE') or hasRole('SUPER_ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<?> deleteAttachment(@PathVariable Long id) {
         personService.deleteAttachmentById(id);

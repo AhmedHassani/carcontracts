@@ -10,11 +10,11 @@ public record AuditLogResponseDTO(
         String username,
         String operation,
         String method,
-        String params,
-        String result,
+//        String params,
+//        String result,
         Boolean success,
-        String errorMsg,
-        LocalDateTime timestamp
+        String errorMsg
+//        LocalDateTime timestamp
 ) {
     public static AuditLogResponseDTO fromEntity(AuditLog log , String userName) {
         return new AuditLogResponseDTO(
@@ -23,11 +23,11 @@ public record AuditLogResponseDTO(
                 userName,
                 log.getOperation(),
                 log.getMethod(),
-                log.getParams(),
-                log.getResult(),
+//                log.getParams(),
+//                log.getResult(),
                 log.getSuccess(),
-                log.getErrorMsg(),
-                log.getTimestamp()
+                log.getErrorMsg()
+//                log.getTimestamp()
         );
     }
 }
