@@ -24,7 +24,7 @@ public class CompanyUser {
     @JoinColumn(name = "user_id", nullable = false)
     private AppUser user;
 
-    @Column(name = "role", length = 20, nullable = false)
+    @Column(name = "role", length = 20 ,nullable = true)
     @Enumerated(EnumType.STRING)
     private CompanyUserRole role;
 
