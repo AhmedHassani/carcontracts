@@ -4,6 +4,7 @@ import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import java.util.List;
                 )
         }
 )
+@Where(clause = "deleted = false")
 public class Car {
 
     @Id
