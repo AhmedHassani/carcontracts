@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -279,15 +280,16 @@ public class CompanyService {
         if (currentUserCount >= company.getUserCount()) {
             throw new ConflictException("The company has reached its maximum allowed users.");
         }
-        Role companyRole = roleRepository.findByName("ROLE_STAFF")
-                .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
+//        Role companyRole = roleRepository.findByName("ROLE_STAFF")
+//                .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
         var userInfo = CreateUserRequest.builder()
                 .email(request.email())
                 .password(request.password())
                 .username(request.username())
                 .fullName(request.fullName())
                 .phone(request.phone())
-                .roleIds(Set.of(companyRole.getId()))
+//                .roleIds(Set.of(companyRole.getId()))
+                .roleIds(Collections.emptySet())
                 .build();
         var user = authService.createUser(userInfo);
         em.flush();
