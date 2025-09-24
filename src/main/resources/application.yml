@@ -13,14 +13,18 @@ server:
       enabled: true
 
 spring:
+  multipart:
+    enabled: true
+    max-file-size: 50MB
+    max-request-size: 60MB
   messages:
     basename: i18n/strings
     encoding: UTF-8
   mail:
-    host: smtp.gmail.com
+    host: mail.iqcaradmin.com
     port: 587
-    username: ah.jr22@gmail.com
-    password: ezpy trlc fbze olit
+    username: activation@iqcaradmin.com
+    password: ACT!V@T10N
     properties:
       mail:
         smtp:
@@ -32,9 +36,9 @@ spring:
           timeout: 5000
           writetimeout: 5000
   datasource:
-    url: jdbc:sqlserver://209.127.228.55;databaseName=carcontracts;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8
+    url: jdbc:sqlserver://172.238.118.105;databaseName=carcontracts;encrypt=true;trustServerCertificate=true;characterEncoding=UTF-8
     username: sa
-    password: Password_123#
+    password: 51cgN4q7y0Z0
     hikari:
       connection-timeout: 30000
       maximum-pool-size: 10
@@ -85,6 +89,6 @@ cloud:
       static: ${aws.region}
 
 config:
-  loginUri : http://209.127.228.55:84/
+  loginUri : https://iqcaradmin.com/
   autoSendEmailCompany : true
   prod: true
