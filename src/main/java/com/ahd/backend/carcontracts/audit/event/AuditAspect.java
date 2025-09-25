@@ -58,7 +58,7 @@ public class AuditAspect {
                     : auditable.method();
 
             publisher.publishEvent(AuditEventPayload.builder()
-                    .eventId(java.util.UUID.randomUUID())
+                //    .eventId(java.util.UUID.randomUUID())
                     .companyId(companyId)
                     .userId(userId)
                     .operation(auditable.operation())
