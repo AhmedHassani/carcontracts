@@ -17,8 +17,8 @@ import java.util.UUID;
 @Builder
 public class AuditLog {
     @Id @GeneratedValue private Long id;
-    @Column(name = "event_id", insertable = false, updatable = false, nullable = false)
-    private java.util.UUID eventId;
+//    @Column(name = "event_id", insertable = false, updatable = false, nullable = false)
+//    private java.util.UUID eventId;
     private Long companyId;
     private Long userId;
     private String operation;

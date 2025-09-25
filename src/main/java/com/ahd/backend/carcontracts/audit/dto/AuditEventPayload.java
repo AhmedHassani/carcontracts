@@ -4,7 +4,7 @@ import lombok.Builder;
 
 @Builder
 public record AuditEventPayload(
-        java.util.UUID eventId,
+      //  java.util.UUID eventId,
         Long companyId,
         Long userId,
         String operation,

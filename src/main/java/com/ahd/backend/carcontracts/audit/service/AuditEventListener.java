@@ -19,7 +19,7 @@ public class AuditEventListener {
     @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onAudit(AuditEventPayload e) {
         repo.save(AuditLog.builder()
-                .eventId(e.eventId())
+               // .eventId(e.eventId())
                 .companyId(e.companyId())
                 .userId(e.userId())
                 .operation(e.operation())
