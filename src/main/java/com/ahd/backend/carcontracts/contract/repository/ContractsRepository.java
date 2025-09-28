@@ -14,6 +14,7 @@ import java.util.Optional;
 
 public interface ContractsRepository extends JpaRepository<Contracts, Long>, JpaSpecificationExecutor<Contracts> {
 
+    Contracts findByPaymentPlanId(Long id);
     @EntityGraph(attributePaths = {
             "seller",
             "buyer",

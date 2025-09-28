@@ -27,4 +27,5 @@ public class CarResponseDTO {
     private LocalDateTime createdAt;
     private String walletNumber;
     private String typeOfCarPlate;
+    private String status;
 }

@@ -84,6 +84,8 @@ public class Car {
     @Column(name = "wallet_number", columnDefinition = "NVARCHAR(20)")
     private String walletNumber;
 
+    private String status;
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();
