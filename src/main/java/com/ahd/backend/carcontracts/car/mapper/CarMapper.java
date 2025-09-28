@@ -68,6 +68,7 @@ public final class CarMapper {
                 .createdAt(car.getCreatedAt())
                 .walletNumber(car.getWalletNumber())
                 .typeOfCarPlate(car.getTypeOfCarPlate())
+                .status(car.getStatus())
                 .build();
     }
 

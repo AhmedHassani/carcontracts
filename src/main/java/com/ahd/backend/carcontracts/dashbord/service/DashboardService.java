@@ -4,6 +4,7 @@ package com.ahd.backend.carcontracts.dashbord.service;
 
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserStatsProjection;
+import com.ahd.backend.carcontracts.car.repository.CarRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyStatsProjection;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
@@ -29,6 +30,7 @@ import java.util.Map;
 public class DashboardService {
 
     private final ContractsRepository contractsRepository;
+    private final CarRepository carRepository;
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
     private final PaymentPlanRepository paymentPlanRepository;
@@ -110,15 +112,15 @@ public class DashboardService {
             start = entry.getValue()[0];
             end = entry.getValue()[1];
 
-            long contractsCount = contractsRepository.countContractsBetweenDates(start, end , getCompanyId());
-            long completedPlansCount = paymentPlanRepository
-                    .countByStatusAndDateRangeCompleted(PaymentStatus.COMPLETED, start, end , getCompanyId());
+            long totalCars = carRepository.countByCompanyIdAndCreatedAtBetween(getCompanyId() ,start.atStartOfDay(), end.atTime(LocalTime.MAX) );
+            long PaidCars = carRepository
+                    .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid",start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
             stats.put(periodName, Map.of(
-                   "contractsCount", contractsCount ,
-                  "completedPlansCount", completedPlansCount  ,
+                   "totalCars", totalCars ,
+                  "paidCars", PaidCars  ,
                   "paidInstallmentsCount", paidInstallmentsCount
             ));
         }

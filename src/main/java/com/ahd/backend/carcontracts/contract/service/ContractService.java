@@ -47,6 +47,7 @@ public class ContractService {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
         Car car    = carRepo.getReferenceById(request.getCarId());
+        car.setStatus("Active");
         PaymentPlan paymentPlan = planRepo.getReferenceById(request.getPaymentId());
         Person guarantor = null;
         if (request.getGuarantorId() != null) {

@@ -54,13 +54,13 @@ public class PaymentPlanController {
     }
 
 
-    @PostMapping("/payments")
-    @PreAuthorize("hasAuthority('UPDATE_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> processPayment(
-            @Valid @RequestBody PaymentRequest request) {
-        PaymentResponse response = paymentPlanService.processPayment(request);
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/payments")
+//    @PreAuthorize("hasAuthority('UPDATE_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
+//    public ResponseEntity<?> processPayment(
+//            @Valid @RequestBody PaymentRequest request) {
+//        PaymentResponse response = paymentPlanService.processPayment(request);
+//        return ResponseEntity.ok(response);
+//    }
     @PostMapping("/updateInstallmentDate")
     @PreAuthorize("hasAuthority('UPDATE_INSTALLMENT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updatePaymentDate(

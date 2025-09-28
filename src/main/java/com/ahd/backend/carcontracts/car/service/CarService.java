@@ -73,6 +73,7 @@ public class CarService {
                 car.getAttachments().add(att);
             }
         }
+        car.setStatus("Pending");
         Car saved = carRepository.save(car);
         return CarMapper.toDto(saved);
     }
