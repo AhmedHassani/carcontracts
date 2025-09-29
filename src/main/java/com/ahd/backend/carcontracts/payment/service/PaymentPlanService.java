@@ -89,20 +89,20 @@ public class PaymentPlanService {
         return mapToResponse(paymentPlan);
     }
 
-    public List<PaymentPlanResponse> getAllPaymentPlans() {
-        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByCompanyId(getCompanyId());
-        return paymentPlans.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-
-
-    @Transactional(readOnly = true)
-    public Page<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status, Pageable pageable) {
-        Page<PaymentPlan> page = paymentPlanRepository
-                .findByStatusAndCompanyId(status, getCompanyId(), pageable);
-        return page.map(this::mapToResponse);
-    }
+//    public List<PaymentPlanResponse> getAllPaymentPlans() {
+//        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByCompanyId(getCompanyId());
+//        return paymentPlans.stream()
+//                .map(this::mapToResponse)
+//                .collect(Collectors.toList());
+//    }
+//
+//
+//    @Transactional(readOnly = true)
+//    public Page<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status) {
+//        Page<PaymentPlan> page = paymentPlanRepository
+//                .findByStatusAndCompanyId(status, getCompanyId());
+//        return page.map(this::mapToResponse);
+//    }
 
 
     public List<InstallmentResponse> getInstallments(Long paymentPlanId) {

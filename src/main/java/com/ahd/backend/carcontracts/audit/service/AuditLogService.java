@@ -5,6 +5,8 @@ import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.audit.dto.AuditLogResponseDTO;
 import com.ahd.backend.carcontracts.audit.model.AuditLog;
 import com.ahd.backend.carcontracts.audit.repository.AuditLogRepository;
+import com.ahd.backend.carcontracts.company.enums.CompanyUserRole;
+import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +28,22 @@ public class AuditLogService {
     private final AuditLogRepository auditLogRepository;
     private final UserRepository appUserRepository;
     private final Helper helper;
-
+    private final CompanyUserRepository companyUserRepository;
     @Transactional(readOnly = true)
     public Page<AuditLogResponseDTO> getAllAuditLogsForCompany(Pageable pageable) {
         Long companyId = getCompanyId();
+        var user = companyUserRepository.findByUserId( helper.getCurrentUserId());
+        Page<AuditLog> logs = null ;
+        if(user.getRole() == CompanyUserRole.OWNER){
+            logs = auditLogRepository.findAllByCompanyId(companyId, PageRequest.of(pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(DESC, "timestamp", "id")));
+        }else{
+            logs = auditLogRepository.findAllByUserId(helper.getCurrentUserId(), PageRequest.of(pageable.getPageNumber(),
+                    pageable.getPageSize(),
+                    Sort.by(DESC, "timestamp", "id")));
+        }
 
-        Page<AuditLog> logs = auditLogRepository.findAllByCompanyId(companyId, PageRequest.of(pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(DESC, "timestamp", "id")));
 
         return logs.map(log -> {
             String username = null;

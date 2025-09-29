@@ -1,10 +1,7 @@
 package com.ahd.backend.carcontracts.contract.controller;
 
 
-import com.ahd.backend.carcontracts.contract.dto.ContractPaymentsSearchCriteria;
-import com.ahd.backend.carcontracts.contract.dto.ContractRequest;
-import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
-import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
+import com.ahd.backend.carcontracts.contract.dto.*;
 import com.ahd.backend.carcontracts.contract.service.ContractService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
@@ -49,7 +46,7 @@ public class ContractController {
 
     @GetMapping("/payments")
     @PreAuthorize("hasAuthority('GET_CONTRACT') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> getAllContract2(
+    public ResponseEntity<ApiResponse<?>> getAllContract2(
             @ModelAttribute ContractPaymentsSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -57,8 +54,10 @@ public class ContractController {
             @RequestParam(defaultValue = "asc") String sortDirection) {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
-        var contractResponses = contractService.getAllContractPayments(criteria, pageable);
-        return ResponseEntity.ok(contractResponses);
+        Page<ContractPaymentsResponse> contractResponses = contractService.getAllContractPayments(criteria, pageable);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.success(contractResponses));
     }
 
     @DeleteMapping("/{id}")

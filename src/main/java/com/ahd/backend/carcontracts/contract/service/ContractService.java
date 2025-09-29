@@ -29,6 +29,7 @@ import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import java.time.LocalDateTime;
 import java.util.*;
 
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -111,7 +112,7 @@ public class ContractService {
 
 
     @Transactional(readOnly = true)
-    public  List<ContractPaymentsResponse>  getAllContractPayments(ContractPaymentsSearchCriteria criteria, Pageable pageable) {
+    public  Page<ContractPaymentsResponse>  getAllContractPayments(ContractPaymentsSearchCriteria criteria, Pageable pageable) {
         Specification<Contracts> spec = ContractPaymentsSpecification.buildSpecification(criteria);
         ContractPaymentsSearchCriteria enrichedCriteria = ContractPaymentsSearchCriteria.builder()
                 .keyword(criteria.keyword())
@@ -124,10 +125,8 @@ public class ContractService {
                 .build();
 
         spec = ContractPaymentsSpecification.buildSpecification(enrichedCriteria);
-        Page<Contracts> contracts = contractRepo.findAll(spec, pageable);
-        return contracts.getContent().stream()
-                .map(ContractMapper::toPayments)
-                .toList();
+        return contractRepo.findAll(spec, pageable)
+                .map(ContractMapper::toPayments);
     }
 
     @Transactional
