@@ -3,6 +3,8 @@ import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.dto.*;
@@ -95,12 +97,11 @@ public class PaymentPlanService {
     }
 
 
-    public List<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status) {
-
-        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByStatusAndCompanyId(status , getCompanyId());
-        return paymentPlans.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    @Transactional(readOnly = true)
+    public Page<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status, Pageable pageable) {
+        Page<PaymentPlan> page = paymentPlanRepository
+                .findByStatusAndCompanyId(status, getCompanyId(), pageable);
+        return page.map(this::mapToResponse);
     }
 
 
