@@ -9,9 +9,13 @@ import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,9 @@ public class AuditLogService {
     public Page<AuditLogResponseDTO> getAllAuditLogsForCompany(Pageable pageable) {
         Long companyId = getCompanyId();
 
-        Page<AuditLog> logs = auditLogRepository.findAllByCompanyId(companyId, pageable);
+        Page<AuditLog> logs = auditLogRepository.findAllByCompanyId(companyId, PageRequest.of(pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by(DESC, "timestamp", "id")));
 
         return logs.map(log -> {
             String username = null;

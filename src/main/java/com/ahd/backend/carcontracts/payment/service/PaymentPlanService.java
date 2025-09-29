@@ -226,6 +226,7 @@ public class PaymentPlanService {
             paymentPlan.setRemainingAmount(remainingAmount);
             var contract = contractsRepository.findByPaymentPlanId(paymentPlan.getId());
             contract.getCar().setStatus("Paid");
+            contract.getCar().setPaidAt(LocalDateTime.now());
             contractsRepository.save(contract);
            // System.out.println(" the valkue of this action : " + remainingAmount);
             paymentPlanRepository.save(paymentPlan);
