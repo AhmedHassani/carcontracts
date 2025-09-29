@@ -4,13 +4,12 @@ package com.ahd.backend.carcontracts.payment.controller;
 import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.service.PaymentPlanService;
+import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -42,20 +41,22 @@ public class PaymentPlanController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    @PreAuthorize("hasAuthority('GET_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> getAllPaymentPlans() {
-        List<PaymentPlanResponse> response = paymentPlanService.getAllPaymentPlans();
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/status/{status}")
-    @PreAuthorize("hasAuthority('GET_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<Page<PaymentPlanResponse>> getPaymentPlansByStatus(
-            @PathVariable PaymentStatus status,
-            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(paymentPlanService.getPaymentPlansByStatus(status, pageable));
-    }
+//    @GetMapping
+//    @PreAuthorize("hasAuthority('GET_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
+//    public ResponseEntity<ApiResponse<?>> list() {
+//        Page<PaymentPlanResponse> response = paymentPlanService.getAllPaymentPlans();
+//       return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(ApiResponse.success(response));
+//    }
+//
+//    @GetMapping("/status/{status}")
+//    @PreAuthorize("hasAuthority('GET_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
+//    public ResponseEntity<?> getPaymentPlansByStatus(
+//            @PathVariable PaymentStatus status) {
+//        List<PaymentPlanResponse> response = paymentPlanService.getPaymentPlansByStatus(status);
+//        return ResponseEntity.ok(response);
+//    }
 
 
 //    @PostMapping("/payments")
