@@ -4,6 +4,8 @@ package com.ahd.backend.carcontracts.payment.repository;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +24,7 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
     List<PaymentPlan> findByCompanyId(Long companyId);
     Optional<PaymentPlan> findByIdAndCompanyId(Long id , Long companyId);
 
-    List<PaymentPlan> findByStatusAndCompanyId(PaymentStatus status , Long companyId);
+    Page<PaymentPlan> findByStatusAndCompanyId(Pageable pageable , PaymentStatus status , Long companyId);
 
 
     @Query("""
