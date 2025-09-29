@@ -36,7 +36,7 @@ public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificatio
             FROM Car c
             WHERE c.companyId = :companyId
               AND c.status = :status
-              AND c.createdAt BETWEEN :start AND :end
+              AND c.paidAt BETWEEN :start AND :end
             """)
     Long countByCompanyIdAndStatusAndCreatedAtBetween(@Param("companyId") Long companyId,
                                                       @Param("status") String status,

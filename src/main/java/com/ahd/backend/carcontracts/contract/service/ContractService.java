@@ -9,6 +9,7 @@ import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
+import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import com.ahd.backend.carcontracts.person.dto.PersonSearchCriteria;
@@ -47,8 +48,17 @@ public class ContractService {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
         Car car    = carRepo.getReferenceById(request.getCarId());
-        car.setStatus("Active");
+        if (Objects.equals(seller.getNationalId(), buyer.getNationalId())
+                || Objects.equals(seller.getId(), buyer.getId())) {
+            throw new IllegalArgumentException("you can't make the buyer and the seller be the same person");
+        }
+
         PaymentPlan paymentPlan = planRepo.getReferenceById(request.getPaymentId());
+        if(paymentPlan.getPaymentType() == PaymentType.CASH){
+            car.setStatus("Paid");
+        }else{
+            car.setStatus("Active");
+        }
         Person guarantor = null;
         if (request.getGuarantorId() != null) {
             guarantor = personRepo.getReferenceById(request.getGuarantorId());

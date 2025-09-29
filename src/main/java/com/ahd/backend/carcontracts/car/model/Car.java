@@ -75,6 +75,9 @@ public class Car {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     @Column(name = "companyId", nullable = false)
     private Long companyId;
 
