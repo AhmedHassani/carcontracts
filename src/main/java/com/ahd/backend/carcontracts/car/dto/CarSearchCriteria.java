@@ -23,7 +23,8 @@ public record CarSearchCriteria(
         Long companyId,
         String model,
         String plateNumber,
-        String chassisNumber
+        String chassisNumber,
+        String status
 
 
 ) implements BaseCriteria { }

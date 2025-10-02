@@ -86,6 +86,9 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
         if (c.deleted() != null) {
             p.add(cb.equal(root.get("deleted"), c.deleted()));
         }
+        if (c.status() != null) {
+            p.add(cb.equal(root.get("status"), c.status()));
+        }
 
         // Company ID filter
         if (c.companyId() != null) {
