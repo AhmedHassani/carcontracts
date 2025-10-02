@@ -20,7 +20,10 @@ import java.util.List;
         name = "car",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        columnNames = {"companyId", "chassis_number", "plate_number"}
+                        columnNames = {"companyId", "chassis_number"}
+                ) ,
+                @UniqueConstraint(
+                        columnNames = {"companyId" , "plate_number" , "type_of_car_plate" , "wallet_number"}
                 )
         }
 )

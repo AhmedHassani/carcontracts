@@ -183,6 +183,7 @@ public class CarService {
                 .plateNumber(criteria.plateNumber())
                 .chassisNumber((criteria.chassisNumber()))
                 .model(criteria.model())
+                .status(criteria.status())
                 .build();
 
         Specification<Car> spec = new CarSpecification(enrichedCriteria);
