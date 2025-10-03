@@ -16,9 +16,9 @@ import java.util.Optional;
 public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificationExecutor<Car> {
     Optional<Car> findByIdAndCompanyIdAndDeletedFalse(Long id , Long CompanyId);
     //Optional<Car> findById(Long id);
-    boolean existsByChassisNumber(String chassisNumber);
+    boolean existsByChassisNumberAndCompanyId(String chassisNumber , Long compnayId);
     boolean existsByCompanyId(Long companyId);
-    boolean existsByPlateNumber(String plateNumber);
+    boolean existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyId(String plateNumber , String walletNumber , String typeOfCarPlate , Long compnayId);
     @EntityGraph(attributePaths = "attachments")
     Optional<Car> findWithAttachmentsByIdAndCompanyId(Long id , Long CompanyId);
     @Query("""
