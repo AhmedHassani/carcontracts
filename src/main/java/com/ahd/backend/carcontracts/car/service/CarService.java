@@ -52,11 +52,15 @@ public class CarService {
     @Auditable(operation = "CREATE_CAR", captureArgs = true, captureResult = true)
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
-        if(carRepository.existsByChassisNumber(dto.getChassisNumber())
-        && carRepository.existsByCompanyId(getCompanyId())
-        && carRepository.existsByPlateNumber(dto.getPlateNumber())){
+        if(carRepository.existsByChassisNumberAndCompanyId(dto.getChassisNumber() , getCompanyId())){
+                throw new DuplicateResourceException(
+                        "ChassisNumber", dto.getPlateNumber(), "Car with this Chassis Number already exists");
+        }
+        if(carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyId(dto.getPlateNumber()
+                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId())){
                 throw new DuplicateResourceException(
                         "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
+
         }
 
         Car car = CarMapper.toEntity(dto);
@@ -98,14 +102,15 @@ public class CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
         if (patch.getChassisNumber() != null &&
                 !patch.getChassisNumber().equals(car.getChassisNumber()) &&
-                carRepository.existsByChassisNumber(patch.getChassisNumber())) {
+                carRepository.existsByChassisNumberAndCompanyId(patch.getChassisNumber() , getCompanyId())) {
             throw new DuplicateResourceException(
                     "chassisNumber", patch.getChassisNumber(),
                     "Car with this chassis number already exists");
         }
         if (patch.getPlateNumber() != null &&
                 !patch.getPlateNumber().equals(car.getPlateNumber()) &&
-                carRepository.existsByPlateNumber(patch.getPlateNumber())) {
+                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyId(patch.getPlateNumber()
+                        , patch.getWalletNumber() , patch.getTypeOfCarPlate() , getCompanyId())){
             throw new DuplicateResourceException(
                     "plateNumber", patch.getPlateNumber(),
                     "Car with this plate number already exists");
