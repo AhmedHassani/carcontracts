@@ -14,5 +14,7 @@ public record ContractPaymentsSearchCriteria(
         String startDate,
         String endDate,
         PaymentStatus status,
-        Long companyId
+        Long companyId,
+        Long contractId
+  //      Long id
 ) implements BaseCriteria { }

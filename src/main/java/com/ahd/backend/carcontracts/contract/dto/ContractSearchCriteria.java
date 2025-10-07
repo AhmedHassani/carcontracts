@@ -17,5 +17,11 @@ public record ContractSearchCriteria(
         String BuyerPhone,
         String SellerName,
         String SellerPhone,
-        Long companyId
+        Long companyId,
+        Long id ,
+//        String buyerNationalId,
+//        String sellerNationalId,
+        String chassisNumber,
+        String status
+
 ) implements BaseCriteria { }

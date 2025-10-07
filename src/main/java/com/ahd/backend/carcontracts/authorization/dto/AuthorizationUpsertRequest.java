@@ -12,7 +12,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class AuthorizationUpsertRequest {
-
     private Long authorizationNumber;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate authorizationDate;

@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.ahd.backend.carcontracts.S3.S3UrlService;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -121,11 +122,17 @@ public class CarService {
     }
     @Auditable(operation = "DELETE_CAR", captureArgs = true, captureResult = true)
     public void softDeleteCar(Long id) {
-        Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id , getCompanyId())
+        Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id, getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
-        car.setDeleted(true);
-        carRepository.save(car);
+
+        if (!Objects.equals(car.getStatus(), "Active")) {
+            car.setDeleted(true);
+            carRepository.save(car);
+        } else {
+            throw new IllegalStateException("You can't remove a car that is in an active contract");
+        }
     }
+
 
     @Transactional
     @Auditable(operation = "ADD_ATTACHMENT_CAR", captureArgs = true, captureResult = true)

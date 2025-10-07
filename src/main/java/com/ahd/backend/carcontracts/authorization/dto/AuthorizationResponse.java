@@ -9,6 +9,7 @@ import lombok.*;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class AuthorizationResponse {
     private Long id;
+    private Long companyId;
     private Long authorizationNumber;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate authorizationDate;

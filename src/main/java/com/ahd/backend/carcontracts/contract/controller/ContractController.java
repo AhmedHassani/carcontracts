@@ -3,6 +3,7 @@ package com.ahd.backend.carcontracts.contract.controller;
 
 import com.ahd.backend.carcontracts.contract.dto.*;
 import com.ahd.backend.carcontracts.contract.service.ContractService;
+import com.ahd.backend.carcontracts.contract.service.ContractSpecification;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class ContractController {
     @GetMapping("/payments")
     @PreAuthorize("hasAuthority('GET_CONTRACT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> getAllContract2(
-            @ModelAttribute ContractPaymentsSearchCriteria criteria,
+            @ModelAttribute ContractSearchCriteria criteria,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,

@@ -25,7 +25,7 @@ public class AuthorizationSpecification {
                         )
                 );
             }
-
+            predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
             // Authorization number
             if (criteria.authorizationNumber() != null) {
                 predicates.add(cb.equal(root.get("authorizationNumber"), criteria.authorizationNumber()));

@@ -60,9 +60,23 @@ public class ContractSpecification {
                         "%" + criteria.BuyerPhone().toLowerCase() + "%"
                 ));
             }
+            if (criteria.status() != null && !criteria.status().isBlank()) {
+                predicates.add(cb.like(
+                        cb.lower(root.join("paymentPlan").get("status")),
+                         criteria.status().toLowerCase()
+                ));
+            }
+//            if (criteria.buyerNationalId() != null && !criteria.buyerNationalId().isBlank()) {
+//                predicates.add(cb.like(
+//                        cb.lower(root.join("buyer").get("buyerNationalId")),
+//                        "%" + criteria.buyerNationalId().toLowerCase() + "%"
+//                ));
+//            }
 
 
-
+            if (criteria.id() != null) {
+                predicates.add(cb.equal(root.get("id"), criteria.id()));
+            }
 
 
             if (criteria.SellerPhone() != null && !criteria.SellerPhone().isBlank()) {
@@ -71,6 +85,12 @@ public class ContractSpecification {
                         "%" + criteria.SellerPhone().toLowerCase() + "%"
                 ));
             }
+//            if (criteria.sellerNationalId() != null && !criteria.sellerNationalId().isBlank()) {
+//                predicates.add(cb.like(
+//                        cb.lower(root.join("seller").get("sellerNationalId")),
+//                        "%" + criteria.sellerNationalId().toLowerCase() + "%"
+//                ));
+//            }
 
             if (criteria.StatusPaymant() != null && !criteria.StatusPaymant().isBlank()) {
                 predicates.add(cb.like(
@@ -82,6 +102,12 @@ public class ContractSpecification {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("plateNumber")),
                         "%" + criteria.carNumber().toLowerCase() + "%"
+                ));
+            }
+            if (criteria.chassisNumber() != null && !criteria.chassisNumber().isBlank()) {
+                predicates.add(cb.like(
+                        cb.lower(root.join("car").get("chassisNumber")),
+                        "%" + criteria.chassisNumber().toLowerCase() + "%"
                 ));
             }
             if (criteria.carType() != null && !criteria.carType().isBlank()) {
