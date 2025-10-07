@@ -103,6 +103,10 @@ public class ContractService {
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
                 .companyId(getCompanyId())
+//                .buyerNationalId(criteria.buyerNationalId())
+//                .sellerNationalId(criteria.sellerNationalId())
+                .chassisNumber(criteria.chassisNumber())
+                .status(criteria.status())
                 .build();
 
         spec = ContractSpecification.buildSpecification(enrichedCriteria);
@@ -112,19 +116,27 @@ public class ContractService {
 
 
     @Transactional(readOnly = true)
-    public  Page<ContractPaymentsResponse>  getAllContractPayments(ContractPaymentsSearchCriteria criteria, Pageable pageable) {
-        Specification<Contracts> spec = ContractPaymentsSpecification.buildSpecification(criteria);
-        ContractPaymentsSearchCriteria enrichedCriteria = ContractPaymentsSearchCriteria.builder()
+    public  Page<ContractPaymentsResponse>  getAllContractPayments(ContractSearchCriteria criteria, Pageable pageable) {
+        Specification<Contracts> spec = ContractSpecification.buildSpecification(criteria);
+        ContractSearchCriteria enrichedCriteria = ContractSearchCriteria.builder()
                 .keyword(criteria.keyword())
                 .sortBy(criteria.sortBy())
                 .sortDirection(criteria.sortDirection())
-                .startDate(criteria.startDate())
-                .endDate(criteria.endDate())
-                .status(criteria.status())
+                .carType(criteria.carType())
+                .carNumber(criteria.carNumber())
+                .StatusPaymant(criteria.StatusPaymant())
+                .BuyerName(criteria.BuyerName())
+                .BuyerPhone(criteria.BuyerPhone())
+                .SellerName(criteria.SellerName())
+                .SellerPhone(criteria.SellerPhone())
                 .companyId(getCompanyId())
+//                .buyerNationalId(criteria.buyerNationalId())
+//                .sellerNationalId(criteria.sellerNationalId())
+                .chassisNumber(criteria.chassisNumber())
+                .status(criteria.status())
                 .build();
 
-        spec = ContractPaymentsSpecification.buildSpecification(enrichedCriteria);
+        spec = ContractSpecification.buildSpecification(enrichedCriteria);
         return contractRepo.findAll(spec, pageable)
                 .map(ContractMapper::toPayments);
     }

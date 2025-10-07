@@ -101,9 +101,12 @@ public final class ContractMapper {
         ContractPaymentsResponse dto = new ContractPaymentsResponse();
         dto.setContractId(contract.getId());
         String customerName = Optional.ofNullable(contract.getSeller())
-                .map(seller ->
-                        Optional.ofNullable(seller.getFirstName()).orElse("") + " " +
-                        Optional.ofNullable(seller.getFatherName()).orElse("")
+                .map(buyer ->
+                        Optional.ofNullable(buyer.getFirstName()).orElse("") + " " +
+                        Optional.ofNullable(buyer.getFatherName()).orElse("") + " " +
+                                Optional.ofNullable(buyer.getGrandfatherName()).orElse("")  + " " +
+                                Optional.ofNullable(buyer.getFourthName()).orElse("") + " " +
+                                Optional.ofNullable(buyer.getSurname()).orElse("")
                 ).orElse("").trim();
         dto.setCustomerName(customerName);
         dto.setCarName(Optional.ofNullable(contract.getCar())

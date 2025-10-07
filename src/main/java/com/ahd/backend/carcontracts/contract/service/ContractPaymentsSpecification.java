@@ -37,6 +37,10 @@ public class ContractPaymentsSpecification {
                 predicates.add(cb.equal(paymentPlan.get("status"), criteria.status()));
             }
 
+            if (criteria.contractId() != null) {
+                predicates.add(cb.equal(paymentPlan.get("id"), criteria.contractId()));
+            }
+
             // date range: installments.dueDate
             LocalDate start = parseDate(criteria.startDate());
             LocalDate end = parseDate(criteria.endDate());

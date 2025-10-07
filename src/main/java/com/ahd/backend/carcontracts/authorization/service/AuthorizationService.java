@@ -11,6 +11,7 @@ import com.ahd.backend.carcontracts.car.model.Car;
 import com.ahd.backend.carcontracts.car.repository.CarRepository;
 import com.ahd.backend.carcontracts.person.model.Person;
 import com.ahd.backend.carcontracts.person.repository.PersonRepository;
+import com.ahd.backend.carcontracts.util.Helper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,18 +27,30 @@ public class AuthorizationService {
     private final AuthorizationRepository authorizationRepository;
     private final PersonRepository personRepository;
     private final CarRepository carRepository;
-
+    private final Helper helper ;
     @Transactional(readOnly = true)
     public Page<AuthorizationResponse> list(Pageable pageable, AuthorizationSearchCriteria searchCriteria) {
+
+        AuthorizationSearchCriteria criteriaWithCompany = new AuthorizationSearchCriteria(
+                searchCriteria.keyword(),
+                searchCriteria.sortBy(),
+                searchCriteria.sortDirection(),
+                searchCriteria.authorizationNumber(),
+                searchCriteria.companyAgent(),
+                searchCriteria.authorizationDateStart(),
+                searchCriteria.authorizationDateEnd(),
+                getCompanyId()
+        );
+
         return authorizationRepository.findAll(
-                AuthorizationSpecification.buildSpecification(searchCriteria),
+                AuthorizationSpecification.buildSpecification(criteriaWithCompany),
                 pageable
         ).map(AuthorizationMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public AuthorizationResponse get(Long id) {
-        Authorization entity = authorizationRepository.findById(id)
+        Authorization entity = authorizationRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Authorization not found: " + id));
         return AuthorizationMapper.toResponse(entity);
     }
@@ -51,11 +64,12 @@ public class AuthorizationService {
         Car car = carRepository.findById(r.getCarId())
                 .orElseThrow(() -> new EntityNotFoundException("Car not found: " + r.getCarId()));
         Authorization entity = AuthorizationMapper.fromUpsertRequest(r, buyer, car);
+        entity.setCompanyId(getCompanyId());
         return AuthorizationMapper.toResponse(authorizationRepository.save(entity));
     }
     @Auditable(operation = "UPDATE_AUTHORIZATION", captureArgs = true, captureResult = true)
     public AuthorizationResponse update(Long id, AuthorizationUpsertRequest r) {
-        Authorization entity = authorizationRepository.findById(id)
+        Authorization entity = authorizationRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Authorization not found: " + id));
         if (!entity.getAuthorizationNumber().equals(r.getAuthorizationNumber())
                 && authorizationRepository.existsByAuthorizationNumber(r.getAuthorizationNumber())) {
@@ -70,12 +84,14 @@ public class AuthorizationService {
     }
     @Auditable(operation = "DELETE_AUTHORIZATION", captureArgs = true, captureResult = true)
     public void delete(Long id) {
-        if (!authorizationRepository.existsById(id)) {
+        if (!authorizationRepository.existsByIdAndCompanyId(id , getCompanyId())) {
             throw new EntityNotFoundException("Authorization not found: " + id);
         }
         authorizationRepository.deleteById(id);
     }
 
-
+    public Long getCompanyId (){
+        return  helper.getCurrentCompanyId();
+    }
 
 }

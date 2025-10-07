@@ -22,6 +22,8 @@ public class Authorization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "company_id")
+    private Long companyId;
 
     @NotNull
     @Column(unique = true)
