@@ -50,7 +50,7 @@ public class PersonService {
      */
 
     @Transactional
-    @Auditable(operation = "PERSON_CREATE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة مستخدم جديد", captureArgs = true, captureResult = true)
     public PersonResponseDTO addPersonWithAttachments(PersonRequestDTO req) {
         req.setCompanyId(getCompanyId());
         Person person = personRepository.save(PersonMapper.toEntity(req));
@@ -96,7 +96,7 @@ public class PersonService {
         return PersonMapper.toResponse(person);
     }
 
-    @Auditable(operation = "PERSON_REPLACE_ATTACHMENT", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تغير صورة مستخدم", captureArgs = true, captureResult = true)
     @Transactional
     public PersonAttachmentResponse replaceAttachment(UpdatePersonAttachment dto) {
         if (dto.getFile() == null || dto.getFile().isEmpty())
@@ -125,7 +125,7 @@ public class PersonService {
 
 
     @Transactional
-    @Auditable(operation = "PERSON_DELETE_ATTACHMENT", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف صورة مستخدم", captureArgs = true, captureResult = true)
     public void deleteAttachmentById(Long attachmentId) {
 
         PersonAttachment att = personAttachmentRepository.findById(attachmentId)
@@ -141,7 +141,7 @@ public class PersonService {
     }
 
     @Transactional
-    @Auditable(operation = "PERSON_UPSERT_ATTACHMENT", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة صورة مستخدم", captureArgs = true, captureResult = true)
     public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file ,long id) {
         if (file == null || file.isEmpty())
             throw new BadRequestException("A non-empty file must be supplied");
@@ -176,7 +176,7 @@ public class PersonService {
     /**
      * Update person information
      */
-    @Auditable(operation = "PERSON_UPDATE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث معلومات مستخدم", captureArgs = true, captureResult = true)
     public PersonResponseDTO updatePerson(Long id, UpdatePerson personRequest) {
         log.info("Updating person with id: {}", id);
         Person existingPerson = personRepository.findByIdAndCompanyId(id ,  getCompanyId())

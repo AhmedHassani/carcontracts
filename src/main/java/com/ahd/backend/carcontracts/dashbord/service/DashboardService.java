@@ -112,7 +112,7 @@ public class DashboardService {
             start = entry.getValue()[0];
             end = entry.getValue()[1];
 
-            long totalCars = carRepository.countByCompanyIdAndCreatedAtBetween(getCompanyId() ,start.atStartOfDay(), end.atTime(LocalTime.MAX) );
+            long totalCars = carRepository.countByCompanyIdAndStatusAndCreatedAtBetween(getCompanyId() , "Pending",start.atStartOfDay(), end.atTime(LocalTime.MAX) );
             long PaidCars = carRepository
                     .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid",start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
             long paidInstallmentsCount = installmentRepository

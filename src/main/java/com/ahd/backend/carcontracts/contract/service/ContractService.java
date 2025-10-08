@@ -44,7 +44,7 @@ public class ContractService {
 
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @Auditable(operation = "CREATE_CONTRACT", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة عقد", captureArgs = true, captureResult = true)
     public ContractResponse addContract(ContractRequest request) {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
@@ -142,7 +142,7 @@ public class ContractService {
     }
 
     @Transactional
-    @Auditable(operation = "DELETE_CONTRACT", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف عقد", captureArgs = true, captureResult = true)
     public void softDeleteContract(Long contractId) {
         Contracts contract = contractRepo.findByIdAndCompanyId(contractId , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
