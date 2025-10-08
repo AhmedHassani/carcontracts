@@ -54,7 +54,7 @@ public class AuthorizationService {
                 .orElseThrow(() -> new EntityNotFoundException("Authorization not found: " + id));
         return AuthorizationMapper.toResponse(entity);
     }
-    @Auditable(operation = "CREATE_AUTHORIZATION", captureArgs = true, captureResult = true)
+    @Auditable(operation = "انشاء تخويل", captureArgs = true, captureResult = true)
     public AuthorizationResponse create(AuthorizationUpsertRequest r) {
         if (authorizationRepository.existsByAuthorizationNumber(r.getAuthorizationNumber())) {
             throw new IllegalArgumentException("authorizationNumber already exists");
@@ -67,7 +67,7 @@ public class AuthorizationService {
         entity.setCompanyId(getCompanyId());
         return AuthorizationMapper.toResponse(authorizationRepository.save(entity));
     }
-    @Auditable(operation = "UPDATE_AUTHORIZATION", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث تخويل", captureArgs = true, captureResult = true)
     public AuthorizationResponse update(Long id, AuthorizationUpsertRequest r) {
         Authorization entity = authorizationRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Authorization not found: " + id));
@@ -82,7 +82,7 @@ public class AuthorizationService {
         AuthorizationMapper.update(entity, r, buyer, car);
         return AuthorizationMapper.toResponse(authorizationRepository.save(entity));
     }
-    @Auditable(operation = "DELETE_AUTHORIZATION", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف تخويل", captureArgs = true, captureResult = true)
     public void delete(Long id) {
         if (!authorizationRepository.existsByIdAndCompanyId(id , getCompanyId())) {
             throw new EntityNotFoundException("Authorization not found: " + id);

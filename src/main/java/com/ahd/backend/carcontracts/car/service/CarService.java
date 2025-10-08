@@ -50,15 +50,15 @@ public class CarService {
     private final UserRepository userRepository ;
     private final Helper helper;
     @Transactional
-    @Auditable(operation = "CREATE_CAR", captureArgs = true, captureResult = true)
+    @Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
-        if(carRepository.existsByChassisNumberAndCompanyId(dto.getChassisNumber() , getCompanyId())){
+        if(carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Pending")){
                 throw new DuplicateResourceException(
                         "ChassisNumber", dto.getPlateNumber(), "Car with this Chassis Number already exists");
         }
-        if(carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyId(dto.getPlateNumber()
-                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId())){
+        if(carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber()
+                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Pending")){
                 throw new DuplicateResourceException(
                         "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
 
@@ -94,7 +94,7 @@ public class CarService {
 
 
     @Transactional
-    @Auditable(operation = "UPDATE_CAR", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث معلومات سيارة", captureArgs = true, captureResult = true)
     public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
         if (patch == null || patch.isEmpty()) {
             throw new BadRequestException("Update payload must contain at least one field");
@@ -103,15 +103,15 @@ public class CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
         if (patch.getChassisNumber() != null &&
                 !patch.getChassisNumber().equals(car.getChassisNumber()) &&
-                carRepository.existsByChassisNumberAndCompanyId(patch.getChassisNumber() , getCompanyId())) {
+                carRepository.existsByChassisNumberAndCompanyIdAndStatus(patch.getChassisNumber() , getCompanyId() , "Pending")) {
             throw new DuplicateResourceException(
                     "chassisNumber", patch.getChassisNumber(),
                     "Car with this chassis number already exists");
         }
         if (patch.getPlateNumber() != null &&
                 !patch.getPlateNumber().equals(car.getPlateNumber()) &&
-                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyId(patch.getPlateNumber()
-                        , patch.getWalletNumber() , patch.getTypeOfCarPlate() , getCompanyId())){
+                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(patch.getPlateNumber()
+                        , patch.getWalletNumber() , patch.getTypeOfCarPlate() , getCompanyId() , "Pending")){
             throw new DuplicateResourceException(
                     "plateNumber", patch.getPlateNumber(),
                     "Car with this plate number already exists");
@@ -120,7 +120,7 @@ public class CarService {
         Car saved = carRepository.save(carUpdated);
         return CarMapper.toDto(saved);
     }
-    @Auditable(operation = "DELETE_CAR", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف سيارة", captureArgs = true, captureResult = true)
     public void softDeleteCar(Long id) {
         Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id, getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
@@ -135,7 +135,7 @@ public class CarService {
 
 
     @Transactional
-    @Auditable(operation = "ADD_ATTACHMENT_CAR", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة صور لسيارة", captureArgs = true, captureResult = true)
     public CarResponseDTO addAttachments(Long carId, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files provided");
@@ -158,7 +158,7 @@ public class CarService {
     }
 
     @Transactional
-    @Auditable(operation = "DELETE_ATTACHMENT_CAR", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف صور سيارة", captureArgs = true, captureResult = true)
     public CarResponseDTO deleteAttachment(Long carId, Long attachmentId) {
         Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId , getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + carId + " not found"));
@@ -169,8 +169,8 @@ public class CarService {
         car.getAttachments().remove(att);
         return CarMapper.toDto(car);
     }
-
-
+    @Transactional
+    @Auditable(operation = "جلب الصخام", captureArgs = true, captureResult = true)
     public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria,Pageable pageable) {
         Sort.Direction dir = "DESC".equalsIgnoreCase(criteria.sortDirection())
                 ? Sort.Direction.DESC : Sort.Direction.ASC;

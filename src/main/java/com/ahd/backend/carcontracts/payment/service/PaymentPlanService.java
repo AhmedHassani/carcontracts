@@ -45,7 +45,7 @@ public class PaymentPlanService {
 
     private final ContractsRepository contractsRepository;
 
-    @Auditable(operation = "CREATE_PAYMENT_PLAN", captureArgs = true, captureResult = true)
+    @Auditable(operation = "انشاء خطة دفع", captureArgs = true, captureResult = true)
     public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
         PaymentPlan paymentPlan = PaymentPlan.builder()
                 .paymentType(request.getPaymentType())
@@ -157,7 +157,7 @@ public class PaymentPlanService {
 //                .amount(request.getAmount())
 //                .build();
 //    }
-    @Auditable(operation = "UPDATE_INSTALLMENT_DATE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث تاريخ الدفعة", captureArgs = true, captureResult = true)
     public PaymentResponse updatePInstallmentDate(PaymentDateRequest request) {
         Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -184,7 +184,7 @@ public class PaymentPlanService {
                 .paymentDate(LocalDate.now())
                 .build();
     }
-    @Auditable(operation = "UPDATE_INSTALLMENT_STATUS", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث حالة الدفعة", captureArgs = true, captureResult = true)
     public PaymentResponse updatePInstallmentStatus(Long id) {
         Installment installment = installmentRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -246,7 +246,7 @@ public class PaymentPlanService {
                 .paymentDate(LocalDate.now())
                 .build();
     }
-    @Auditable(operation = "UPDATE_PAYMENT_STATUS", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث حالة خطة الدفع", captureArgs = true, captureResult = true)
     public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
         PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));

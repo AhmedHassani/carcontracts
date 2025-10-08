@@ -43,7 +43,7 @@ public class RoleService {
     public List<Role> findAll() {
         return roleRepository.findAll();
     }
-    @Auditable(operation = "CREATE_ROLL", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة صلاحيات", captureArgs = true, captureResult = true)
     public Role create(Role r) {
 //        if(!getCompanyId(r.getCompany().getId())){
 //            throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
@@ -66,7 +66,7 @@ public class RoleService {
                 .collect(Collectors.toList());
     }
 
-    @Auditable(operation = "CREATE_COMPANY_ROLL", captureArgs = true, captureResult = true)
+    @Auditable(operation = "اضافة صلاحيات للشركة", captureArgs = true, captureResult = true)
     public RoleDTO createCompanyRole(Long companyId, CreateRoleRequest request) {
         if(!getCompanyId(companyId)){
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
@@ -132,7 +132,7 @@ public class RoleService {
             throw new BadRequestException("Only company owner can create roles");
         }
     }
-    @Auditable(operation = "UPDATE_COMPANY_ROLL", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحديث صلاحيات للشركة", captureArgs = true, captureResult = true)
     public Role update(Long id, Role r) {
         if(!getCompanyId(r.getCompany().getId())){
             throw new ResourceNotFoundException("Company authorization not found: " + r.getCompany().getId());
@@ -143,7 +143,7 @@ public class RoleService {
         existing.setPermissions(r.getPermissions());
         return roleRepository.save(existing);
     }
-    @Auditable(operation = "DELETE_COMPANY_ROLL", captureArgs = true, captureResult = true)
+    @Auditable(operation = "حذف صلاحيات من الشركة", captureArgs = true, captureResult = true)
     public void delete(Long id) {
         Role role = roleRepository.getById(id);
 

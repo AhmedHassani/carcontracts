@@ -69,7 +69,7 @@ public class RolePermissionService {
                 .map(this::convertToAllPermission)
                 .collect(Collectors.toList());
     }
-    @Auditable(operation = "TOGGLE_PERMISSION", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تبديل صلاحية", captureArgs = true, captureResult = true)
     public RolePermissionDTO togglePermission(Long roleId, Long permissionId) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
@@ -88,7 +88,7 @@ public class RolePermissionService {
     }
 
     // Toggle all permissions (when toggle switch is clicked)
-    @Auditable(operation = "TOGGLE_ALL_PERMISSION", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تبديل كل الصلاحيات", captureArgs = true, captureResult = true)
     public RolePermissionDTO toggleAllPermissions(Long roleId, boolean enableAll) {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
@@ -107,7 +107,7 @@ public class RolePermissionService {
     }
 
     // Link single permission to role
-    @Auditable(operation = "LINK_PERMISSION_TO_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "ربط صلاحية بالدور", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO linkPermissionToRole(Long permissionId, Long roleId) {
         AppUser currentUser = helper.getCurrentUser();
         Permission permission = permissionRepository.findById(permissionId)
@@ -127,7 +127,7 @@ public class RolePermissionService {
     }
 
     // Link multiple permissions to role
-    @Auditable(operation = "LINK_PERMISSIONS_TO_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "ربط صلاحيات بالدور", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO linkPermissionsToRole(Long roleId, List<Long> permissionIds) {
         if (permissionIds == null || permissionIds.isEmpty()) {
             throw new BadRequestException("Permission IDs list cannot be empty");
@@ -158,7 +158,7 @@ public class RolePermissionService {
     }
 
     // Unlink single permission from role
-    @Auditable(operation = "UNLINK_PERMISSION_TO_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "إلغاء ربط صلاحية بالدور", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO unlinkPermissionFromRole(Long permissionId, Long roleId) {
         AppUser currentUser = helper.getCurrentUser();
         Permission permission = permissionRepository.findById(permissionId)
@@ -177,7 +177,7 @@ public class RolePermissionService {
     }
 
     // Unlink multiple permissions from role
-    @Auditable(operation = "LINK_PERMISSIONS_TO_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تعيين صلاحيات الدور", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO unlinkPermissionsFromRole(Long roleId, List<Long> permissionIds) {
         if (permissionIds == null || permissionIds.isEmpty()) {
             throw new BadRequestException("Permission IDs list cannot be empty");
@@ -201,7 +201,7 @@ public class RolePermissionService {
     }
 
     // Replace all permissions for a role
-    @Auditable(operation = "SET_PERMISSION_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تبديل صلاحية للدور", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO setRolePermissions(Long roleId, List<Long> permissionIds) {
         AppUser currentUser = helper.getCurrentUser();
         Role role = roleRepository.findById(roleId)
@@ -223,7 +223,7 @@ public class RolePermissionService {
     }
 
     // Toggle permission for role
-    @Auditable(operation = "TOGGLE_PERMISSION_FOR_ROLE", captureArgs = true, captureResult = true)
+    @Auditable(operation = "تحويل إلى كل الصلاحيات", captureArgs = true, captureResult = true)
     public RolePermissionResponseDTO togglePermissionForRole(Long permissionId, Long roleId) {
         AppUser currentUser = helper.getCurrentUser();
         Permission permission = permissionRepository.findById(permissionId)
