@@ -170,7 +170,6 @@ public class CarService {
         return CarMapper.toDto(car);
     }
     @Transactional
-    @Auditable(operation = "جلب الصخام", captureArgs = true, captureResult = true)
     public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria,Pageable pageable) {
         Sort.Direction dir = "DESC".equalsIgnoreCase(criteria.sortDirection())
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
