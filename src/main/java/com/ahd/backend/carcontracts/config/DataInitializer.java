@@ -26,20 +26,20 @@ public class DataInitializer {
         return args -> {
 
             // 3) Create a default super-admin user
-            if (userRepo.findByUsername("super1").isEmpty()) {
-                var superAdmin  = roleRepo.findByName("ROLE_SUPER_ADMIN").get();
-                var enc = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
-                var u = AppUser.builder()
-                        .username("super1")
-                        .password(enc.encode("Pass1@ssss"))
-                        .phone("964783284383")
-                        .fullName("super admin")
-                        .email("superadmin@gmail.com")
-                        .username("super1")
-                        .roles(Set.of(superAdmin))
-                        .build();
-                userRepo.save(u);
-            }
+//            if (userRepo.findByUsername("super1").isEmpty()) {
+//                var superAdmin  = roleRepo.findByName("ROLE_SUPER_ADMIN").get();
+//                var enc = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+//                var u = AppUser.builder()
+//                        .username("super1")
+//                        .password(enc.encode("Pass1@ssss"))
+//                        .phone("964783284383")
+//                        .fullName("super admin")
+//                        .email("superadmin@gmail.com")
+//                        .username("super1")
+//                        .roles(Set.of(superAdmin))
+//                        .build();
+//                userRepo.save(u);
+//            }
 
         };
     }
