@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface CompanyRepository extends JpaRepository<Company, Long> , JpaSpecificationExecutor<Company> {
     List<Company> findByExpirationDateBefore(LocalDate date);
@@ -35,6 +36,12 @@ public interface CompanyRepository extends JpaRepository<Company, Long> , JpaSpe
                 @Param("startDate") java.time.LocalDate startDate,
                 @Param("endDate")   java.time.LocalDate endDate
         );
-    }
+
+    @Query(value = "SELECT * FROM company WHERE company_id = :id", nativeQuery = true)
+    Optional<Company> findAnyById(@Param("id") Long id);
+
+    Optional<Company> findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual(Long id, LocalDate today);
+
+}
 
 
