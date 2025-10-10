@@ -228,16 +228,17 @@ public class CompanyService {
     public ApiResponse<Void> deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
+
         companyRepository.delete(company);
+
         notificationService.sendNotificationToDevice(
                 "حذف شركة",
                 "تم حذف شركة " + company.getCompanyName() + " بنجاح"
         );
-        AppNotification notif = new AppNotification();
+        var notif = new AppNotification();
         notif.setTitle("حذف شركة");
         notif.setBody("تم حذف شركة " + company.getCompanyName() + " بنجاح");
         notif.setNotificationDate(LocalDateTime.now());
-     //   notif.setCompany(company);
         notif.setPermisson("ADMIN");
         notificationService.insertNotificationAsync(notif);
 
@@ -248,6 +249,7 @@ public class CompanyService {
                 .date(Instant.now())
                 .build();
     }
+
 
     @Scheduled(cron = "0 0 0 * * ?")
     public void checkExpiredCompanies() {

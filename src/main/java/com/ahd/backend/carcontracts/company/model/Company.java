@@ -4,13 +4,21 @@ package com.ahd.backend.carcontracts.company.model;
 import com.ahd.backend.carcontracts.company.enums.CompanyStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE company SET deleted = 1, deleted_at = CURRENT_TIMESTAMP WHERE company_id = ?")
+@Where(clause = "deleted = 0")
+@Table(name = "company")
 public class Company {
 
     @Id
@@ -42,4 +50,11 @@ public class Company {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     private CompanyStatus status;
+
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

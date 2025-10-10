@@ -9,8 +9,12 @@ import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.repository.RoleRepository;
 import com.ahd.backend.carcontracts.audit.Auditable;
+import com.ahd.backend.carcontracts.company.model.CompanyUser;
+import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
+import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.config.jwt.JwtProperties;
 import com.ahd.backend.carcontracts.config.jwt.JwtTokenProvider;
+import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
@@ -22,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -42,6 +47,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CompanyRepository companyRepository;
+    private final CompanyUserRepository companyUserRepository;
+    private final Helper helper;
 
     /**
      * Authenticate user and issue both access & refresh tokens.
@@ -49,12 +57,14 @@ public class AuthService {
     @Transactional(readOnly = true)
     @Auditable(operation = "تسجيل دخزل", captureArgs = true, captureResult = true)
     public AuthResponse login(AuthRequest request) {
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(), request.getPassword()
                     )
             );
+
             log.info("User '{}' logged in successfully", request.getUsername());
             return buildAuthResponse(authentication);
         } catch (AuthenticationException ex) {
@@ -68,6 +78,9 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public AuthResponse refresh(RefreshRequest request) {
+        if(! isCompanyActive()){
+            throw new ResponseStatusException(BAD_REQUEST, "Company expire or deleted");
+        }
         String refreshToken = request.getRefreshToken();
         if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
             log.warn("Invalid refresh token provided");
@@ -87,14 +100,23 @@ public class AuthService {
      * Common routine to build the AuthResponse DTO.
      */
     private AuthResponse buildAuthResponse(Authentication authentication) {
+
+
         AppUser user = (AppUser) authentication.getPrincipal();
 
         String accessToken  = jwtTokenProvider.generateAccessToken(authentication);
         String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
-        List<String> roleNames = user.getRoles().stream()
-                .map(r -> r.getName())
-                .collect(Collectors.toList());
+        List<String> roleNames = user.getRoles() == null ? List.of()
+                : user.getRoles().stream().map(Role::getName).toList();
+        if(!roleNames.stream().anyMatch("ROLE_SUPER_ADMIN"::equals)){
+            boolean isActiveCompany = isCompanyActiveInlogin(user.getId());
+
+            if ( !isActiveCompany) {
+                throw new ResponseStatusException(BAD_REQUEST, "Company expire or deleted");
+            }
+        }
+
 
         return AuthResponse.builder()
                 .tokenType("Bearer")
@@ -113,6 +135,9 @@ public class AuthService {
     @Auditable(operation = "اضافة حساب", captureArgs = true, captureResult = true)
     public AppUser createUser(CreateUserRequest request) {
         // Check if username already exists
+        if( !isCompanyActive()){
+            throw new ResponseStatusException(BAD_REQUEST, "Company expire or deleted");
+        }
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             throw new ResponseStatusException(BAD_REQUEST, "Username already exists");
         }
@@ -144,7 +169,26 @@ public class AuthService {
 
     @Auditable(operation = "تحديث معلومات حساب", captureArgs = true, captureResult = true)
     public void updateUser(AppUser user) {
+        if(! isCompanyActive()){
+            throw new ResponseStatusException(BAD_REQUEST, "Company expire or deleted");
+        }
         userRepository.save(user);
     }
+
+
+    public boolean isCompanyActive() {
+        helper.getCurrentUserId();
+        LocalDate today = LocalDate.now();
+        return companyRepository.findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual( helper.getCurrentCompanyId() , today).isPresent();
+    }
+    public boolean isCompanyActiveInlogin(Long id) {
+        System.out.println(" the id of the user id :"+ id);
+        CompanyUser companyUser = companyUserRepository.findByUserId(id);
+        LocalDate today = LocalDate.now();
+        System.out.println(" the id of the company id :"+ companyUser.getCompany().getId());
+        System.out.println("the date of the time now "+ today);
+        return companyRepository.findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual(companyUser.getCompany().getId(), today).isPresent();
+    }
+
 
 }
