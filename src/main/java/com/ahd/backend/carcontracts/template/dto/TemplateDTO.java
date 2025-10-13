@@ -1,11 +1,9 @@
 package com.ahd.backend.carcontracts.template.dto;
 
-
-
-import lombok.Data;
+import lombok.*;
 import java.util.List;
 
-@Data
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class TemplateDTO {
     private Long id;
     private String name;
