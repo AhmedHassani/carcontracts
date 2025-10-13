@@ -177,16 +177,22 @@ public class AuthService {
 
 
     public boolean isCompanyActive() {
-        helper.getCurrentUserId();
-        LocalDate today = LocalDate.now();
-        return companyRepository.findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual( helper.getCurrentCompanyId() , today).isPresent();
+        System.out.println("test1");
+       var user = helper.getCurrentUser();
+        List<String> roleNames = user.getRoles() == null ? List.of()
+                : user.getRoles().stream().map(Role::getName).toList();
+        if(!roleNames.stream().anyMatch("ROLE_SUPER_ADMIN"::equals)){
+            LocalDate today = LocalDate.now();
+            return companyRepository.findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual( helper.getCurrentCompanyId() , today).isPresent();
+        }
+       return true;
     }
     public boolean isCompanyActiveInlogin(Long id) {
-        System.out.println(" the id of the user id :"+ id);
+       // System.out.println(" the id of the user id :"+ id);
         CompanyUser companyUser = companyUserRepository.findByUserId(id);
         LocalDate today = LocalDate.now();
-        System.out.println(" the id of the company id :"+ companyUser.getCompany().getId());
-        System.out.println("the date of the time now "+ today);
+      //  System.out.println(" the id of the company id :"+ companyUser.getCompany().getId());
+      //  System.out.println("the date of the time now "+ today);
         return companyRepository.findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual(companyUser.getCompany().getId(), today).isPresent();
     }
 

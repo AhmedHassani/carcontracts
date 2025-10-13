@@ -1,39 +1,60 @@
+// src/main/java/com/ahd/backend/carcontracts/template/mapper/TemplateFieldMapper.java
 package com.ahd.backend.carcontracts.template.mapper;
-
 
 import com.ahd.backend.carcontracts.template.dto.TemplateFieldDTO;
 import com.ahd.backend.carcontracts.template.model.TemplateField;
 
 public class TemplateFieldMapper {
 
-    public static TemplateFieldDTO toDTO(TemplateField entity) {
-        if (entity == null) return null;
+    public static TemplateField toEntity(TemplateFieldDTO d) {
+        if (d == null) return null;
+        TemplateField e = new TemplateField();
+        e.setId(d.getId());
+        e.setLabel(d.getLabel());
+        e.setFieldId(d.getFieldId());
+        e.setX(d.getX());
+        e.setY(d.getY());
+        e.setWidth(d.getWidth());
+        e.setHeight(d.getHeight());
+        e.setValue(d.getValue());
+        e.setKind(/* map enum safely */
+                d.getKind() == null ? null :
+                        com.ahd.backend.carcontracts.template.model.TemplateItemKind.valueOf(d.getKind().toUpperCase())
+        );
+        e.setSrc(d.getSrc());
 
-        TemplateFieldDTO dto = new TemplateFieldDTO();
-        dto.setId(entity.getId());
-        dto.setLabel(entity.getLabel());
-        dto.setFieldId(entity.getFieldId());
-        dto.setX(entity.getX());
-        dto.setY(entity.getY());
-        dto.setWidth(entity.getWidth());
-        dto.setHeight(entity.getHeight());
-        dto.setValue(entity.getValue());
-
-        return dto;
+        // copy style to flat columns
+        if (d.getStyle() != null) {
+            e.setStyleFontSize(d.getStyle().getFontSize());
+            e.setStyleColor(d.getStyle().getColor());
+        } else {
+            e.setStyleFontSize(null);
+            e.setStyleColor(null);
+        }
+        return e;
     }
 
-    public static TemplateField toEntity(TemplateFieldDTO dto) {
-        if (dto == null) return null;
+    public static TemplateFieldDTO toDTO(TemplateField e) {
+        if (e == null) return null;
+        TemplateFieldDTO d = new TemplateFieldDTO();
+        d.setId(e.getId());
+        d.setLabel(e.getLabel());
+        d.setFieldId(e.getFieldId());
+        d.setX(e.getX());
+        d.setY(e.getY());
+        d.setWidth(e.getWidth());
+        d.setHeight(e.getHeight());
+        d.setValue(e.getValue());
+        d.setKind(e.getKind() == null ? null : e.getKind().name());
+        d.setSrc(e.getSrc());
 
-        return TemplateField.builder()
-                .id(dto.getId()) // only set if updating
-                .label(dto.getLabel())
-                .fieldId(dto.getFieldId())
-                .x(dto.getX())
-                .y(dto.getY())
-                .width(dto.getWidth())
-                .height(dto.getHeight())
-                .value(dto.getValue())
-                .build();
+        // build style object from columns
+        if (e.getStyleFontSize() != null || e.getStyleColor() != null) {
+            TemplateFieldDTO.Style style = new TemplateFieldDTO.Style();
+            style.setFontSize(e.getStyleFontSize());
+            style.setColor(e.getStyleColor());
+            d.setStyle(style);
+        }
+        return d;
     }
 }
