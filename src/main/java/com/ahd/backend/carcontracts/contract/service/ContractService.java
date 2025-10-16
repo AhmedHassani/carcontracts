@@ -162,10 +162,20 @@ public class ContractService {
         notif.setTitle("حذف عقد");
         notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");
         notif.setNotificationDate(LocalDateTime.now());
-    //    notif.setCompany(savedCompany);
+        //    notif.setCompany(savedCompany);
         notif.setPermisson("CompanyUsers");
         notificationService.insertNotificationAsync(notif);
 
+        contractRepo.save(contract);
+    }
+
+
+    @Transactional
+    @Auditable(operation = "تحديث عقد", captureArgs = true, captureResult = true)
+    public void updateContracttemplateId(Long contractId , Long templateId) {
+        Contracts contract = contractRepo.findByIdAndCompanyId(contractId , getCompanyId())
+                .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
+        contract.setTemplateId(templateId);
         contractRepo.save(contract);
     }
 

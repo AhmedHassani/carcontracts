@@ -36,6 +36,7 @@ public final class ContractMapper {
         dto.setGuarantor    (toPersonDTO(c.getGuarantor()));
         dto.setCar          (toCarDTO(c.getCar()));
         dto.setPaymentPlan  (toPaymentPlanDTO(c.getPaymentPlan()));
+        dto.setTemplateId   (c.getTemplateId());
         return dto;
     }
 

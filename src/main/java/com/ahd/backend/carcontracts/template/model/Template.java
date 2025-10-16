@@ -26,8 +26,8 @@ public class Template {
     private String name;
 
     // مهم: اسم العمود camelCase في DB
-    @Column(name = "imageKey", length = 1024)
-    private String imageKey;
+//    @Column(name = "imageKey", length = 1024)
+//    private String imageKey;
 
     @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("zIndex ASC, id ASC")

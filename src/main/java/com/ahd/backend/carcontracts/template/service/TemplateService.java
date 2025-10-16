@@ -2,9 +2,11 @@ package com.ahd.backend.carcontracts.template.service;
 
 
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
+import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.template.dto.TemplateDTO;
+import com.ahd.backend.carcontracts.template.dto.TemplateListDTO;
 import com.ahd.backend.carcontracts.template.mapper.TemplateFieldMapper;
 import com.ahd.backend.carcontracts.template.mapper.TemplateMapper;
 import com.ahd.backend.carcontracts.template.model.Template;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,24 +50,26 @@ public class TemplateService {
     }
 
     @Transactional(readOnly = true)
-    public List<TemplateDTO> getTemplatesByCompany() {
+    public List<TemplateListDTO> getTemplatesByCompany() {
         long companyId = helper.getCurrentCompanyId();
-        return templateRepository.findByCompanyIdOrderByUpdatedAtDesc(companyId)
-                .stream().map(TemplateMapper::toDTO).toList();
+        return templateRepository.findSummariesByCompanyId(companyId);
     }
+
 
     // TemplateService.java (مقتطفات مهمة)
     @Transactional
+    @Auditable(operation = "تحديث قالب", captureArgs = true, captureResult = true)
     public TemplateDTO updateTemplate(Long id, TemplateDTO dto) {
+        System.out.println("start");
         long companyId = helper.getCurrentCompanyId();
         Template template = templateRepository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
-
+        template.setUpdatedAt(Instant.now());
         template.setName(dto.getName());
-        template.setImageKey(dto.getImageKey());
+     //   template.setImageKey(dto.getImageKey());
         template.setCompany(company);
 
         if (template.getFields() == null) {
@@ -80,11 +85,13 @@ public class TemplateService {
                     .toList();
             template.getFields().addAll(fields);
         }
+        System.out.println("start2");
 
         return TemplateMapper.toDTO(templateRepository.save(template));
     }
 
     @Transactional
+    @Auditable(operation = "حفظ قالب", captureArgs = true, captureResult = true)
     public TemplateDTO saveTemplate(TemplateDTO dto) {
         long companyId = helper.getCurrentCompanyId();
         Company company = companyRepository.findById(companyId)
@@ -103,17 +110,18 @@ public class TemplateService {
     }
 
     @Transactional
+    @Auditable(operation = "حذف قالب", captureArgs = true, captureResult = true)
     public void deleteTemplate(Long id) {
         long companyId = helper.getCurrentCompanyId();
         Template template = templateRepository.findByIdAndCompanyId(id, companyId)
                 .orElseThrow(() -> new RuntimeException("Template not found"));
 
         // optionally delete background image from S3
-        String key = template.getImageKey();
+       // String key = template.getImageKey();
         templateRepository.delete(template);
-        if (key != null && !key.isBlank()) {
-            try { s3FileStorageService.delete(key); } catch (Exception ignored) {}
-        }
+//        if (key != null && !key.isBlank()) {
+//            try { s3FileStorageService.delete(key); } catch (Exception ignored) {}
+//        }
     }
 
     @Transactional
@@ -123,7 +131,7 @@ public class TemplateService {
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
         String imageKey = s3FileStorageService.upload(image);
-        dto.setImageKey(imageKey);
+      //  dto.setImageKey(imageKey);
 
         Template entity = TemplateMapper.toEntity(dto, company);
         Template saved = templateRepository.save(entity);
@@ -141,10 +149,10 @@ public class TemplateService {
 
         // upload new first
         String newKey = s3FileStorageService.upload(image);
-        String oldKey = template.getImageKey();
+       // String oldKey = template.getImageKey();
 
         template.setName(dto.getName());
-        template.setImageKey(newKey);
+      //  template.setImageKey(newKey);
         template.setCompany(company);
 
         template.getFields().clear();
@@ -158,9 +166,9 @@ public class TemplateService {
 
         TemplateDTO out = TemplateMapper.toDTO(templateRepository.save(template));
 
-        if (oldKey != null && !oldKey.isBlank()) {
-            try { s3FileStorageService.delete(oldKey); } catch (Exception ignored) {}
-        }
+//        if (oldKey != null && !oldKey.isBlank()) {
+//            try { s3FileStorageService.delete(oldKey); } catch (Exception ignored) {}
+//        }
         return out;
     }
 }

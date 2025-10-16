@@ -89,6 +89,13 @@ public class AuthorizationService {
         }
         authorizationRepository.deleteById(id);
     }
+    @Auditable(operation = "تحديث تخويل", captureArgs = true, captureResult = true)
+    public AuthorizationResponse updatetemplateId(Long id, Long templateId) {
+        Authorization entity = authorizationRepository.findByIdAndCompanyId(id , getCompanyId())
+                .orElseThrow(() -> new EntityNotFoundException("Authorization not found: " + id));
+        entity.setTemplateId(templateId);
+        return AuthorizationMapper.toResponse(authorizationRepository.save(entity));
+    }
 
     public Long getCompanyId (){
         return  helper.getCurrentCompanyId();

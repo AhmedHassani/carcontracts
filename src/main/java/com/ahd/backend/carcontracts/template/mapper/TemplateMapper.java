@@ -17,8 +17,10 @@ public class TemplateMapper {
         Template t = Template.builder()
                 .id(dto.getId())
                 .name(dto.getName())
-                .imageKey(dto.getImageKey())
+            //    .imageKey(dto.getImageKey())
                 .company(company)
+                .updatedAt(dto.getUpdatedAt())
+                .createdAt(dto.getCreatedAt())
                 .build();
 
         // ضمان عدم null
@@ -43,7 +45,9 @@ public class TemplateMapper {
         return TemplateDTO.builder()
                 .id(entity.getId())
                 .name(entity.getName())
-                .imageKey(entity.getImageKey())
+       //         .imageKey(entity.getImageKey())
+                .updatedAt(entity.getUpdatedAt())
+                .createdAt(entity.getCreatedAt())
                 .fields(fields)
                 .build();
     }
