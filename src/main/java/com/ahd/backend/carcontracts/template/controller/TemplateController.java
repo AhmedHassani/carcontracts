@@ -3,6 +3,7 @@ package com.ahd.backend.carcontracts.template.controller;
 
 
 import com.ahd.backend.carcontracts.template.dto.TemplateDTO;
+import com.ahd.backend.carcontracts.template.dto.TemplateListDTO;
 import com.ahd.backend.carcontracts.template.service.TemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,7 @@ public class TemplateController {
     }
 
     @GetMapping("/company")
-    public List<TemplateDTO> getByCompany() {
+    public List<TemplateListDTO> getByCompany() {
         return templateService.getTemplatesByCompany();
     }
 

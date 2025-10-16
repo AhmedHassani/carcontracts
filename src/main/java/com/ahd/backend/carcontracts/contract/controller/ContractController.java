@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -67,4 +68,21 @@ public class ContractController {
         contractService.softDeleteContract(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/contractId/{id}/templateId/{templateId}")
+    @PreAuthorize("hasAnyRole('COMPANY','SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> updateTemplateId(
+            @PathVariable("id") Long id,
+            @PathVariable("templateId") Long templateId) {
+
+        contractService.updateContracttemplateId(id, templateId);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("Contract Update Successfully")
+                .code(200)
+                .date(Instant.now())
+                .build());
+    }
+
+
 }

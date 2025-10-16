@@ -41,4 +41,7 @@ public class Contracts {
 
     @Column(name = "companyId")
     private Long companyId;
+
+    @Column(name = "template_id")
+    private Long templateId;
 }

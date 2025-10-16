@@ -41,4 +41,8 @@ public class Authorization {
 
     @ManyToOne(fetch = FetchType.LAZY)
     Car car;
+
+    @Column(name = "template_id")
+    private Long templateId;
+
 }

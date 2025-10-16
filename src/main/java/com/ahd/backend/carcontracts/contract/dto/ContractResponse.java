@@ -23,6 +23,7 @@ public class ContractResponse {
     private PersonDTO guarantor;
     private CarDTO car;
     private PaymentPlanDTO paymentPlan;
+    private Long templateId;
 
 
     @Getter @Setter

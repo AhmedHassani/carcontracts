@@ -16,6 +16,7 @@ public class AuthorizationResponse {
     private String companyAgent;
     private PersonSummary buyer;
     private CarSummary car;
+    private Long templateId;
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class PersonSummary {

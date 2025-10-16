@@ -21,6 +21,7 @@ public final class AuthorizationMapper {
                 .companyAgent(e.getCompanyAgent())
                 .buyer(toPersonSummary(e.getBuyer()))
                 .car(toCarSummary(e.getCar()))
+                .templateId(e.getTemplateId())
                 .build();
     }
 

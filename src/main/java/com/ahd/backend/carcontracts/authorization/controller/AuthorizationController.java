@@ -61,7 +61,6 @@ public class AuthorizationController {
 
     }
 
-
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
@@ -87,5 +86,15 @@ public class AuthorizationController {
                 .build());
     }
 
-
+    @PutMapping("/Authid/{id}/templateId/{templateId}")
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> updatetemplateId(@PathVariable Long id ,  @PathVariable Long templateId) {
+        service.updatetemplateId(id , templateId);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .success(true)
+                .message("Authorization Update Successfully")
+                .code(200)
+                .date(Instant.now())
+                .build());
+    }
 }
