@@ -73,12 +73,6 @@ public class ContractSpecification {
 //                ));
 //            }
 
-
-            if (criteria.id() != null) {
-                predicates.add(cb.equal(root.get("id"), criteria.id()));
-            }
-
-
             if (criteria.SellerPhone() != null && !criteria.SellerPhone().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("seller").get("phoneNumber")),
@@ -116,6 +110,13 @@ public class ContractSpecification {
                         "%" + criteria.carType().toLowerCase() + "%"
                 ));
             }
+
+
+            if (criteria.id() != null) {
+                predicates.add(cb.equal(root.get("id"), criteria.id()));
+            }
+
+
             predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
 
             return cb.and(predicates.toArray(new Predicate[0]));

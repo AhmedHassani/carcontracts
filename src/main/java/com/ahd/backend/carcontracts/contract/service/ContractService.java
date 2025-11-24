@@ -103,6 +103,7 @@ public class ContractService {
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
                 .companyId(getCompanyId())
+                .id(criteria.id())
 //                .buyerNationalId(criteria.buyerNationalId())
 //                .sellerNationalId(criteria.sellerNationalId())
                 .chassisNumber(criteria.chassisNumber())

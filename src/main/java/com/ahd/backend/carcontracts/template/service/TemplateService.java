@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -67,7 +68,7 @@ public class TemplateService {
 
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
-        template.setUpdatedAt(Instant.now());
+        //template.setUpdatedAt(LocalDateTime.now());
         template.setName(dto.getName());
      //   template.setImageKey(dto.getImageKey());
         template.setCompany(company);
@@ -98,11 +99,9 @@ public class TemplateService {
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
         Template entity = TemplateMapper.toEntity(dto, company);
-        // حماية إضافية
         if (entity.getFields() == null) {
             entity.setFields(new ArrayList<>());
         } else {
-            // تأكد من ضبط الـ back-reference
             entity.getFields().forEach(f -> f.setTemplate(entity));
         }
         Template saved = templateRepository.save(entity);
