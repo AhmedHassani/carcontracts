@@ -56,7 +56,9 @@ public class PaymentPlanService {
                 .status(PaymentStatus.PENDING)
                 .installments(new ArrayList<>())
                 .build();
-        if ("CASH".equals(request.getPaymentType())) {
+
+        if (request.getPaymentType() == PaymentType.CASH) {
+            System.out.println("CASH payment detected - setting status to COMPLETED");
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
         }
         BigDecimal remainingAmount = paymentPlan.getTotalAmount().subtract(paymentPlan.getDownPayment());

@@ -2,6 +2,8 @@
 package com.ahd.backend.carcontracts.template.dto;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+
 import lombok.Value;
 
 @Value
@@ -9,6 +11,6 @@ public class TemplateListDTO {
     Long id;
     String name;
    // String imageKey;
-    Instant createdAt;
-    Instant updatedAt;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
 }

@@ -6,6 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 @Getter
@@ -21,11 +23,9 @@ public class Template {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // name عندك NVARCHAR فعادي تتركها
     @Column(columnDefinition = "NVARCHAR(255)")
     private String name;
 
-    // مهم: اسم العمود camelCase في DB
 //    @Column(name = "imageKey", length = 1024)
 //    private String imageKey;
 
@@ -38,13 +38,11 @@ public class Template {
     @JoinColumn(name = "company_id", nullable = false)
     private Company company;
 
-    // مهم: اسم العمود camelCase في DB
+    @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
-    @Column(name = "createdAt", updatable = false)
-    private Instant createdAt;
+    private LocalDateTime createdAt;
 
-    // مهم: اسم العمود camelCase في DB
+    @Column(name = "updated_at")
     @UpdateTimestamp
-    @Column(name = "updatedAt")
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
 }
