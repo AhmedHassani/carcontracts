@@ -34,14 +34,25 @@ public class PersonSpecification {
 
             if (criteria.keyword() != null && !criteria.keyword().isBlank()) {
                 String pattern = "%" + criteria.keyword().toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(fullName, pattern),
-                        cb.like(cb.lower(root.get("firstName")), pattern),
-                        cb.like(cb.lower(root.get("fatherName")), pattern),
-                        cb.like(cb.lower(root.get("grandfatherName")), pattern),
-                        cb.like(cb.lower(root.get("fourthName")), pattern),
-                        cb.like(cb.lower(root.get("surname")), pattern)
-                ));
+
+                predicates.add(
+                        cb.or(
+                                // Full name
+                                cb.like(fullName, pattern),
+
+                                // Individual name parts
+                                cb.like(cb.lower(root.get("firstName")), pattern),
+                                cb.like(cb.lower(root.get("fatherName")), pattern),
+                                cb.like(cb.lower(root.get("grandfatherName")), pattern),
+                                cb.like(cb.lower(root.get("fourthName")), pattern),
+                                cb.like(cb.lower(root.get("surname")), pattern),
+
+                                // Phone, nationalId, residenceCardNo
+                                cb.like(cb.lower(root.get("phoneNumber")), pattern),
+                                cb.like(cb.lower(root.get("nationalId")), pattern),
+                                cb.like(cb.lower(root.get("residenceCardNo")), pattern)
+                        )
+                );
             }
 
             if (criteria.phoneNumber() != null && !criteria.phoneNumber().isBlank()) {
