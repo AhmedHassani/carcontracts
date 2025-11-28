@@ -101,7 +101,7 @@ public final class ContractMapper {
     public static ContractPaymentsResponse toPayments(Contracts contract) {
         ContractPaymentsResponse dto = new ContractPaymentsResponse();
         dto.setContractId(contract.getId());
-        String customerName = Optional.ofNullable(contract.getSeller())
+        String customerName = Optional.ofNullable(contract.getBuyer())
                 .map(buyer ->
                         Optional.ofNullable(buyer.getFirstName()).orElse("") + " " +
                         Optional.ofNullable(buyer.getFatherName()).orElse("") + " " +
