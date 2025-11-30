@@ -66,7 +66,7 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
          AND p.complete_date BETWEEN :start AND :end
          AND p.companyId = :companyId
        """)
-    long summationByStatusAndDateRangeCompleted(@Param("status") PaymentStatus status,
+    Long summationByStatusAndDateRangeCompleted(@Param("status") PaymentStatus status,
                                             @Param("start") LocalDate start,
                                             @Param("end") LocalDate end,
                                             @Param("companyId") Long companyId);
