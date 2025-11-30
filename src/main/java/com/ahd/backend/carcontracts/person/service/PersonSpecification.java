@@ -60,6 +60,11 @@ public class PersonSpecification {
                 predicates.add(cb.like(cb.lower(root.get("phoneNumber")), pattern));
             }
 
+            if (criteria.residence() != null && !criteria.residence().isBlank()) {
+                String pattern = "%" + criteria.residence().toLowerCase() + "%";
+                predicates.add(cb.like(cb.lower(root.get("residence")), pattern));
+            }
+
             if (criteria.nationalId() != null && !criteria.nationalId().isBlank()) {
                 String pattern = "%" + criteria.nationalId().toLowerCase() + "%";
                 predicates.add(cb.like(cb.lower(root.get("nationalId")), pattern));
