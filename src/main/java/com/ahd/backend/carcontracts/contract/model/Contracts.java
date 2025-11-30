@@ -39,7 +39,7 @@ public class Contracts {
     @Column(nullable = false)
     private boolean deleted = false;
 
-    @Column(name = "companyId")
+    @Column(name = "company_id")
     private Long companyId;
 
     @Column(name = "template_id")
