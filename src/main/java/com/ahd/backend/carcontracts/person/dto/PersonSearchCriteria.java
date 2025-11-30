@@ -13,5 +13,6 @@ public record PersonSearchCriteria(
         String phoneNumber,
         String nationalId,
         String residenceCardNo,
-        Long companyId
+        Long companyId,
+        String residence
 ) implements BaseCriteria { }

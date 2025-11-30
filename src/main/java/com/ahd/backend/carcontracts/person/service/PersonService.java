@@ -79,6 +79,7 @@ public class PersonService {
                 .phoneNumber(criteria.phoneNumber())
                 .nationalId(criteria.nationalId())
                 .residenceCardNo(criteria.residenceCardNo())
+                .residence(criteria.residence())
                 .companyId(getCompanyId())
                 .build();
         spec = PersonSpecification.buildSpecification(enrichedCriteria);
