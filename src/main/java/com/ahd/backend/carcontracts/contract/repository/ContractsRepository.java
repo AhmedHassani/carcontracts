@@ -53,7 +53,7 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
             COUNT(id) AS total_contracts
         FROM car_contracts
         WHERE contract_date BETWEEN :start AND :end
-          AND companyId = :companyId
+          AND company_id = :companyId
         GROUP BY FORMAT(contract_date, 'yyyy-MM')
         ORDER BY month
     """, nativeQuery = true)
