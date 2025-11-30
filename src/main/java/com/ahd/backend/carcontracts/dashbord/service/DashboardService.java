@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -120,7 +121,11 @@ public class DashboardService {
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
-            long paidCashCount = paymentPlanRepository.summationByStatusAndDateRangeCompleted(PaymentStatus.COMPLETED , start, end , getCompanyId());
+            long paidCashCount = Optional.ofNullable(
+                    paymentPlanRepository.summationByStatusAndDateRangeCompleted(
+                            PaymentStatus.COMPLETED, start, end, getCompanyId()
+                    )
+            ).orElse(0L);
 
             stats.put(periodName, Map.of(
                    "totalCars", totalCars ,
