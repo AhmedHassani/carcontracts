@@ -9,6 +9,7 @@ import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.notification.model.AppNotification;
+import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
@@ -57,8 +58,11 @@ public class ContractService {
         PaymentPlan paymentPlan = planRepo.getReferenceById(request.getPaymentId());
         if(paymentPlan.getPaymentType() == PaymentType.CASH){
             car.setStatus("Paid");
+            car.setPaidAt(LocalDateTime.now());
+            paymentPlan.setStatus(PaymentStatus.COMPLETED);
         }else{
             car.setStatus("Active");
+            paymentPlan.setStatus(PaymentStatus.ACTIVE);
         }
         Person guarantor = null;
         if (request.getGuarantorId() != null) {

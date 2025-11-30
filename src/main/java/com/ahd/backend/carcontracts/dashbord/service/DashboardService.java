@@ -113,15 +113,19 @@ public class DashboardService {
             end = entry.getValue()[1];
 
             long totalCars = carRepository.countByCompanyIdAndCreatedAtBetween(getCompanyId() , "Pending",start.atStartOfDay(), end.atTime(LocalTime.MAX) );
+            //check if the car become paid in the cash and the instament paid
             long PaidCars = carRepository
                     .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid",start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
+            // here the cash will not work
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
+
+            long paidCashCount = paymentPlanRepository.summationByStatusAndDateRangeCompleted(PaymentStatus.COMPLETED , start, end , getCompanyId());
 
             stats.put(periodName, Map.of(
                    "totalCars", totalCars ,
                   "paidCars", PaidCars  ,
-                  "paidInstallmentsCount", paidInstallmentsCount
+                  "paidInstallmentsCount", paidInstallmentsCount + paidCashCount
             ));
         }
         return stats;
