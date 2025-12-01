@@ -11,6 +11,7 @@ import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.dashbord.enums.DateType;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
+import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import com.ahd.backend.carcontracts.util.Helper;
@@ -98,13 +99,15 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
         LocalDate start;
         LocalDate end;
-        System.out.println("today : " + today);
+        //System.out.println("today : " + today);
+
         Map<String, LocalDate[]> periods = Map.of(
                 "day",   new LocalDate[]{ today, today },
-                "week",  new LocalDate[]{ today.with(DayOfWeek.MONDAY), today.with(DayOfWeek.SUNDAY) },
-                "month", new LocalDate[]{ today.withDayOfMonth(1), today.withDayOfMonth(today.lengthOfMonth()) },
-                "year",  new LocalDate[]{ today.withDayOfYear(1), today.withDayOfYear(today.lengthOfYear()) }
+                "week",  new LocalDate[]{ today.minusWeeks(1), today },
+                "month", new LocalDate[]{ today.minusMonths(1), today },
+                "year",  new LocalDate[]{ today.minusYears(1), today}
         );
+
 
         Map<String, Map<String, Long>> stats = new LinkedHashMap<>();
 
@@ -121,11 +124,18 @@ public class DashboardService {
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
-            long paidCashCount = Optional.ofNullable(
+            BigDecimal paidCashSum = Optional.ofNullable(
                     paymentPlanRepository.summationByStatusAndDateRangeCompleted(
-                            PaymentStatus.COMPLETED, start, end, getCompanyId()
+                            PaymentStatus.COMPLETED , PaymentType.CASH , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
                     )
-            ).orElse(0L);
+            ).orElse(BigDecimal.ZERO);
+//            System.out.println("the value of the payment data1 : "+ paidCashSum);
+//            System.out.println("the value of the payment data : "+ paidCashSum.longValue());
+//            System.out.println("start "+ start + " end "+ end);
+//            System.out.println("company  "+ getCompanyId() + " PaymentStatus "+ PaymentStatus.COMPLETED  +" \n PaymentType "+PaymentType.CASH);
+
+            long paidCashCount = paidCashSum.longValue();
+
 
             stats.put(periodName, Map.of(
                    "totalCars", totalCars ,

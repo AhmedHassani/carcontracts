@@ -60,15 +60,20 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
                                    @Param("companyId") Long companyId);
 
     @Query("""
-       SELECT SUM(p.totalAmount)
-       FROM PaymentPlan p
-       WHERE p.status = :status
-         AND p.complete_date BETWEEN :start AND :end
-         AND p.companyId = :companyId
-       """)
-    Long summationByStatusAndDateRangeCompleted(@Param("status") PaymentStatus status,
-                                            @Param("start") LocalDate start,
-                                            @Param("end") LocalDate end,
-                                            @Param("companyId") Long companyId);
+   SELECT COALESCE(SUM(p.totalAmount), 0)
+   FROM PaymentPlan p
+   WHERE p.status = :status
+     AND p.paymentType =:paymentType
+     AND p.createdAt BETWEEN :start AND :end
+     AND p.companyId = :companyId
+   """)
+    BigDecimal summationByStatusAndDateRangeCompleted(
+            @Param("status") PaymentStatus status,
+            @Param("paymentType") PaymentType paymentType,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("companyId") Long companyId
+    );
+
 
 }
