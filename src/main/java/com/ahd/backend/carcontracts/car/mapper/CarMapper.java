@@ -38,6 +38,7 @@ public final class CarMapper {
                 .attachments(new ArrayList<>())
                 .walletNumber(dto.getWalletNumber())
                 .typeOfCarPlate(dto.getTypeOfCarPlate())
+                .initPrice(dto.getInitPrice())
                 .build();
     }
 
@@ -69,6 +70,7 @@ public final class CarMapper {
                 .walletNumber(car.getWalletNumber())
                 .typeOfCarPlate(car.getTypeOfCarPlate())
                 .status(car.getStatus())
+                .initPrice(car.getInitPrice())
                 .build();
     }
 
@@ -100,6 +102,7 @@ public final class CarMapper {
         Optional.ofNullable(patch.getOrigin()).ifPresent(target::setOrigin);
         Optional.ofNullable(patch.getWalletNumber()).ifPresent(target::setWalletNumber);
         Optional.ofNullable(patch.getTypeOfCarPlate()).ifPresent(target::setTypeOfCarPlate);
+        Optional.ofNullable(patch.getInitPrice()).ifPresent(target::setInitPrice);
 
         return target;
     }
