@@ -33,4 +33,5 @@ public class CarRequestDTO {
     private Long compnayId;
     private String walletNumber;
     private String typeOfCarPlate;
+    private String initPrice;
 }

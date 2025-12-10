@@ -28,4 +28,5 @@ public class CarResponseDTO {
     private String walletNumber;
     private String typeOfCarPlate;
     private String status;
+    private String initPrice;
 }

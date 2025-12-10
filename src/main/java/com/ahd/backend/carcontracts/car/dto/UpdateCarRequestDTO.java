@@ -30,6 +30,7 @@ public class UpdateCarRequestDTO {
     private String origin;
     private String walletNumber;
     private String typeOfCarPlate;
+    private String initPrice;
 
     public boolean isEmpty() {
         return  name            == null &&
