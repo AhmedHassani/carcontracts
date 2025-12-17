@@ -38,17 +38,21 @@ public class DropDownService {
 
     @Transactional(readOnly = true)
     public List<DropDownResponseDTO> getAllDropDowns() {
-       // log.debug("Fetching all dropdowns");
+
         List<DropDown> dropDowns = dropDownRepository.findAll();
         return dropDownMapper.toDropDownResponseDTOList(dropDowns);
     }
 
     @Transactional(readOnly = true)
-    public List<OptionResponseDTO> getOptionsByDropDownId(Long dropDownId) {
-       //log.debug("Fetching options for dropdown id: {}", dropDownId);
-
-        List<OptionDropDown> optionDropDown = optionDropDownRepository.findBydropDownId(dropDownId);
-
+    public List<OptionResponseDTO> getOptionsByDropDownId(Long dropDownId , Long root ) {
+        List<OptionDropDown> optionDropDown = null;
+        if(root == 0){
+            optionDropDown =
+                    optionDropDownRepository.findBydropDownId(dropDownId);
+        }else{
+            optionDropDown =
+                    optionDropDownRepository.findBydropDownIdAndSub(dropDownId , root);
+        }
 
         return dropDownMapper.toOptionResponseDTOList(optionDropDown);
     }
@@ -67,6 +71,8 @@ public class DropDownService {
                 .label(request.getLabel())
                 .value(request.getValue())
                 .dropDownId(request.getDropDownId())
+                .sub(request.getSub())
+                .root(request.getRoot())
                 .build();
 
         OptionDropDown savedOption = optionDropDownRepository.save(option);

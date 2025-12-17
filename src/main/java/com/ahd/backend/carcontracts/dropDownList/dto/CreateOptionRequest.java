@@ -13,4 +13,6 @@ public class CreateOptionRequest {
     private Long dropDownId;
     private String label;
     private String value;
+    private Long sub;
+    private Long root;
 }

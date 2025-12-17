@@ -13,6 +13,8 @@ public class UpdateOptionRequest {
     private Long id; // For bulk updates
     private String label;
     private String value;
+    private Long sub;
+    private Long root;
 
     public boolean isEmpty() {
         return (label == null || label.trim().isEmpty()) &&

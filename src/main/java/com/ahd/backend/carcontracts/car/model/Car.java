@@ -145,6 +145,9 @@ public class Car {
 
     private String status;
 
+    private String description;
+
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

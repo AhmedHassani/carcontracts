@@ -26,6 +26,8 @@ public class DropDownMapper {
                 .label(option.getLabel())
                 .value(option.getValue())
                 .dropDownId(option.getDropDownId())
+                .root(option.getRoot())
+                .sub(option.getSub())
                 .build();
     }
 
@@ -70,6 +72,8 @@ public class DropDownMapper {
         return OptionDropDown.builder()
                 .label(request.getLabel())
                 .value(request.getValue())
+                .root(request.getRoot())
+                .sub(request.getSub())
                 .build();
     }
 
@@ -82,6 +86,8 @@ public class DropDownMapper {
                 .id(dto.getId())
                 .label(dto.getLabel())
                 .value(dto.getValue())
+                .sub(dto.getSub())
+                .root(dto.getRoot())
                 .build();
     }
 
@@ -143,6 +149,8 @@ public class DropDownMapper {
                 .id(option.getId())
                 .label(option.getLabel())
                 .value(option.getValue())
+                .root(option.getRoot())
+                .sub(option.getSub())
                 .build();
     }
 
@@ -189,6 +197,8 @@ public class DropDownMapper {
                 .id(dto.getId())
                 .label(dto.getLabel())
                 .value(dto.getValue())
+                .root(dto.getRoot())
+                .sub(dto.getSub())
                 .build();
     }
 

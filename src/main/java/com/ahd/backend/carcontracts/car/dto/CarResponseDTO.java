@@ -29,4 +29,6 @@ public class CarResponseDTO {
     private String typeOfCarPlate;
     private String status;
     private String initPrice;
+    private String description;
+
 }

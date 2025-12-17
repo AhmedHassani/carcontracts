@@ -17,6 +17,8 @@ import java.util.Optional;
 public interface CompanyUserRepository extends JpaRepository<CompanyUser,CompanyUser.CompanyUserId>,JpaSpecificationExecutor<CompanyUser> {
     long countByCompanyId(Long companyId);
     Optional<CompanyUser> findByCompanyAndRole(Company company, CompanyUserRole role);
+    Optional<CompanyUser> findByCompanyIdAndRole(Long companyId, CompanyUserRole role);
+
     Page<CompanyUser> findByCompanyId(Long companyId, Pageable pageable);
     CompanyUser findByUserId(Long userId);
     CompanyUser findByUser(AppUser user);

@@ -33,10 +33,11 @@ public class DropDownController {
         return ResponseEntity.ok(dropdowns);
     }
 
-    @GetMapping("/{dropDownId}/options")
+    @GetMapping("/fetch/{dropDownId}/options/{root}/root")
     public ResponseEntity<List<OptionResponseDTO>> getOptionsByDropDownId(
-            @PathVariable Long dropDownId) {
-        List<OptionResponseDTO> options = dropDownService.getOptionsByDropDownId(dropDownId);
+            @PathVariable Long dropDownId ,
+            @PathVariable Long root) {
+        List<OptionResponseDTO> options = dropDownService.getOptionsByDropDownId(dropDownId , root);
         return ResponseEntity.ok(options);
     }
 
