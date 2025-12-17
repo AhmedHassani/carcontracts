@@ -31,6 +31,8 @@ public class UpdateCarRequestDTO {
     private String walletNumber;
     private String typeOfCarPlate;
     private String initPrice;
+    private String description;
+
 
     public boolean isEmpty() {
         return  name            == null &&

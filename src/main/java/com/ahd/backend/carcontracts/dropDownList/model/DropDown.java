@@ -69,5 +69,11 @@ public class DropDown {
 //        (N'عدد الاسطوانات');
 //
 //select * from  drop_down
+//
+//
+//ALTER TABLE dbo.car
+//ADD init_price NVARCHAR(50) NULL;
+/// ///////////////////////////////////////////////////////////////////////////////////
+
 
 

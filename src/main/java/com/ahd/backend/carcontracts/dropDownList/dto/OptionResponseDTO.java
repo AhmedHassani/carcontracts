@@ -14,4 +14,6 @@ public class OptionResponseDTO {
     private String label;
     private String value;
     private Long dropDownId;
+    private Long sub;
+    private Long root;
 }

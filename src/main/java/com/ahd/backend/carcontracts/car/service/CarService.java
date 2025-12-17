@@ -53,12 +53,15 @@ public class CarService {
     @Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
-        if(carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Pending")){
+        if(carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Pending") ||
+                carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Active")){
                 throw new DuplicateResourceException(
                         "ChassisNumber", dto.getPlateNumber(), "Car with this Chassis Number already exists");
         }
         if(carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber()
-                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Pending")){
+                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Pending") ||
+                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber()
+                        , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Active")){
                 throw new DuplicateResourceException(
                         "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
 

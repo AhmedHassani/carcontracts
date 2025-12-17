@@ -10,5 +10,7 @@ import java.util.Optional;
 @Repository
 public interface OptionDropDownRepository extends JpaRepository<OptionDropDown, Long> {
     List<OptionDropDown> findBydropDownId(Long dropDownId);
+    List<OptionDropDown> findBydropDownIdAndSub(Long dropDownId , Long root);
+
     Optional<OptionDropDown> findByIdAndDropDownId(Long id, Long dropDownId);
 }
