@@ -98,6 +98,12 @@ public class ContractSpecification {
                         "%" + criteria.carNumber().toLowerCase() + "%"
                 ));
             }
+            if (criteria.name() != null && !criteria.name().isBlank()) {
+                predicates.add(cb.like(
+                        cb.lower(root.join("car").get("name")),
+                        "%" + criteria.name().toLowerCase() + "%"
+                ));
+            }
             if (criteria.chassisNumber() != null && !criteria.chassisNumber().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("chassisNumber")),

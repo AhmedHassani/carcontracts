@@ -119,7 +119,7 @@ public class DashboardService {
             long totalCars = carRepository.countByCompanyIdAndCreatedAtBetween(getCompanyId() , "Pending",start.atStartOfDay(), end.atTime(LocalTime.MAX) );
             //check if the car become paid in the cash and the instament paid
             long PaidCars = carRepository
-                    .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid",start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
+                    .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid", "Active" ,start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
             // here the cash will not work
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );

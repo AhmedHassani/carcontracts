@@ -32,16 +32,17 @@ public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificatio
                                              @Param("status") String status,
                                              @Param("start") LocalDateTime start,
                                              @Param("end") LocalDateTime end);
-
+    // this issue happen because the paid date
     @Query("""
             SELECT COUNT(c)
             FROM Car c
             WHERE c.companyId = :companyId
-              AND c.status = :status
+              AND (c.status = :status OR c.status = :status2)
               AND c.paidAt BETWEEN :start AND :end
             """)
     Long countByCompanyIdAndStatusAndCreatedAtBetween(@Param("companyId") Long companyId,
                                                       @Param("status") String status,
+                                                      @Param("status2") String status2,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end);
 }

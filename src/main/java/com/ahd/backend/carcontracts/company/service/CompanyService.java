@@ -128,13 +128,13 @@ public class CompanyService {
      * Mapping: Entity → ResponseDTO
      * -------------------------------------------------- */
     private CompanyResponse mapToDto(Company company) {
-        System.out.println("companyId = " + company.getId());
+//        System.out.println("companyId = " + company.getId());
 
         CompanyUser ownerLink = companyUserRepository
                 .findByCompanyIdAndRole(company.getId(), CompanyUserRole.OWNER)
                 .orElse(null);
 
-        System.out.println("ownerLink = " + String.valueOf(ownerLink));
+//        System.out.println("ownerLink = " + String.valueOf(ownerLink));
 
         return CompanyResponse.builder()
                 .id(company.getId())

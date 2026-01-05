@@ -41,6 +41,8 @@ public class ContractResponse {
         String plateNumber;
         String color;
         Integer modelYear;
+        String name;
+        String initPrice;
     }
 
     @Getter @Setter

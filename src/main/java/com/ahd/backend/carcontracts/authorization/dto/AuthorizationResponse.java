@@ -44,7 +44,7 @@ public class AuthorizationResponse {
         private String chassisNumber;
         private Integer kilometers;
         private Integer cylinderCount;
-        private Integer passengerCount;
+        private String passengerCount;
         private String engineType;
         private String origin;
     }

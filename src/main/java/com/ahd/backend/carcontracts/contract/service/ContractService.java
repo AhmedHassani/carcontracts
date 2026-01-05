@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.notification.service.NotificationService;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -50,8 +51,7 @@ public class ContractService {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
         Car car    = carRepo.getReferenceById(request.getCarId());
-        if (Objects.equals(seller.getNationalId(), buyer.getNationalId())
-                || Objects.equals(seller.getId(), buyer.getId())) {
+        if ( Objects.equals(seller.getId(), buyer.getId())) {
             throw new IllegalArgumentException("you can't make the buyer and the seller be the same person");
         }
 
@@ -60,6 +60,8 @@ public class ContractService {
             car.setStatus("Paid");
             car.setPaidAt(LocalDateTime.now());
             paymentPlan.setStatus(PaymentStatus.COMPLETED);
+            paymentPlan.setRemainingAmount(BigDecimal.ZERO);
+            paymentPlan.setDownPayment(paymentPlan.getTotalAmount());
         }else{
             car.setStatus("Active");
             paymentPlan.setStatus(PaymentStatus.ACTIVE);
@@ -106,6 +108,7 @@ public class ContractService {
                 .BuyerPhone(criteria.BuyerPhone())
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
+                .name(criteria.name())
                 .companyId(getCompanyId())
                 .id(criteria.id())
 //                .buyerNationalId(criteria.buyerNationalId())
@@ -135,6 +138,7 @@ public class ContractService {
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
                 .companyId(getCompanyId())
+                .name(criteria.name())
 //                .buyerNationalId(criteria.buyerNationalId())
 //                .sellerNationalId(criteria.sellerNationalId())
                 .chassisNumber(criteria.chassisNumber())

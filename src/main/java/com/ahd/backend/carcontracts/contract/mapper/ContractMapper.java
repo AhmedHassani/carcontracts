@@ -77,13 +77,15 @@ public final class ContractMapper {
         dto.setModel      (car.getModel());
         dto.setPlateNumber(car.getPlateNumber());
         dto.setColor      (car.getColor());
+        dto.setName(car.getName());
+        dto.setInitPrice(car.getInitPrice());
         return dto;
     }
     private static ContractResponse.PaymentPlanDTO toPaymentPlanDTO(PaymentPlan paymentPlan) {
         if (paymentPlan == null) return null;
 
         ContractResponse.PaymentPlanDTO dto = new ContractResponse.PaymentPlanDTO();
-        dto.setId         (paymentPlan.getId());
+        dto.setId          (paymentPlan.getId());
         dto.setStatus      (paymentPlan.getStatus());
         dto.setPaymentType (paymentPlan.getPaymentType());
         BigDecimal total = paymentPlan.getTotalAmount() != null ? paymentPlan.getTotalAmount() : BigDecimal.ZERO;
@@ -92,6 +94,7 @@ public final class ContractMapper {
         if (paid.compareTo(BigDecimal.ZERO) < 0) {
             paid = paid.multiply(BigDecimal.valueOf(-1));
         }
+        dto.setTotalAmount (paymentPlan.getTotalAmount());
         dto.setPaidAmount(paid);
         return dto;
     }

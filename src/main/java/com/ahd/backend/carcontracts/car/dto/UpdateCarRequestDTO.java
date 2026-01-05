@@ -23,7 +23,7 @@ public class UpdateCarRequestDTO {
     @PositiveOrZero
     private Integer kilometers;
     private Integer cylinderCount;
-    private Integer passengerCount;
+    private String passengerCount;
     @Size(max = 50)
     private String engineType;
     @Size(max = 50)
