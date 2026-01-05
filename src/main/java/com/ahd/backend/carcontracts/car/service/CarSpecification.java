@@ -39,6 +39,14 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
             String pattern = "%" + c.chassisNumber().toLowerCase() + "%";
             p.add(cb.like(cb.lower(root.get("chassisNumber")), pattern));
         }
+        if (c.description() != null && !c.description().isBlank()) {
+            String pattern = "%" + c.description().toLowerCase() + "%";
+            p.add(cb.like(cb.lower(root.get("description")), pattern));
+        }
+        if (c.name() != null && !c.name().isBlank()) {
+            String pattern = "%" + c.name().toLowerCase() + "%";
+            p.add(cb.like(cb.lower(root.get("name")), pattern));
+        }
 
         // Exact matches for other fields
         if (c.model() != null && !c.model().isBlank()) {

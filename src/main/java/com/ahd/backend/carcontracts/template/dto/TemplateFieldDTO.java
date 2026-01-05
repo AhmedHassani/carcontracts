@@ -20,6 +20,7 @@ public class TemplateFieldDTO {
     private String src;        // IMAGE preferred source
 
     private Style style;       // <— nested object to match frontend
+    private Integer zIndex;
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class Style {

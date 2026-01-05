@@ -103,7 +103,6 @@ public final class CarMapper {
         Optional.ofNullable(patch.getPassengerCount()).ifPresent(target::setPassengerCount);
         Optional.ofNullable(patch.getEngineType()).ifPresent(target::setEngineType);
         Optional.ofNullable(patch.getOrigin()).ifPresent(target::setOrigin);
-        Optional.ofNullable(patch.getWalletNumber()).ifPresent(target::setWalletNumber);
         Optional.ofNullable(patch.getTypeOfCarPlate()).ifPresent(target::setTypeOfCarPlate);
         Optional.ofNullable(patch.getInitPrice()).ifPresent(target::setInitPrice);
         Optional.ofNullable(patch.getDescription()).ifPresent(target::setDescription);
