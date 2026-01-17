@@ -74,6 +74,20 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
             @Param("end") LocalDateTime end,
             @Param("companyId") Long companyId
     );
+    @Query("""
+   SELECT COALESCE(SUM(p.intInstallment), 0)
+   FROM PaymentPlan p
+   WHERE p.paymentType =:paymentType
+     AND p.createdAt BETWEEN :start AND :end
+     AND p.companyId = :companyId
+   """)
+    BigDecimal summationinitPaymentByDateRangeCompleted(
+            @Param("paymentType") PaymentType paymentType,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("companyId") Long companyId
+    );
+
 
 
 }

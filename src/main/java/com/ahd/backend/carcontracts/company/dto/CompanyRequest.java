@@ -1,5 +1,6 @@
 package com.ahd.backend.carcontracts.company.dto;
 
+import com.ahd.backend.carcontracts.company.enums.PaymentCompanyType;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
@@ -42,6 +43,7 @@ public record CompanyRequest(
 
         @NotNull(message = "Password is required")
         @Size(min = 8,max = 25, message = "Password must be at most 6 characters long")
-        String companyPassword
-
+        String companyPassword,
+        @NotNull(message = "Payment type is required")
+        PaymentCompanyType paymentCompanyType
 ) {}

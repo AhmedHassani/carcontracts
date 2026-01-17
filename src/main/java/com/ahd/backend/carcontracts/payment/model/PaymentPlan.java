@@ -38,6 +38,8 @@ public class PaymentPlan {
 
     @Column(name = "down_payment", precision = 15, scale = 2)
     private BigDecimal downPayment;
+    @Column(name = "int_installment", precision = 15, scale = 2)
+    private BigDecimal intInstallment;
 
     @Column(name = "remaining_amount", precision = 15, scale = 2)
     private BigDecimal remainingAmount;
@@ -66,7 +68,7 @@ public class PaymentPlan {
 
     @Column(nullable = false)
     private boolean deleted = false;
-    @Column(name = "companyId")
+    @Column(name = "company_id")
     private Long companyId;
     @PrePersist
     protected void onCreate() {
@@ -79,3 +81,22 @@ public class PaymentPlan {
         updatedAt = LocalDateTime.now();
     }
 }
+
+
+
+
+//ALTER TABLE [dbo].[company]
+//ADD payment_company_type VARCHAR(10) NULL
+//
+//-- 更新现有数据
+//UPDATE [dbo].[company]
+//SET payment_company_type = 'IQD'  -- 或 'USD'
+//WHERE payment_company_type IS NULL
+//
+//-- 改为 NOT NULL（可选）
+//ALTER TABLE [dbo].[company]
+//ALTER COLUMN payment_company_type VARCHAR(10) NOT NULL
+//
+//-- 添加检查约束
+//ALTER TABLE [dbo].[company]
+//ADD CONSTRAINT CHK_PaymentType CHECK (payment_company_type IN ('IQD', 'USD'))

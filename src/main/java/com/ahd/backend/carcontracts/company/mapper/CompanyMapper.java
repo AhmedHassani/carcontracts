@@ -29,6 +29,7 @@ public class CompanyMapper {
                 .subscriptionDate(LocalDate.now())
                 .expirationDate(request.expirationDate())
                 .companyLocation(request.companyLocation())
+                .paymentCompanyType(request.paymentCompanyType())
                 .build();
     }
 
@@ -49,6 +50,7 @@ public class CompanyMapper {
                 .companyPassword(password)
                 .companyUsername(username)
                 .companyEmail(email)
+                .paymentCompanyType(company.getPaymentCompanyType())
                 .build();
     }
 

@@ -17,7 +17,6 @@ public class TemplateFieldMapper {
         e.setWidth(d.getWidth());
         e.setHeight(d.getHeight());
         e.setValue(d.getValue());
-        e.setZIndex(d.getZIndex());
         e.setKind(/* map enum safely */
                 d.getKind() == null ? null :
                         com.ahd.backend.carcontracts.template.model.TemplateItemKind.valueOf(d.getKind().toUpperCase())
@@ -28,9 +27,12 @@ public class TemplateFieldMapper {
         if (d.getStyle() != null) {
             e.setStyleFontSize(d.getStyle().getFontSize());
             e.setStyleColor(d.getStyle().getColor());
+            e.setZIndex(d.getStyle().getZIndex());
+
         } else {
             e.setStyleFontSize(null);
             e.setStyleColor(null);
+            e.setZIndex(0);
         }
         return e;
     }
@@ -48,13 +50,13 @@ public class TemplateFieldMapper {
         d.setValue(e.getValue());
         d.setKind(e.getKind() == null ? null : e.getKind().name());
         d.setSrc(e.getSrc());
-        d.setZIndex(e.getZIndex());
 
         // build style object from columns
         if (e.getStyleFontSize() != null || e.getStyleColor() != null) {
             TemplateFieldDTO.Style style = new TemplateFieldDTO.Style();
             style.setFontSize(e.getStyleFontSize());
             style.setColor(e.getStyleColor());
+            style.setZIndex(e.getZIndex());
             d.setStyle(style);
         }
         return d;

@@ -96,12 +96,16 @@ public class PersonService {
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + id));
         return PersonMapper.toResponse(person);
     }
-
+    //notification
+    //تم تغير الصورة الشخصيه
+    //only for current user
     @Auditable(operation = "تغير صورة مستخدم", captureArgs = true, captureResult = true)
     @Transactional
     public PersonAttachmentResponse replaceAttachment(UpdatePersonAttachment dto) {
         if (dto.getFile() == null || dto.getFile().isEmpty())
             throw new BadRequestException("A non-empty file must be supplied");
+
+
         PersonAttachment att = personAttachmentRepository
                 .findByIdAndPersonId(dto.getAttachmentId(), dto.getId())
                 .orElseThrow(() -> new RuntimeException(
@@ -124,7 +128,9 @@ public class PersonService {
                 .build();
     }
 
-
+    //notification
+    //تم حذف الصورةالشخصية
+    //only for current user
     @Transactional
     @Auditable(operation = "حذف صورة مستخدم", captureArgs = true, captureResult = true)
     public void deleteAttachmentById(Long attachmentId) {
@@ -140,7 +146,9 @@ public class PersonService {
         });
         personAttachmentRepository.delete(att);
     }
-
+    //notification
+    //تم اضافة الصورةالشخصية
+    //only for current user
     @Transactional
     @Auditable(operation = "اضافة صورة مستخدم", captureArgs = true, captureResult = true)
     public PersonAttachmentResponse upsertAttachment(Long personId, DocType  type, DocSide  side,MultipartFile file ,long id) {
@@ -174,9 +182,9 @@ public class PersonService {
     }
 
 
-    /**
-     * Update person information
-     */
+    //notification
+    //تم تحديث المعلومات
+    //only for current user
     @Auditable(operation = "تحديث معلومات مستخدم", captureArgs = true, captureResult = true)
     public PersonResponseDTO updatePerson(Long id, UpdatePerson personRequest) {
         log.info("Updating person with id: {}", id);
@@ -190,6 +198,9 @@ public class PersonService {
     /**
      * Delete person (cascades to attachments)
      */
+    //notification
+    //تم حذف المستخدم person.firstName +" "+ person.fatherName +" "+ person.grandfatherName
+    //only for current user
     public void deletePerson(Long id) {
        // log.info("Deleting person with id: {}", id);
         Person person = personRepository.findByIdAndCompanyId(id , getCompanyId())

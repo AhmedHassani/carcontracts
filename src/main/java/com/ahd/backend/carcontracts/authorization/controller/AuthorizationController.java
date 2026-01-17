@@ -50,6 +50,9 @@ public class AuthorizationController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
+    //notification
+    //request.getAuthorizationNumber(); قام المستخدم  ;helper.getCurrentUser.userName بانشاء صلاحيات وصول رقم
+    //to all company
     public ResponseEntity<ApiResponse<?>> create(@Valid @RequestBody AuthorizationUpsertRequest request) {
         service.create(request);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -76,6 +79,9 @@ public class AuthorizationController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+    //notification
+    //id قام المستخدم  ;helper.getCurrentUser.userName بحذف صلاحيات وصول رقم
+    //to all company
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.<Void>builder()
@@ -86,15 +92,15 @@ public class AuthorizationController {
                 .build());
     }
 
-    @PutMapping("/Authid/{id}/templateId/{templateId}")
-    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> updatetemplateId(@PathVariable Long id ,  @PathVariable Long templateId) {
-        service.updatetemplateId(id , templateId);
-        return ResponseEntity.ok(ApiResponse.<Void>builder()
-                .success(true)
-                .message("Authorization Update Successfully")
-                .code(200)
-                .date(Instant.now())
-                .build());
-    }
+//    @PutMapping("/Authid/{id}/templateId/{templateId}")
+//    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+//    public ResponseEntity<ApiResponse<Void>> updatetemplateId(@PathVariable Long id ,  @PathVariable Long templateId) {
+//        service.updatetemplateId(id , templateId);
+//        return ResponseEntity.ok(ApiResponse.<Void>builder()
+//                .success(true)
+//                .message("Authorization Update Successfully")
+//                .code(200)
+//                .date(Instant.now())
+//                .build());
+//    }
 }

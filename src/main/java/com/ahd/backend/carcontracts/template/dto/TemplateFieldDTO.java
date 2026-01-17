@@ -1,6 +1,7 @@
 // src/main/java/com/ahd/backend/carcontracts/template/dto/TemplateFieldDTO.java
 package com.ahd.backend.carcontracts.template.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
@@ -20,11 +21,20 @@ public class TemplateFieldDTO {
     private String src;        // IMAGE preferred source
 
     private Style style;       // <— nested object to match frontend
-    private Integer zIndex;
 
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor @Builder
     public static class Style {
-        private Integer fontSize;  // use Integer, not int
+
+        private Integer fontSize;
         private String color;
+
+        private Integer zIndex;
+
+        @JsonProperty("zIndex")
+        public Integer getZIndex() {
+            return zIndex;
+        }
     }
+
 }

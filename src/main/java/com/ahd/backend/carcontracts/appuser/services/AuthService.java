@@ -133,6 +133,8 @@ public class AuthService {
      * Create a new user with the specified roles.
      */
     @Auditable(operation = "اضافة حساب", captureArgs = true, captureResult = true)
+    //notification
+    //request.getUsername() قام المستخدم  ;helper.getCurrentUser.userName بانشاء حساب
     public AppUser createUser(CreateUserRequest request) {
         // Check if username already exists
         if( !isCompanyActive()){
@@ -168,6 +170,8 @@ public class AuthService {
     }
 
     @Auditable(operation = "تحديث معلومات حساب", captureArgs = true, captureResult = true)
+    //notification
+    //request.getUsername() قام المستخدم  ;helper.getCurrentUser.userName بانشاء حساب
     public void updateUser(AppUser user) {
         if(! isCompanyActive()){
             throw new ResponseStatusException(BAD_REQUEST, "Company expire or deleted");

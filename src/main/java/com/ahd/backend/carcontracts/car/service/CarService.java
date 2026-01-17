@@ -51,6 +51,9 @@ public class CarService {
     private final Helper helper;
     @Transactional
     @Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
+    //notification
+    //saved.getId(); قام المستخدم  ;helper.getCurrentUser.userName بانشاء سيارة رقم
+    //to all company
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
         if(carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Pending") ||
@@ -98,6 +101,9 @@ public class CarService {
 
     @Transactional
     @Auditable(operation = "تحديث معلومات سيارة", captureArgs = true, captureResult = true)
+    //notification
+    //id قام المستخدم  ;helper.getCurrentUser.userName بتحديث معلومات السيارة رقم
+    //to all company
     public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
         if (patch == null || patch.isEmpty()) {
             throw new BadRequestException("Update payload must contain at least one field");
@@ -139,6 +145,7 @@ public class CarService {
 
     @Transactional
     @Auditable(operation = "اضافة صور لسيارة", captureArgs = true, captureResult = true)
+
     public CarResponseDTO addAttachments(Long carId, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files provided");
@@ -162,6 +169,7 @@ public class CarService {
 
     @Transactional
     @Auditable(operation = "حذف صور سيارة", captureArgs = true, captureResult = true)
+
     public CarResponseDTO deleteAttachment(Long carId, Long attachmentId) {
         Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId , getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + carId + " not found"));

@@ -67,6 +67,9 @@ public class CompanyService {
     private final EntityManager em;
 
     @Auditable(operation = "انشاء شركة", captureArgs = true, captureResult = true)
+    //notification
+    //savedCompany.getCompanyName()  قام المستخدم  ;helper.getCurrentUser.userName انشاء شركة
+    //to all company
     public CompanyResponse createCompany(CompanyRequest request) {
         //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
@@ -82,16 +85,16 @@ public class CompanyService {
                 .role(CompanyUserRole.OWNER)
                 .build();
         companyUserRepository.save(relation);
-        notificationService.sendNotificationToDevice(
-                "إضافة شركة جديدة",
-                "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
-        );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("إضافة شركة جديدة");
-        notif.setBody("تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-        notif.setPermisson("ADMIN");
-        notificationService.insertNotificationAsync(notif);
+//        notificationService.sendNotificationToDevice(
+//                "إضافة شركة جديدة",
+//                "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
+//        );
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("إضافة شركة جديدة");
+//        notif.setBody("تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//        notif.setPermisson("ADMIN");
+//        notificationService.insertNotificationAsync(notif);
         return companyMapper.toResponse(
                 savedCompany,
                 request.companyPassword(),
@@ -154,6 +157,9 @@ public class CompanyService {
 
     @Transactional
     @Auditable(operation = "تحديث معلومات الشركة", captureArgs = true, captureResult = true)
+    //notification
+    //saved.getCompanyName()  قام المستخدم  ;helper.getCurrentUser.userName انشاء شركة
+    //to all company
     public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
         final Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
@@ -165,17 +171,17 @@ public class CompanyService {
         AppUser user = updateOwnerUser(company, request);
         userRepository.save(user);
         Company saved = companyRepository.save(company);
-        notificationService.sendNotificationToDevice(
-                "التعديل معلومات الشركة",
-                "لقد تغير معلومات شركة" + company.getCompanyName() + "بنجاح "
-        );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("لتعديل معلومات الشركة");
-        notif.setBody("لقد تغير معلومات شركة" + company.getCompanyName() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-      //  notif.setCompany(company);
-        notif.setPermisson("ADMIN");
-        notificationService.insertNotificationAsync(notif);
+//        notificationService.sendNotificationToDevice(
+//                "التعديل معلومات الشركة",
+//                "لقد تغير معلومات شركة" + company.getCompanyName() + "بنجاح "
+//        );
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("لتعديل معلومات الشركة");
+//        notif.setBody("لقد تغير معلومات شركة" + company.getCompanyName() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//      //  notif.setCompany(company);
+//        notif.setPermisson("ADMIN");
+//        notificationService.insertNotificationAsync(notif);
 
         return companyMapper.toResponse(
                 saved,
@@ -236,22 +242,24 @@ public class CompanyService {
 
     @Transactional
     @Auditable(operation = "حذف الشركة", captureArgs = true, captureResult = true)
+    //notification
+    //id قام المستخدم  ;helper.getCurrentUser.userName حذف الشركة رقم
     public ApiResponse<Void> deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
 
         companyRepository.delete(company);
 
-        notificationService.sendNotificationToDevice(
-                "حذف شركة",
-                "تم حذف شركة " + company.getCompanyName() + " بنجاح"
-        );
-        var notif = new AppNotification();
-        notif.setTitle("حذف شركة");
-        notif.setBody("تم حذف شركة " + company.getCompanyName() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-        notif.setPermisson("ADMIN");
-        notificationService.insertNotificationAsync(notif);
+//        notificationService.sendNotificationToDevice(
+//                "حذف شركة",
+//                "تم حذف شركة " + company.getCompanyName() + " بنجاح"
+//        );
+//        var notif = new AppNotification();
+//        notif.setTitle("حذف شركة");
+//        notif.setBody("تم حذف شركة " + company.getCompanyName() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//        notif.setPermisson("ADMIN");
+//        notificationService.insertNotificationAsync(notif);
 
         return ApiResponse.<Void>builder()
                 .success(true)
@@ -282,6 +290,9 @@ public class CompanyService {
      * -------------------------------------------------- */
     @Transactional
     @Auditable(operation = "اضافة موظف للشركة", captureArgs = true, captureResult = true)
+    //notification
+    //request.companyId()  قام المستخدم  ;helper.getCurrentUser.userName اضافة موظف للشركة
+    //to all company
     public void addUserToCompany(AddUserToCompanyRequest request) {
 
         Company company = companyRepository.findById(request.companyId())

@@ -44,7 +44,7 @@ public class PaymentPlanService {
     private final NotificationService notificationService;
 
     private final ContractsRepository contractsRepository;
-
+    //the notfication in the contract
     @Auditable(operation = "انشاء خطة دفع", captureArgs = true, captureResult = true)
     public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
         PaymentPlan paymentPlan = PaymentPlan.builder()
@@ -64,6 +64,7 @@ public class PaymentPlanService {
         BigDecimal remainingAmount = paymentPlan.getTotalAmount().subtract(paymentPlan.getDownPayment());
         paymentPlan.setRemainingAmount(remainingAmount);
         if (request.getPaymentType() == PaymentType.INSTALLMENT) {
+            paymentPlan.setIntInstallment(paymentPlan.getDownPayment());
             paymentPlan.setNumberOfInstallments(request.getNumberOfInstallments());
             PaymentPlan savedPlan = paymentPlanRepository.save(paymentPlan);
             List<Installment> installments = request.getInstallment().stream()
@@ -91,22 +92,6 @@ public class PaymentPlanService {
         return mapToResponse(paymentPlan);
     }
 
-//    public List<PaymentPlanResponse> getAllPaymentPlans() {
-//        List<PaymentPlan> paymentPlans = paymentPlanRepository.findByCompanyId(getCompanyId());
-//        return paymentPlans.stream()
-//                .map(this::mapToResponse)
-//                .collect(Collectors.toList());
-//    }
-//
-//
-//    @Transactional(readOnly = true)
-//    public Page<PaymentPlanResponse> getPaymentPlansByStatus(PaymentStatus status) {
-//        Page<PaymentPlan> page = paymentPlanRepository
-//                .findByStatusAndCompanyId(status, getCompanyId());
-//        return page.map(this::mapToResponse);
-//    }
-
-
     public List<InstallmentResponse> getInstallments(Long paymentPlanId) {
 
         List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyIdOrderByInstallmentNumber(   paymentPlanId , getCompanyId());
@@ -123,42 +108,9 @@ public class PaymentPlanService {
                 .map(this::mapInstallmentToResponse)
                 .collect(Collectors.toList());
     }
-
-//    @Auditable(operation = "PROCESS_PAYMENT_PLAN", captureArgs = true, captureResult = true)
-//    public PaymentResponse processPayment(PaymentRequest request) {
-//        Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
-//                .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
-//        if (installment.getStatus() == InstallmentStatus.PAID) {
-//            throw new IllegalStateException("Installment already paid");
-//        }
-//        if (!installment.getAmount().equals(request.getAmount())) {
-//            throw new IllegalArgumentException("Payment amount does not match installment amount");
-//        }
-//        installment.setStatus(InstallmentStatus.PAID);
-//        installment.setPaidDate(LocalDate.now());
-//
-//        installment.setPaymentReference(request.getPaymentReference());
-//        installmentRepository.save(installment);
-//        notificationService.sendNotificationToDevice(
-//                " دفع قسط",
-//                "تم دفع القسط رقم" + installment.getId() + " بنجاح "
-//        );
-//        AppNotification notif = new AppNotification();
-//        notif.setTitle("حذف عقد");
-//        notif.setBody("تم حذف العقد رقم " + installment.getId() + " بنجاح");
-//        notif.setNotificationDate(LocalDateTime.now());
-//        //    notif.setCompany(savedCompany);
-//        notif.setPermisson("CompanyUsers");
-//        notificationService.insertNotificationAsync(notif);
-//        checkAndUpdatePaymentPlanStatus(installment.getPaymentPlan() , installment.getAmount());
-//        return PaymentResponse.builder()
-//                .success(true)
-//                .message("Payment processed successfully")
-//                .paymentReference(request.getPaymentReference())
-//                .paymentDate(LocalDate.now())
-//                .amount(request.getAmount())
-//                .build();
-//    }
+    //notification
+    //request.getInstallmentId() قام المستخدم  ;helper.getCurrentUser.userName تحديث تاريخ الدفعة رقم
+    //to all company
     @Auditable(operation = "تحديث تاريخ الدفعة", captureArgs = true, captureResult = true)
     public PaymentResponse updatePInstallmentDate(PaymentDateRequest request) {
         Installment installment = installmentRepository.findByIdAndCompanyId(request.getInstallmentId() , getCompanyId())
@@ -169,17 +121,17 @@ public class PaymentPlanService {
 
         installment.setDueDate(request.getDueDate());
         installmentRepository.save(installment);
-        notificationService.sendNotificationToDevice(
-                "تعديل عقد",
-                "تم تغير تاريخ القسط رقم" + installment.getId() + " بنجاح "
-        );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("تعديل عقد");
-        notif.setBody("تم تغير تاريخ القسط رقم " + installment.getId() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
+//        notificationService.sendNotificationToDevice(
+//                "تعديل عقد",
+//                "تم تغير تاريخ القسط رقم" + installment.getId() + " بنجاح "
+//        );
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("تعديل عقد");
+//        notif.setBody("تم تغير تاريخ القسط رقم " + installment.getId() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
         //    notif.setCompany(savedCompany);
-        notif.setPermisson("CompanyUsers");
-        notificationService.insertNotificationAsync(notif);
+//        notif.setPermisson("CompanyUsers");
+//        notificationService.insertNotificationAsync(notif);
         return PaymentResponse.builder()
                 .success(true)
                 .message("Installment processed successfully")
@@ -187,6 +139,9 @@ public class PaymentPlanService {
                 .build();
     }
     @Auditable(operation = "تحديث حالة الدفعة", captureArgs = true, captureResult = true)
+    //notification
+    //id قام المستخدم  ;helper.getCurrentUser.userName تحديث حاله الدفعة رقم
+    //to all company
     public PaymentResponse updatePInstallmentStatus(Long id) {
         Installment installment = installmentRepository.findByIdAndCompanyId(id , getCompanyId())
                 .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
@@ -202,18 +157,18 @@ public class PaymentPlanService {
 
         Long paymentPlanId = installment.getPaymentPlan().getId();
 
-        notificationService.sendNotificationToDevice(
-                "دفع قسط",
-                "تم دفع القسط رقم" + installment.getId() + " بنجاح "
-        );
+//        notificationService.sendNotificationToDevice(
+//                "دفع قسط",
+//                "تم دفع القسط رقم" + installment.getId() + " بنجاح "
+//        );
 
-        AppNotification notif = new AppNotification();
-        notif.setTitle("دفع قسط");
-        notif.setBody("تم دفع القسط رقم " + installment.getId() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-        //    notif.setCompany(savedCompany);
-        notif.setPermisson("CompanyUsers");
-        notificationService.insertNotificationAsync(notif);
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("دفع قسط");
+//        notif.setBody("تم دفع القسط رقم " + installment.getId() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//        //    notif.setCompany(savedCompany);
+//        notif.setPermisson("CompanyUsers");
+//        notificationService.insertNotificationAsync(notif);
         boolean allPaid = installmentRepository
                 .findByPaymentPlanIdAndCompanyId(paymentPlanId , getCompanyId())
                 .stream()
@@ -248,53 +203,56 @@ public class PaymentPlanService {
                 .paymentDate(LocalDate.now())
                 .build();
     }
-    @Auditable(operation = "تحديث حالة خطة الدفع", captureArgs = true, captureResult = true)
-    public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
-        PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyId(id , getCompanyId())
-                .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
-        paymentPlan.setStatus(status);
-        paymentPlan = paymentPlanRepository.save(paymentPlan);
-        return mapToResponse(paymentPlan);
-    }
+//    @Auditable(operation = "تحديث حالة خطة الدفع", captureArgs = true, captureResult = true
+//    //notification
+//    //id قام المستخدم  ;helper.getCurrentUser.userName تحديث حاله الدفعة رقم
+//    //to all company
+//    public PaymentPlanResponse updatePaymentPlanStatus(Long id, PaymentStatus status) {
+//        PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyId(id , getCompanyId())
+//                .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
+//        paymentPlan.setStatus(status);
+//        paymentPlan = paymentPlanRepository.save(paymentPlan);
+//        return mapToResponse(paymentPlan);
+//    }
 
-    private void checkAndUpdatePaymentPlanStatus(PaymentPlan paymentPlan , BigDecimal amount ) {
-        List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyId(paymentPlan.getId() , getCompanyId());
-        boolean allPaid = installments.stream().allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
-        if (allPaid) {
-            paymentPlan.setStatus(PaymentStatus.COMPLETED);
-            paymentPlan.setComplete_date(LocalDate.now());
-            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
-            paymentPlan.setRemainingAmount(remainingAmount);
-            System.out.println(" the valkue of this action : " + remainingAmount);
-
-            paymentPlanRepository.save(paymentPlan);
-            notificationService.sendNotificationToDevice(
-                    "اكمال اقساط",
-                    "تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح "
-            );
-
-            System.out.println(" the valkue of this action : " + remainingAmount);
-
-            AppNotification notif = new AppNotification();
-            notif.setTitle("اكمال اقساط");
-            notif.setBody("تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح");
-            notif.setNotificationDate(LocalDateTime.now());
-            //    notif.setCompany(savedCompany);
-            notif.setPermisson("CompanyUsers");
-            notificationService.insertNotificationAsync(notif);
-        } else if (paymentPlan.getStatus() == PaymentStatus.PENDING) {
-            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
-            paymentPlan.setRemainingAmount(remainingAmount);
-            System.out.println(" the valkue of this action : " + remainingAmount);
-            paymentPlan.setStatus(PaymentStatus.ACTIVE);
-            paymentPlanRepository.save(paymentPlan);
-        }else{
-            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
-            paymentPlan.setRemainingAmount(remainingAmount);
-            System.out.println(" the valkue of this action : " + remainingAmount);
-            paymentPlanRepository.save(paymentPlan);
-        }
-    }
+//    private void checkAndUpdatePaymentPlanStatus(PaymentPlan paymentPlan , BigDecimal amount ) {
+//        List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyId(paymentPlan.getId() , getCompanyId());
+//        boolean allPaid = installments.stream().allMatch(i -> i.getStatus() == InstallmentStatus.PAID);
+//        if (allPaid) {
+//            paymentPlan.setStatus(PaymentStatus.COMPLETED);
+//            paymentPlan.setComplete_date(LocalDate.now());
+//            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
+//            paymentPlan.setRemainingAmount(remainingAmount);
+//            System.out.println(" the valkue of this action : " + remainingAmount);
+//
+//            paymentPlanRepository.save(paymentPlan);
+//            notificationService.sendNotificationToDevice(
+//                    "اكمال اقساط",
+//                    "تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح "
+//            );
+//
+//            System.out.println(" the valkue of this action : " + remainingAmount);
+//
+//            AppNotification notif = new AppNotification();
+//            notif.setTitle("اكمال اقساط");
+//            notif.setBody("تم اكمل جميع اقساط خطة الدفع رقم" + paymentPlan.getId() + " بنجاح");
+//            notif.setNotificationDate(LocalDateTime.now());
+//            //    notif.setCompany(savedCompany);
+//            notif.setPermisson("CompanyUsers");
+//            notificationService.insertNotificationAsync(notif);
+//        } else if (paymentPlan.getStatus() == PaymentStatus.PENDING) {
+//            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
+//            paymentPlan.setRemainingAmount(remainingAmount);
+//            System.out.println(" the valkue of this action : " + remainingAmount);
+//            paymentPlan.setStatus(PaymentStatus.ACTIVE);
+//            paymentPlanRepository.save(paymentPlan);
+//        }else{
+//            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(amount);
+//            paymentPlan.setRemainingAmount(remainingAmount);
+//            System.out.println(" the valkue of this action : " + remainingAmount);
+//            paymentPlanRepository.save(paymentPlan);
+//        }
+//    }
 
     private PaymentPlanResponse mapToResponse(PaymentPlan paymentPlan) {
         List<InstallmentResponse> installmentResponses = paymentPlan.getInstallments().stream()
