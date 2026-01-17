@@ -47,6 +47,9 @@ public class ContractService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Auditable(operation = "اضافة عقد", captureArgs = true, captureResult = true)
+    //notification
+    //contract.getId(); قام المستخدم  ;helper.getCurrentUser.userName بانشاء العقد رقم
+    //to all company
     public ContractResponse addContract(ContractRequest request) {
         Person seller = personRepo.getReferenceById(request.getSellerId());
         Person buyer  = personRepo.getReferenceById(request.getBuyerId());
@@ -79,17 +82,12 @@ public class ContractService {
         contract.setPaymentPlan(paymentPlan);
         contract.setCompanyId(getCompanyId());
         contract = contractRepo.saveAndFlush(contract);
-        notificationService.sendNotificationToDevice(
-                "اضافة عقد",
-                "تم اضافة العقد رقم" + contract.getId() + " بنجاح "
-        );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("اضافة عقد");
-        notif.setBody("تم اضافة العقد رقم" + contract.getId() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-        //    notif.setCompany(savedCompany);
-        notif.setPermisson("CompanyUsers");
-        notificationService.insertNotificationAsync(notif);
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("اضافة عقد");
+//        notif.setBody("تم اضافة العقد رقم" + contract.getId() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//        notif.setPermisson("CompanyUsers");
+//        notificationService.insertNotificationAsync(notif);
         return ContractMapper.toDetails(contract);
     }
 
@@ -139,6 +137,7 @@ public class ContractService {
                 .SellerPhone(criteria.SellerPhone())
                 .companyId(getCompanyId())
                 .name(criteria.name())
+                .id(criteria.id())
 //                .buyerNationalId(criteria.buyerNationalId())
 //                .sellerNationalId(criteria.sellerNationalId())
                 .chassisNumber(criteria.chassisNumber())
@@ -152,6 +151,9 @@ public class ContractService {
 
     @Transactional
     @Auditable(operation = "حذف عقد", captureArgs = true, captureResult = true)
+    //notification
+    //contractId قام المستخدم  ;helper.getCurrentUser.userName بحذف العقد رقم
+    //to all company
     public void softDeleteContract(Long contractId) {
         Contracts contract = contractRepo.findByIdAndCompanyId(contractId , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
@@ -167,13 +169,13 @@ public class ContractService {
                 "حذف عقد",
                 "تم حذف العقد رقم" + contract.getId() + " بنجاح "
         );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("حذف عقد");
-        notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");
-        notif.setNotificationDate(LocalDateTime.now());
-        //    notif.setCompany(savedCompany);
-        notif.setPermisson("CompanyUsers");
-        notificationService.insertNotificationAsync(notif);
+//        AppNotification notif = new AppNotification();
+//        notif.setTitle("حذف عقد");
+//        notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");
+//        notif.setNotificationDate(LocalDateTime.now());
+//        //    notif.setCompany(savedCompany);
+//        notif.setPermisson("CompanyUsers");
+//        notificationService.insertNotificationAsync(notif);
 
         contractRepo.save(contract);
     }
@@ -181,6 +183,9 @@ public class ContractService {
 
     @Transactional
     @Auditable(operation = "تحديث عقد", captureArgs = true, captureResult = true)
+    //notification
+    //contractId قام المستخدم  ;helper.getCurrentUser.userName تحديث العقد رقم
+    //to all company
     public void updateContracttemplateId(Long contractId , Long templateId) {
         Contracts contract = contractRepo.findByIdAndCompanyId(contractId , getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));

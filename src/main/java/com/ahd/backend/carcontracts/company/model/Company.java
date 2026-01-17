@@ -2,6 +2,8 @@ package com.ahd.backend.carcontracts.company.model;
 
 
 import com.ahd.backend.carcontracts.company.enums.CompanyStatus;
+import com.ahd.backend.carcontracts.company.enums.PaymentCompanyType;
+import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -51,6 +53,9 @@ public class Company {
     @Column(name = "status", length = 20, nullable = false)
     private CompanyStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_company_type", length = 20, nullable = false)
+    private PaymentCompanyType paymentCompanyType;
 
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
@@ -58,3 +63,6 @@ public class Company {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 }
+
+
+

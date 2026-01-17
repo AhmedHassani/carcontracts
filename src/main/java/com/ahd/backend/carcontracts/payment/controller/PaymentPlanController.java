@@ -95,12 +95,12 @@ public class PaymentPlanController {
         return ResponseEntity.ok(overdueInstallments);
     }
 
-    @PutMapping("/{id}/status")
-    @PreAuthorize("hasAuthority('UPDATE_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<?> updatePaymentPlanStatus(
-            @PathVariable Long id, @RequestParam PaymentStatus status) {
-        PaymentPlanResponse response = paymentPlanService.updatePaymentPlanStatus(id, status);
-        return ResponseEntity.ok(response);
-    }
+//    @PutMapping("/{id}/status")
+//    @PreAuthorize("hasAuthority('UPDATE_PAYMENT_PLAN') or hasRole('SUPER_ADMIN')")
+//    public ResponseEntity<?> updatePaymentPlanStatus(
+//            @PathVariable Long id, @RequestParam PaymentStatus status) {
+//        PaymentPlanResponse response = paymentPlanService.updatePaymentPlanStatus(id, status);
+//        return ResponseEntity.ok(response);
+//    }
 
 }

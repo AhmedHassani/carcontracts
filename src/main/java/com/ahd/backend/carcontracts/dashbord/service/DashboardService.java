@@ -99,13 +99,15 @@ public class DashboardService {
         LocalDate today = LocalDate.now();
         LocalDate start;
         LocalDate end;
+        LocalDate startPrev;
+        LocalDate endPrev;
         //System.out.println("today : " + today);
 
         Map<String, LocalDate[]> periods = Map.of(
-                "day",   new LocalDate[]{ today, today },
-                "week",  new LocalDate[]{ today.minusWeeks(1), today },
-                "month", new LocalDate[]{ today.minusMonths(1), today },
-                "year",  new LocalDate[]{ today.minusYears(1), today}
+                "day",   new LocalDate[]{ today, today , today.minusDays(1) , today.minusDays(1)  },
+                "week",  new LocalDate[]{ today.minusWeeks(1), today , today.minusWeeks(2) , today.minusWeeks(1) },
+                "month", new LocalDate[]{ today.minusMonths(1), today , today.minusMonths(2) , today.minusMonths(1)},
+                "year",  new LocalDate[]{ today.minusYears(1), today , today.minusYears(2) , today.minusYears(1)}
         );
 
 
@@ -115,12 +117,14 @@ public class DashboardService {
             String periodName = entry.getKey();
             start = entry.getValue()[0];
             end = entry.getValue()[1];
+            startPrev = entry.getValue()[2];
+            endPrev = entry.getValue()[3];
 
-            long totalCars = carRepository.countByCompanyIdAndCreatedAtBetween(getCompanyId() , "Pending",start.atStartOfDay(), end.atTime(LocalTime.MAX) );
-            //check if the car become paid in the cash and the instament paid
-            long PaidCars = carRepository
+
+            long totalCurrentCars = carRepository
                     .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid", "Active" ,start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
-            // here the cash will not work
+            long totalprevCars = carRepository
+                    .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid", "Active" ,startPrev.atStartOfDay(), endPrev.atTime(LocalTime.MAX)  );
             long paidInstallmentsCount = installmentRepository
                     .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
@@ -129,18 +133,20 @@ public class DashboardService {
                             PaymentStatus.COMPLETED , PaymentType.CASH , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
                     )
             ).orElse(BigDecimal.ZERO);
-//            System.out.println("the value of the payment data1 : "+ paidCashSum);
-//            System.out.println("the value of the payment data : "+ paidCashSum.longValue());
-//            System.out.println("start "+ start + " end "+ end);
-//            System.out.println("company  "+ getCompanyId() + " PaymentStatus "+ PaymentStatus.COMPLETED  +" \n PaymentType "+PaymentType.CASH);
-
+            BigDecimal paidInit = Optional.ofNullable(
+                    paymentPlanRepository.summationinitPaymentByDateRangeCompleted(
+                             PaymentType.INSTALLMENT , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
+                    )
+            ).orElse(BigDecimal.ZERO);
             long paidCashCount = paidCashSum.longValue();
+            long paidInitCount = paidInit.longValue();
+
 
 
             stats.put(periodName, Map.of(
-                   "totalCars", totalCars ,
-                  "paidCars", PaidCars  ,
-                  "paidInstallmentsCount", paidInstallmentsCount + paidCashCount
+                   "totalCars", totalCurrentCars ,
+                  "paidCars", totalprevCars  ,
+                  "paidInstallmentsCount", paidInstallmentsCount + paidCashCount + paidInitCount
             ));
         }
         return stats;

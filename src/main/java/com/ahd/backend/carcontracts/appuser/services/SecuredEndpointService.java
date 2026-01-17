@@ -27,6 +27,8 @@ public class SecuredEndpointService {
         return endpointRepo.findAll();
     }
     @Auditable(operation = "اضافة صلاحيات جديدة للشركة", captureArgs = true, captureResult = true)
+    //notification
+    //request.getUsername() قام المستخدم  ;helper.getCurrentUser.userName اضافة صلاحيات جديدة للشركة
     public SecuredEndpoint create(SecuredEndpoint dto) {
         Role role = roleRepo.findById(dto.getRole().getId())
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -39,6 +41,8 @@ public class SecuredEndpointService {
         return endpointRepo.save(se);
     }
     @Auditable(operation = "تحديث صلاحيات داخل الشركة", captureArgs = true, captureResult = true)
+    //notification
+    //request.getUsername() قام المستخدم  ;helper.getCurrentUser.userName تحديث صلاحيات من الشركة
     public SecuredEndpoint update(Long id, SecuredEndpoint dto) {
         SecuredEndpoint existing = endpointRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(
@@ -52,6 +56,8 @@ public class SecuredEndpointService {
         return endpointRepo.save(existing);
     }
     @Auditable(operation = "حذف صلاحيات من الشركة", captureArgs = true, captureResult = true)
+    //notification
+    //request.getUsername() قام المستخدم  ;helper.getCurrentUser.userName حذف صلاحيات من الشركة
     public void delete(Long id) {
         if (!endpointRepo.existsById(id)) {
             throw new EntityNotFoundException("SecuredEndpoint not found with id " + id);

@@ -44,9 +44,6 @@ public class UserService {
     private final CompanyUserRepository companyUserRepository;
     private final Helper helper;
 
-    /**
-     * Get the currently authenticated user's details
-     */
     @Transactional(readOnly = true)
     public UserDetailsDTO getCurrentUserDetails() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -57,7 +54,7 @@ public class UserService {
         }else{
             CompanyUser companyUsers = companyUserRepository.findByUserId(user.getId());
             Company company = companyUsers.getCompany();
-            return UserDetailsDTO.fromAppUser(user,company.getId());
+            return UserDetailsDTO.fromAppUser(user,company);
         }
     }
 

@@ -4,6 +4,8 @@ import com.ahd.backend.carcontracts.S3.S3UrlService;
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.models.Permission;
 import com.ahd.backend.carcontracts.appuser.models.Role;
+import com.ahd.backend.carcontracts.company.enums.PaymentCompanyType;
+import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.config.ApplicationContextProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
@@ -23,6 +25,7 @@ public class UserDetailsDTO {
     private Long companyUserId;
     private List<String> roles;
     Set<Permission> permissions;
+    private PaymentCompanyType paymentCompanyType;
     
     @JsonIgnore
     private String image; // S3 key
@@ -57,7 +60,7 @@ public class UserDetailsDTO {
                 .build();
     }
 
-    public static UserDetailsDTO fromAppUser(AppUser user,Long companyUserId) {
+    public static UserDetailsDTO fromAppUser(AppUser user, Company company) {
         S3UrlService s3UrlService = ApplicationContextProvider.getApplicationContext().getBean(S3UrlService.class);
         var result = user.getRoles().stream()
                 .collect(Collectors.teeing(
@@ -80,7 +83,8 @@ public class UserDetailsDTO {
                 .fullName(user.getFullName())
                 .image(user.getImage())
                 .imageUrl(s3UrlService.getImageUrl(user.getImage()))
-                .companyUserId(companyUserId)
+                .companyUserId(company.getId())
+                .paymentCompanyType(company.getPaymentCompanyType())
                 .roles(roleNames)
                 .permissions(allPermissions)
                 .build();
