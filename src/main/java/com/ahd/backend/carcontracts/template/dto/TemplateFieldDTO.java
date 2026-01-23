@@ -2,25 +2,27 @@
 package com.ahd.backend.carcontracts.template.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.Column;
 import lombok.*;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class TemplateFieldDTO {
     private Long id;
 
-    private String label;      // FIELD
-    private String fieldId;    // FIELD
+    private String label;
+    private String fieldId;
 
     private double x;
     private double y;
     private double width;
     private double height;
+    private String shapeType;
 
-    private String value;      // TEXT content or (legacy) base64 for IMAGE
-    private String kind;       // "TEXT" | "FIELD" | "IMAGE"
-    private String src;        // IMAGE preferred source
+    private String value;
+    private String kind;
+    private String src;
 
-    private Style style;       // <— nested object to match frontend
+    private Style style;
 
     @Getter @Setter
     @NoArgsConstructor @AllArgsConstructor @Builder
@@ -30,11 +32,16 @@ public class TemplateFieldDTO {
         private String color;
 
         private Integer zIndex;
+        @Column(name = "shape_type")
+
+        private double strokeWidth;
+        private String fillColor;
+        private String strokeColor;
+        @Column(name = "stroke_width")
 
         @JsonProperty("zIndex")
         public Integer getZIndex() {
             return zIndex;
         }
     }
-
 }

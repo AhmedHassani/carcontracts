@@ -58,6 +58,17 @@ public class TemplateField {
 
     @Column(name = "z_index")
     private Integer zIndex;
+    //new
+    @Column(name = "shape_type")
+    private String shapeType;
+    @Column(name = "fill_color")
+    private String fillColor;
+    @Column(name = "stroke_color")
+    private String strokeColor;
+    @Column(name = "stroke_width")
+    private double strokeWidth;
+
+    //end
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id", nullable = false)

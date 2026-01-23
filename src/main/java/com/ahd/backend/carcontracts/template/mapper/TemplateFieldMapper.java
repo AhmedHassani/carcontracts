@@ -17,18 +17,22 @@ public class TemplateFieldMapper {
         e.setWidth(d.getWidth());
         e.setHeight(d.getHeight());
         e.setValue(d.getValue());
-        e.setKind(/* map enum safely */
+        e.setShapeType(d.getShapeType());
+        e.setKind(
                 d.getKind() == null ? null :
                         com.ahd.backend.carcontracts.template.model.TemplateItemKind.valueOf(d.getKind().toUpperCase())
         );
         e.setSrc(d.getSrc());
 
-        // copy style to flat columns
-        if (d.getStyle() != null) {
+        if (d.getStyle() != null && d.getStyle().getFontSize() != null) {
             e.setStyleFontSize(d.getStyle().getFontSize());
             e.setStyleColor(d.getStyle().getColor());
             e.setZIndex(d.getStyle().getZIndex());
-
+        } else if(d.getStyle() != null && d.getStyle().getStrokeColor() != null) {
+            e.setZIndex(d.getStyle().getZIndex());
+            e.setStrokeColor(d.getStyle().getStrokeColor());
+            e.setStrokeWidth(d.getStyle().getStrokeWidth());
+            e.setFillColor(d.getStyle().getFillColor());
         } else {
             e.setStyleFontSize(null);
             e.setStyleColor(null);
@@ -50,7 +54,7 @@ public class TemplateFieldMapper {
         d.setValue(e.getValue());
         d.setKind(e.getKind() == null ? null : e.getKind().name());
         d.setSrc(e.getSrc());
-
+        d.setShapeType(e.getShapeType());
         // build style object from columns
         if (e.getStyleFontSize() != null || e.getStyleColor() != null) {
             TemplateFieldDTO.Style style = new TemplateFieldDTO.Style();
@@ -58,6 +62,12 @@ public class TemplateFieldMapper {
             style.setColor(e.getStyleColor());
             style.setZIndex(e.getZIndex());
             d.setStyle(style);
+        }else if(e.getStrokeColor() != null ){
+            TemplateFieldDTO.Style style = new TemplateFieldDTO.Style();
+            style.setZIndex(e.getZIndex());
+            style.setStrokeColor(e.getStrokeColor());
+            style.setStrokeWidth(e.getStrokeWidth());
+            style.setFillColor(e.getFillColor());
         }
         return d;
     }

@@ -32,6 +32,7 @@ public class ContractResponse {
         String fullName;
         String phone;
         String nationalId;
+        String residence;
     }
 
     @Getter @Setter
@@ -43,6 +44,7 @@ public class ContractResponse {
         Integer modelYear;
         String name;
         String initPrice;
+        String chassisNumber;
     }
 
     @Getter @Setter
@@ -54,6 +56,8 @@ public class ContractResponse {
         BigDecimal paidAmount;
         PaymentType paymentType;
         List<InstallmentDTO> installments;
+        BigDecimal remainingAmount;
+
     }
 
     @Getter @Setter

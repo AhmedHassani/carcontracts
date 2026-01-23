@@ -65,6 +65,7 @@ public final class ContractMapper {
         dto.setId        (p.getId());
         dto.setFullName  (p.getFirstName() + " " + p.getFatherName() + " " + p.getFourthName() );
         dto.setPhone     (p.getPhoneNumber());
+        dto.setResidence (p.getResidence());
         dto.setNationalId(p.getNationalId());   // adjust fields as needed
         return dto;
     }
@@ -77,8 +78,10 @@ public final class ContractMapper {
         dto.setModel      (car.getModel());
         dto.setPlateNumber(car.getPlateNumber());
         dto.setColor      (car.getColor());
+        dto.setChassisNumber(car.getChassisNumber());
         dto.setName(car.getName());
         dto.setInitPrice(car.getInitPrice());
+        dto.setModel(car.getModel());
         return dto;
     }
     private static ContractResponse.PaymentPlanDTO toPaymentPlanDTO(PaymentPlan paymentPlan) {
@@ -94,6 +97,7 @@ public final class ContractMapper {
         if (paid.compareTo(BigDecimal.ZERO) < 0) {
             paid = paid.multiply(BigDecimal.valueOf(-1));
         }
+        dto.setRemainingAmount (paymentPlan.getRemainingAmount());
         dto.setTotalAmount (paymentPlan.getTotalAmount());
         dto.setPaidAmount(paid);
         return dto;

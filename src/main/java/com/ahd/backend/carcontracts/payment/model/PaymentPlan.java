@@ -84,19 +84,3 @@ public class PaymentPlan {
 
 
 
-
-//ALTER TABLE [dbo].[company]
-//ADD payment_company_type VARCHAR(10) NULL
-//
-//-- 更新现有数据
-//UPDATE [dbo].[company]
-//SET payment_company_type = 'IQD'  -- 或 'USD'
-//WHERE payment_company_type IS NULL
-//
-//-- 改为 NOT NULL（可选）
-//ALTER TABLE [dbo].[company]
-//ALTER COLUMN payment_company_type VARCHAR(10) NOT NULL
-//
-//-- 添加检查约束
-//ALTER TABLE [dbo].[company]
-//ADD CONSTRAINT CHK_PaymentType CHECK (payment_company_type IN ('IQD', 'USD'))
