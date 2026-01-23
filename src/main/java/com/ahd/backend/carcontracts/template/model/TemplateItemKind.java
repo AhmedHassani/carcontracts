@@ -3,7 +3,7 @@ package com.ahd.backend.carcontracts.template.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum TemplateItemKind {
-    FIELD, TEXT, IMAGE;
+    FIELD, TEXT, IMAGE , SHAPE;
 
     @JsonCreator
     public static TemplateItemKind fromString(String v) {
