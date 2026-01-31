@@ -37,12 +37,15 @@ public class Installment {
 
     @Column(name = "amount", precision = 15, scale = 2)
     private BigDecimal amount;
-
+    @Column(name = "remaining_amount")
+    private BigDecimal remainingAmount;
     @Column(name = "due_date")
     private LocalDate dueDate;
 
     @Column(name = "paid_date")
     private LocalDate paidDate;
+    @Column(name = "old_paid_date")
+    private LocalDate oldPaidDate;
 
     @Enumerated(EnumType.STRING)
     private InstallmentStatus status;

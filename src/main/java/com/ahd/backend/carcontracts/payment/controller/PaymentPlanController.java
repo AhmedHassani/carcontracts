@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -73,11 +75,12 @@ public class PaymentPlanController {
         PaymentResponse response = paymentPlanService.updatePInstallmentDate(request);
         return ResponseEntity.ok(response);
     }
-    @PutMapping("/{id}/updateInstallmentStatus")
+    @PutMapping("/{id}/updateInstallmentStatus/{paidAmount}")
     @PreAuthorize("hasAuthority('UPDATE_INSTALLMENT') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> updatePaymentStatus(
-            @PathVariable Long id) {
-        PaymentResponse response = paymentPlanService.updatePInstallmentStatus(id);
+            @PathVariable Long id,
+            @PathVariable BigDecimal paidAmount) {
+        PaymentResponse response = paymentPlanService.updatePInstallmentStatus(id , paidAmount);
         return ResponseEntity.ok(response);
     }
 

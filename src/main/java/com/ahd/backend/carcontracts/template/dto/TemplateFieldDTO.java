@@ -32,12 +32,10 @@ public class TemplateFieldDTO {
         private String color;
 
         private Integer zIndex;
-        @Column(name = "shape_type")
 
         private double strokeWidth;
         private String fillColor;
         private String strokeColor;
-        @Column(name = "stroke_width")
 
         @JsonProperty("zIndex")
         public Integer getZIndex() {

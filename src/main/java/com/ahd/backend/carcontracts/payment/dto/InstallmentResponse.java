@@ -14,6 +14,9 @@ public class InstallmentResponse {
     private BigDecimal amount;
     private LocalDate dueDate;
     private LocalDate paidDate;
+    private LocalDate oldPaidDate;
+
     private InstallmentStatus status;
     private String paymentReference;
+
 }
