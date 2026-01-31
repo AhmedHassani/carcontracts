@@ -37,7 +37,6 @@ public class TemplateField {
     private double height;
 
 
-    @Lob
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String value;
 
@@ -46,7 +45,7 @@ public class TemplateField {
     private TemplateItemKind kind = TemplateItemKind.FIELD;
 
 
-    @Lob
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String src;
 

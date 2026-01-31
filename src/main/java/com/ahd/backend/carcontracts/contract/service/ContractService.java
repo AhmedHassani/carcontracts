@@ -67,6 +67,7 @@ public class ContractService {
             paymentPlan.setDownPayment(paymentPlan.getTotalAmount());
         }else{
             car.setStatus("Active");
+            car.setPaidAt(LocalDateTime.now());
             paymentPlan.setStatus(PaymentStatus.ACTIVE);
         }
         Person guarantor = null;

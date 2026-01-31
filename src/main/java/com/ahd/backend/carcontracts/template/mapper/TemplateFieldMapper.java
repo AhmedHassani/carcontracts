@@ -68,6 +68,7 @@ public class TemplateFieldMapper {
             style.setStrokeColor(e.getStrokeColor());
             style.setStrokeWidth(e.getStrokeWidth());
             style.setFillColor(e.getFillColor());
+            d.setStyle(style);
         }
         return d;
     }
