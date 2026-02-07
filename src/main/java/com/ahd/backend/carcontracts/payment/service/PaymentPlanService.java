@@ -134,64 +134,95 @@ public class PaymentPlanService {
     //notification
     //id قام المستخدم  ;helper.getCurrentUser.userName تحديث حاله الدفعة رقم
     //to all company
-    public PaymentResponse updatePInstallmentStatus(Long id , BigDecimal paidAmount) {
-        Installment installment = installmentRepository.findByIdAndCompanyId(id , getCompanyId())
-                .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
-
-        if (installment.getStatus() == InstallmentStatus.PAID) {
-            throw new IllegalStateException("Installment already paid");
-        }
-        if (paidAmount != null && paidAmount.compareTo(installment.getAmount()) == 0) {
-            installment.setStatus(InstallmentStatus.PAID);
-        } else if (paidAmount != null && paidAmount.compareTo(installment.getAmount()) > 0) {
-            throw new IllegalStateException ("the amount more then the current installment ");
-        } else if (paidAmount != null && paidAmount.compareTo(installment.getAmount()) < 0) {
-            installment.setStatus(InstallmentStatus.PARTIALLY_PAID);
-            BigDecimal remainingAmount = installment.getAmount().subtract(paidAmount);
-            installment.setRemainingAmount(remainingAmount);
-        } else {
-
-            installment.setStatus(InstallmentStatus.PENDING);
-        }
-
-        installment.setPaidDate(LocalDate.now());
-
-        installmentRepository.save(installment);
-
-        Long paymentPlanId = installment.getPaymentPlan().getId();
-
-        boolean allPaid = installmentRepository
-                .findByPaymentPlanIdAndCompanyId(paymentPlanId , getCompanyId())
-                .stream()
-                .allMatch(inst -> inst.getStatus() == InstallmentStatus.PAID);
-
-        if (allPaid) {
-            PaymentPlan paymentPlan = paymentPlanRepository.findById(paymentPlanId)
-                    .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
-
-            paymentPlan.setStatus(PaymentStatus.COMPLETED);
-            paymentPlan.setComplete_date(LocalDate.now());
-            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(installment.getAmount());
-            paymentPlan.setRemainingAmount(remainingAmount);
-            var contract = contractsRepository.findByPaymentPlanId(paymentPlan.getId());
-            contract.getCar().setStatus("Paid");
-            contractsRepository.save(contract);
-            paymentPlanRepository.save(paymentPlan);
-        }else{
-            PaymentPlan paymentPlan = paymentPlanRepository.findById(paymentPlanId)
-                    .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
-            BigDecimal remainingAmount = paymentPlan.getRemainingAmount().subtract(installment.getAmount());
-            paymentPlan.setRemainingAmount(remainingAmount);
-            paymentPlanRepository.save(paymentPlan);
-        }
-
-        return PaymentResponse.builder()
-                .success(true)
-                .message("Installment processed successfully")
-                .paymentDate(LocalDate.now())
-                .build();
+   public PaymentResponse updateInstallmentStatus(Long id, BigDecimal paidAmount) {
+    // Validate input
+    if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) <= 0) {
+        throw new IllegalArgumentException("Paid amount must be positive");
     }
 
+    Installment installment = installmentRepository.findByIdAndCompanyId(id, getCompanyId())
+            .orElseThrow(() -> new EntityNotFoundException("Installment not found"));
+
+    if (installment.getStatus() == InstallmentStatus.PAID) {
+        throw new IllegalStateException("Installment already paid");
+    }
+
+    // Get current remaining amount (handle null)
+    BigDecimal currentRemainingAmount = installment.getRemainingAmount() != null 
+            ? installment.getRemainingAmount() 
+            : installment.getAmount();
+    
+    if (currentRemainingAmount == null) {
+        throw new IllegalStateException("Installment amount is not set");
+    }
+
+    // FIXED: Correct syntax for comparison
+    if (paidAmount.compareTo(currentRemainingAmount) > 0 && 
+        installment.getStatus() == InstallmentStatus.PARTIALLY_PAID) {
+        throw new IllegalStateException("The amount is more than the remaining installment amount");
+    }
+
+    // Calculate new remaining amount
+    BigDecimal newRemainingAmount = currentRemainingAmount.subtract(paidAmount);
+    
+    // Update status based on payment
+    if (newRemainingAmount.compareTo(BigDecimal.ZERO) == 0) {
+        // Fully paid
+        installment.setStatus(InstallmentStatus.PAID);
+        installment.setRemainingAmount(BigDecimal.ZERO);
+    } else {
+        // Partially paid
+        installment.setStatus(InstallmentStatus.PARTIALLY_PAID);
+        installment.setRemainingAmount(newRemainingAmount);
+    }
+
+    installment.setPaidDate(LocalDate.now());
+    installmentRepository.save(installment);
+
+    // Update payment plan
+    Long paymentPlanId = installment.getPaymentPlan().getId();
+    PaymentPlan paymentPlan = paymentPlanRepository.findById(paymentPlanId)
+            .orElseThrow(() -> new EntityNotFoundException("Payment plan not found"));
+
+    // FIXED: Subtract paidAmount, not installment.getAmount()
+    BigDecimal planRemainingAmount = paymentPlan.getRemainingAmount() != null 
+            ? paymentPlan.getRemainingAmount() 
+            : BigDecimal.ZERO;
+    BigDecimal newPlanRemainingAmount = planRemainingAmount.subtract(paidAmount);
+    
+    if (newPlanRemainingAmount.compareTo(BigDecimal.ZERO) < 0) {
+        newPlanRemainingAmount = BigDecimal.ZERO;
+    }
+    
+    paymentPlan.setRemainingAmount(newPlanRemainingAmount);
+
+    // Check if all installments are paid
+    boolean allPaid = installmentRepository
+            .findByPaymentPlanIdAndCompanyId(paymentPlanId, getCompanyId())
+            .stream()
+            .allMatch(inst -> inst.getStatus() == InstallmentStatus.PAID);
+
+    if (allPaid) {
+        paymentPlan.setStatus(PaymentStatus.COMPLETED);
+        paymentPlan.setComplete_date(LocalDate.now());
+        
+        var contract = contractsRepository.findByPaymentPlanId(paymentPlan.getId());
+        if (contract != null && contract.getCar() != null) {
+            contract.getCar().setStatus("Paid");
+            contractsRepository.save(contract);
+        }
+    } else {
+        paymentPlan.setStatus(PaymentStatus.PENDING);
+    }
+
+    paymentPlanRepository.save(paymentPlan);
+
+    return PaymentResponse.builder()
+            .success(true)
+            .message("Installment processed successfully")
+            .paymentDate(LocalDate.now())
+            .build();
+}
 
     private PaymentPlanResponse mapToResponse(PaymentPlan paymentPlan) {
         List<InstallmentResponse> installmentResponses = paymentPlan.getInstallments().stream()

@@ -80,7 +80,7 @@ public class PaymentPlanController {
     public ResponseEntity<?> updatePaymentStatus(
             @PathVariable Long id,
             @PathVariable BigDecimal paidAmount) {
-        PaymentResponse response = paymentPlanService.updatePInstallmentStatus(id , paidAmount);
+        PaymentResponse response = paymentPlanService.updateInstallmentStatus(id , paidAmount);
         return ResponseEntity.ok(response);
     }
 
