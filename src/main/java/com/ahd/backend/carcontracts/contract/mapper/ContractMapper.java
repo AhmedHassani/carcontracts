@@ -58,32 +58,78 @@ public final class ContractMapper {
     }
 
 
-    private static ContractResponse.PersonDTO toPersonDTO(Person p) {
-        if (p == null) return null;
+   private static ContractResponse.PersonDTO toPersonDTO(Person p) {
+    if (p == null) return null;
 
-        ContractResponse.PersonDTO dto = new ContractResponse.PersonDTO();
-        dto.setId        (p.getId());
-        dto.setFullName  (p.getFirstName() + " " + p.getFatherName() + " " + p.getFourthName() );
-        dto.setPhone     (p.getPhoneNumber());
-        dto.setResidence (p.getResidence());
-        dto.setNationalId(p.getNationalId());   // adjust fields as needed
-        return dto;
-    }
+    ContractResponse.PersonDTO dto = new ContractResponse.PersonDTO();
+    
+    dto.setId(p.getId());
+    dto.setCompanyId(p.getCompanyId());
+    
+    dto.setFirstName(p.getFirstName());
+    dto.setFatherName(p.getFatherName());
+    dto.setGrandfatherName(p.getGrandfatherName());
+    dto.setFourthName(p.getFourthName());
+    dto.setSurname(p.getSurname());
+    
+    dto.setFullName(p.getFirstName() + " " + p.getFatherName() + " " + p.getFourthName());
+   
+    dto.setPhone(p.getPhoneNumber());
+    
+    dto.setNationalId(p.getNationalId());
+    dto.setResidenceCardNo(p.getResidenceCardNo());
+    
+    dto.setResidence(p.getResidence());
+    dto.setDistrict(p.getDistrict());
+    dto.setAlley(p.getAlley());
+    dto.setHouseNo(p.getHouseNo());
+    
+    dto.setIssuingAuthority(p.getIssuingAuthority());
+    dto.setInfoOffice(p.getInfoOffice());
+    
+    // Timestamps
+    // dto.setCreatedAt(p.getCreatedAt());
+    // dto.setUpdatedAt(p.getUpdatedAt());
+    
+    return dto;
+}
 
-    private static ContractResponse.CarDTO toCarDTO(Car car) {
-        if (car == null) return null;
+  private static ContractResponse.CarDTO toCarDTO(Car car) {
+    if (car == null) return null;
 
-        ContractResponse.CarDTO dto = new ContractResponse.CarDTO();
-        dto.setId         (car.getId());
-        dto.setModel      (car.getModel());
-        dto.setPlateNumber(car.getPlateNumber());
-        dto.setColor      (car.getColor());
-        dto.setChassisNumber(car.getChassisNumber());
-        dto.setName(car.getName());
-        dto.setInitPrice(car.getInitPrice());
-        dto.setModel(car.getModel());
-        return dto;
-    }
+    ContractResponse.CarDTO dto = new ContractResponse.CarDTO();
+    
+    // Basic identification
+    dto.setId(car.getId());
+    dto.setName(car.getName());
+    dto.setModel(car.getModel());
+    dto.setPlateNumber(car.getPlateNumber());
+    dto.setColor(car.getColor());
+    
+    // Year and specifications
+   // dto.setModelYear(car.getModelYear());
+    dto.setInitPrice(car.getInitPrice());
+    dto.setChassisNumber(car.getChassisNumber());
+    dto.setType(car.getType());
+    
+    // Technical specifications
+    dto.setKilometers(car.getKilometers());
+    dto.setCylinderCount(car.getCylinderCount());
+    dto.setPassengerCount(car.getPassengerCount());
+    dto.setEngineType(car.getEngineType());
+    dto.setOrigin(car.getOrigin());
+    
+    // Administrative details
+    dto.setWalletNumber(car.getWalletNumber());
+    dto.setTypeOfCarPlate(car.getTypeOfCarPlate());
+    dto.setStatus(car.getStatus());
+    
+    // Additional information
+    dto.setDescription(car.getDescription());
+    dto.setCreatedAt(car.getCreatedAt());
+    
+    return dto;
+}
     private static ContractResponse.PaymentPlanDTO toPaymentPlanDTO(PaymentPlan paymentPlan) {
         if (paymentPlan == null) return null;
 

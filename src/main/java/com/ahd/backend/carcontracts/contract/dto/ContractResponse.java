@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import java.time.LocalDateTime; 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -31,8 +31,20 @@ public class ContractResponse {
         Long id;
         String fullName;
         String phone;
+        String firstName;
+        String fatherName;
+        String grandfatherName;
+        String fourthName;
+        String surname;
         String nationalId;
+        String residenceCardNo;
         String residence;
+        String district;
+        String alley;
+        String houseNo;
+        String issuingAuthority;
+        String infoOffice;
+        Long companyId;
     }
 
     @Getter @Setter
@@ -41,10 +53,21 @@ public class ContractResponse {
         String model;
         String plateNumber;
         String color;
-        Integer modelYear;
+        // Integer modelYear;
         String name;
         String initPrice;
         String chassisNumber;
+        String type;
+        Integer kilometers;
+        Integer cylinderCount;
+        String passengerCount;
+        String engineType;
+        String origin;
+        LocalDateTime createdAt;
+        String walletNumber;
+        String typeOfCarPlate;
+        String status;
+        String description;
     }
 
     @Getter @Setter
