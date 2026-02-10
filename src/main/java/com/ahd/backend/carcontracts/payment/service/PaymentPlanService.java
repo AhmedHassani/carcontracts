@@ -175,8 +175,9 @@ public class PaymentPlanService {
         installment.setStatus(InstallmentStatus.PARTIALLY_PAID);
         installment.setRemainingAmount(newRemainingAmount);
     }
-
-    installment.setPaidDate(LocalDate.now());
+    if(installment.getPaidDate() == null){
+        installment.setPaidDate(LocalDate.now());
+    }
     installmentRepository.save(installment);
 
     // Update payment plan

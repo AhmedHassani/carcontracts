@@ -125,28 +125,28 @@ public class DashboardService {
                     .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid", "Active" ,start.atStartOfDay(), end.atTime(LocalTime.MAX)  );
             long totalprevCars = carRepository
                     .countByCompanyIdAndStatusAndCreatedAtBetween( getCompanyId() ,"Paid", "Active" ,startPrev.atStartOfDay(), endPrev.atTime(LocalTime.MAX)  );
-            long paidInstallmentsCount = installmentRepository
-                    .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
+            // long paidInstallmentsCount = installmentRepository
+            //         .countByStatusAndDateRange(InstallmentStatus.PAID, start, end , getCompanyId() );
 
             BigDecimal paidCashSum = Optional.ofNullable(
                     paymentPlanRepository.summationByStatusAndDateRangeCompleted(
-                            PaymentStatus.COMPLETED , PaymentType.CASH , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
+                             start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
                     )
             ).orElse(BigDecimal.ZERO);
-            BigDecimal paidInit = Optional.ofNullable(
-                    paymentPlanRepository.summationinitPaymentByDateRangeCompleted(
-                             PaymentType.INSTALLMENT , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
-                    )
-            ).orElse(BigDecimal.ZERO);
+            // BigDecimal paidInit = Optional.ofNullable(
+            //         paymentPlanRepository.summationinitPaymentByDateRangeCompleted(
+            //                  PaymentType.INSTALLMENT , start.atStartOfDay(), end.atTime(LocalTime.MAX), getCompanyId()
+            //         )
+            // ).orElse(BigDecimal.ZERO);
             long paidCashCount = paidCashSum.longValue();
-            long paidInitCount = paidInit.longValue();
+            // long paidInitCount = paidInit.longValue();
 
 
 
             stats.put(periodName, Map.of(
                    "totalCars", totalCurrentCars ,
                   "paidCars", totalprevCars  ,
-                  "paidInstallmentsCount", paidInstallmentsCount + paidCashCount + paidInitCount
+                   "paidInstallmentsCount", paidCashCount 
             ));
         }
         return stats;

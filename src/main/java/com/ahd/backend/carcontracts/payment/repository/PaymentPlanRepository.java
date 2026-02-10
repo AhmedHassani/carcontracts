@@ -58,22 +58,40 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
                                    @Param("start") LocalDate start,
                                    @Param("end") LocalDate end,
                                    @Param("companyId") Long companyId);
-
-    @Query("""
+                                   
+  //version 1
+  //   @Query("""
+  //  SELECT COALESCE(SUM(p.totalAmount), 0)
+  //  FROM PaymentPlan p
+  //  WHERE p.status = :status
+  //    AND p.paymentType =:paymentType
+  //    AND p.createdAt BETWEEN :start AND :end
+  //    AND p.companyId = :companyId
+  //  """)
+  //   BigDecimal summationByStatusAndDateRangeCompleted(
+  //           @Param("status") PaymentStatus status,
+  //           @Param("paymentType") PaymentType paymentType,
+  //           @Param("start") LocalDateTime start,
+  //           @Param("end") LocalDateTime end,
+  //           @Param("companyId") Long companyId
+  //   );
+    //version 2
+   @Query("""
    SELECT COALESCE(SUM(p.totalAmount), 0)
-   FROM PaymentPlan p
-   WHERE p.status = :status
-     AND p.paymentType =:paymentType
-     AND p.createdAt BETWEEN :start AND :end
-     AND p.companyId = :companyId
+   FROM PaymentPlan p 
+   JOIN p.installments i 
+   WHERE ((COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end) 
+        OR 
+        (i.status != 'PENDING' AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)))
+   AND p.companyId = :companyId
    """)
     BigDecimal summationByStatusAndDateRangeCompleted(
-            @Param("status") PaymentStatus status,
-            @Param("paymentType") PaymentType paymentType,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
             @Param("companyId") Long companyId
     );
+
+    
     @Query("""
    SELECT COALESCE(SUM(p.intInstallment), 0)
    FROM PaymentPlan p
