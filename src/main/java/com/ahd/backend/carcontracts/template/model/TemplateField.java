@@ -57,7 +57,6 @@ public class TemplateField {
 
     @Column(name = "z_index")
     private Integer zIndex;
-    //new
     @Column(name = "shape_type")
     private String shapeType;
     @Column(name = "fill_color")
@@ -67,10 +66,26 @@ public class TemplateField {
     @Column(name = "stroke_width")
     private double strokeWidth;
 
-    //end
+  
+    @Column(name = "font_family", length = 2)
+    private String fontFamily;
+
+    @Column(name = "fill_opacity")
+    @Builder.Default
+    private double fillOpacity = 1.0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id", nullable = false)
     private Template template;
 
 }
+
+
+// -- Add font_family column (without COLUMN keyword)
+// ALTER TABLE [carcontracts].[dbo].[template_field] 
+// ADD font_family NVARCHAR(254) NULL;
+
+// -- Add fill_opacity column (using FLOAT instead of DOUBLE)
+// ALTER TABLE [carcontracts].[dbo].[template_field] 
+// ADD fill_opacity FLOAT NULL 
+// CONSTRAINT DF_template_field_fill_opacity DEFAULT 1.0;

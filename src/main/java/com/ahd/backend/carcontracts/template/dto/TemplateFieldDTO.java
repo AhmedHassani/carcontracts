@@ -36,6 +36,8 @@ public class TemplateFieldDTO {
         private double strokeWidth;
         private String fillColor;
         private String strokeColor;
+        private double fillOpacity ;
+         private String fontFamily;
 
         @JsonProperty("zIndex")
         public Integer getZIndex() {
