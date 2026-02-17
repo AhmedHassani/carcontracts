@@ -15,4 +15,5 @@ public class PaymentDateRequest {
     private Long installmentId;
     @NotNull
     private LocalDate dueDate;
+    private String note;
 }

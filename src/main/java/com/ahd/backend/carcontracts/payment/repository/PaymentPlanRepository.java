@@ -79,17 +79,23 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
    @Query("""
    SELECT COALESCE(SUM(p.totalAmount), 0)
    FROM PaymentPlan p 
-   JOIN p.installments i 
-   WHERE ((COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end) 
-        OR 
-        (i.status != 'PENDING' AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)))
-   AND p.companyId = :companyId
+   WHERE p.companyId = :companyId
+   AND (
+        (COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end)
+        OR
+        EXISTS (
+            SELECT 1 FROM Installment i 
+            WHERE i.paymentPlan = p 
+            AND i.status != 'PENDING' AND  i.status != 'OVERDUE'
+            AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)
+        )
+   )
    """)
-    BigDecimal summationByStatusAndDateRangeCompleted(
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end,
-            @Param("companyId") Long companyId
-    );
+BigDecimal summationByStatusAndDateRangeCompleted(
+        @Param("start") LocalDateTime start,
+        @Param("end") LocalDateTime end,
+        @Param("companyId") Long companyId
+);
 
     
     @Query("""

@@ -46,29 +46,66 @@ public interface InstallmentRepository extends JpaRepository<Installment, Long> 
 
 
 
-    @Query("""
-    SELECT i.paidDate as day, SUM(i.amount) 
+@Query("""
+    SELECT CAST(p.createdAt AS LocalDate) as day, SUM(p.intInstallment) as totalAmount
+    FROM PaymentPlan p 
+    WHERE p.intInstallment IS NOT NULL 
+    AND p.intInstallment > 0 
+    AND CAST(p.createdAt AS LocalDate) BETWEEN :start AND :end 
+    AND p.companyId = :companyId
+    GROUP BY CAST(p.createdAt AS LocalDate)
+    ORDER BY CAST(p.createdAt AS LocalDate)
+""")
+List<Object[]> getIntInstallmentByDay(
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end,
+    @Param("companyId") Long companyId
+);
+
+@Query(value = """
+    SELECT FORMAT(created_at, 'yyyy-MM') as month, SUM(int_installment) as totalAmount
+    FROM payment_plans
+    WHERE int_installment IS NOT NULL 
+    AND int_installment > 0 
+    AND CAST(created_at AS DATE) BETWEEN :start AND :end 
+    AND company_id = :companyId
+    GROUP BY FORMAT(created_at, 'yyyy-MM')
+    ORDER BY month
+""", nativeQuery = true)
+List<Object[]> getIntInstallmentByMonth(
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end,
+    @Param("companyId") Long companyId
+);@Query("""
+    SELECT i.paidDate as day, 
+           SUM(i.amount - COALESCE(i.remainingAmount, 0)) as totalAmount
     FROM Installment i 
-    WHERE i.status = 'PAID' AND i.paidDate BETWEEN :start AND :end AND companyId = :companyId
+    WHERE (i.status = 'PAID' OR i.status = 'PARTIALLY_PAID')
+    AND i.paidDate BETWEEN :start AND :end 
+    AND i.companyId = :companyId
     GROUP BY i.paidDate
     ORDER BY i.paidDate
 """)
-    List<Object[]> countByDay(
-                              @Param("start") LocalDate start,
-                              @Param("end") LocalDate end ,
-                              @Param("companyId") Long companyId);
-    @Query(value = """
-    SELECT FORMAT(paid_date, 'yyyy-MM') AS month, SUM(amount) AS total_amount
+List<Object[]> getInstallmentPaymentsByDay(
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end,
+    @Param("companyId") Long companyId
+);
+
+@Query(value = """
+    SELECT FORMAT(paid_date, 'yyyy-MM') as month, 
+           SUM(amount - COALESCE(remaining_amount, 0)) as totalAmount
     FROM installments
-    WHERE status = 'PAID' AND paid_date BETWEEN :start AND :end AND company_id = :companyId
+    WHERE (status = 'PAID' OR status = 'PARTIALLY_PAID')
+    AND paid_date BETWEEN :start AND :end 
+    AND company_id = :companyId
     GROUP BY FORMAT(paid_date, 'yyyy-MM')
     ORDER BY month
 """, nativeQuery = true)
-    List<Object[]> countByMonth(@Param("start") LocalDate start,
-                                @Param("end") LocalDate end,
-                                @Param("companyId") Long companyId);
-;
-
-
+List<Object[]> getInstallmentPaymentsByMonth(
+    @Param("start") LocalDate start,
+    @Param("end") LocalDate end,
+    @Param("companyId") Long companyId
+);
 
 }

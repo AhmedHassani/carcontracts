@@ -119,7 +119,10 @@ public class PaymentPlanService {
         if (installment.getStatus() == InstallmentStatus.PAID) {
             throw new IllegalStateException("Installment already paid");
         }
-        installment.setOldPaidDate(installment.getDueDate());
+       if (installment.getOldPaidDate() == null) {
+    installment.setOldPaidDate(installment.getDueDate());
+}
+        installment.setNote(request.getNote());
         installment.setDueDate(request.getDueDate());
         installment.setStatus(InstallmentStatus.OVERDUE);
         installmentRepository.save(installment);
