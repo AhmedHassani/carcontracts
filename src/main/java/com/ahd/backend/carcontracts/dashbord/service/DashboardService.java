@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.dashbord.service;
 
 
-
+import java.util.TreeMap;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.appuser.repository.UserStatsProjection;
 import com.ahd.backend.carcontracts.car.repository.CarRepository;
@@ -152,23 +152,49 @@ public class DashboardService {
         return stats;
     }
 
-    public Map<LocalDate, Long> getInstallmentsDaily( LocalDate start, LocalDate end) {
-        Map<LocalDate, Long> result = new LinkedHashMap<>();
-        for (Object[] row : installmentRepository.countByDay( start, end , getCompanyId())) {
-            result.put((LocalDate) row[0], ((Number) row[1]).longValue());
-        }
-        return result;
+public Map<LocalDate, Long> getInstallmentsDaily(LocalDate start, LocalDate end) {
+    Map<LocalDate, Long> result = new LinkedHashMap<>();
+    Long companyId = getCompanyId();
+    
+    // Add intInstallment (down payments) from PaymentPlan
+    for (Object[] row : installmentRepository.getIntInstallmentByDay(start, end, companyId)) {
+        LocalDate day = (LocalDate) row[0];
+        Long amount = ((Number) row[1]).longValue();
+        result.merge(day, amount, Long::sum);
     }
+    
+    // Add installment payments from Installment
+    for (Object[] row : installmentRepository.getInstallmentPaymentsByDay(start, end, companyId)) {
+        LocalDate day = (LocalDate) row[0];
+        Long amount = ((Number) row[1]).longValue();
+        result.merge(day, amount, Long::sum);
+    }
+    
+    // Sort by date
+    return new TreeMap<>(result);
+}
 
-    public Map<String, BigDecimal> getInstallmentsMonthly(LocalDate start, LocalDate end) {
-        Map<String, BigDecimal> result = new LinkedHashMap<>();
-        for (Object[] row : installmentRepository.countByMonth(start, end , getCompanyId())) {
-            String month = (String) row[0];
-            BigDecimal total = (BigDecimal) row[1];
-            result.put(month, total);
-        }
-        return result;
+public Map<String, BigDecimal> getInstallmentsMonthly(LocalDate start, LocalDate end) {
+    Map<String, BigDecimal> result = new LinkedHashMap<>();
+    Long companyId = getCompanyId();
+    
+    // Add intInstallment (down payments) from PaymentPlan
+    for (Object[] row : installmentRepository.getIntInstallmentByMonth(start, end, companyId)) {
+        String month = (String) row[0];
+        BigDecimal amount = (BigDecimal) row[1];
+        result.merge(month, amount, BigDecimal::add);
     }
+    
+    // Add installment payments from Installment
+    for (Object[] row : installmentRepository.getInstallmentPaymentsByMonth(start, end, companyId)) {
+        String month = (String) row[0];
+        BigDecimal amount = (BigDecimal) row[1];
+        result.merge(month, amount, BigDecimal::add);
+    }
+    
+    // Sort by month
+    return new TreeMap<>(result);
+}
 
     public Map<LocalDate, Long> getContractDaily( LocalDate start, LocalDate end) {
         Map<LocalDate, Long> result = new LinkedHashMap<>();

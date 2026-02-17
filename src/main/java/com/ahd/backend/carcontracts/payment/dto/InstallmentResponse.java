@@ -18,5 +18,7 @@ public class InstallmentResponse {
 
     private InstallmentStatus status;
     private String paymentReference;
+    private String note;
+
 
 }

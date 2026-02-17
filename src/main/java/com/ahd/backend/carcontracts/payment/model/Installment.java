@@ -58,4 +58,6 @@ public class Installment {
     @Column(name = "company_id")
     private Long companyId;
 
+    private String note;
+
 }
