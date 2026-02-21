@@ -1,218 +1,155 @@
 package com.ahd.backend.carcontracts.notification.service;
 
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
-import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
-import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
-import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
-import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
-import com.ahd.backend.carcontracts.contract.model.Contracts;
-import com.ahd.backend.carcontracts.contract.service.ContractSpecification;
-import com.ahd.backend.carcontracts.notification.dto.NotificationWithSeenDTO;
-import com.ahd.backend.carcontracts.notification.event.NotificationSaveEvent;
-import com.ahd.backend.carcontracts.notification.event.NotificationSendEvent;
-import com.ahd.backend.carcontracts.notification.model.SeenNotification;
+import com.ahd.backend.carcontracts.appuser.models.Role;
+import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.notification.dto.NotificationRequest;
+import com.ahd.backend.carcontracts.notification.dto.NotificationResponse;
+import com.ahd.backend.carcontracts.notification.model.Notification;
 import com.ahd.backend.carcontracts.notification.repository.NotificationRepository;
-import com.ahd.backend.carcontracts.notification.repository.SeenNotificationRepository;
-import com.google.firebase.messaging.*;
+import com.ahd.backend.carcontracts.util.Helper;
+import com.google.api.gax.rpc.NotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Async;
-import com.ahd.backend.carcontracts.notification.model.AppNotification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.time.*;
-import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-
 
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
-    private final ApplicationEventPublisher publisher;
-    private final UserRepository userRepository;
-    private final SeenNotificationRepository seenRepo;
 
-    @Autowired
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepo;
+    private final Helper helper;
+    private final FCMService fcmService;
+    private final com.ahd.backend.carcontracts.appuser.repository.UserRepository userRepo;
 
-    private ZoneId zone() {
-        return ZoneId.systemDefault();
+    /**
+     * Sends a notification to one or multiple receivers based on the request.
+     * Supports:
+     * - Specific User IDs
+     * - Specific Roles (Action will be visible to all users with this role in the
+     * context)
+     */
+    @Transactional
+    public void sendNotification(NotificationRequest request) {
+        List<Notification> notificationsToSave = new ArrayList<>();
+        List<String> fcmTokens = new ArrayList<>();
+        // 1. Handle Specific User Targets
+        if (request.hasSpecificUsers()) {
+            for (Long userId : request.getTargetUserIds()) {
+                Notification n = buildNotification(request);
+                n.setTargetUserId(userId);
+                n.setTargetRole(null);
+                notificationsToSave.add(n);
+            }
+            // Fetch tokens for push notification
+            fcmTokens.addAll(userRepo.findFcmTokensByUserIds(request.getTargetUserIds()));
+        }
+        // 2. Handle Role Targets
+        if (request.hasTargetRoles()) {
+            for (String roleName : request.getTargetRoles()) {
+                Notification n = buildNotification(request);
+                n.setTargetRole(roleName);
+                n.setTargetUserId(null);
+                notificationsToSave.add(n);
+            }
+            // Fetch tokens for push notification (if company context exists)
+            if (request.getCompanyId() != null) {
+                fcmTokens.addAll(
+                        userRepo.findFcmTokensByRolesAndCompany(request.getTargetRoles(), request.getCompanyId()));
+            }
+        }
+        if (!notificationsToSave.isEmpty()) {
+            notificationRepo.saveAll(notificationsToSave);
+        }
+        // Send Push Notifications asynchronously (fire and forget)
+        for (String token : fcmTokens) {
+            fcmService.sendNotification(token, request.getTitle(), request.getMessage());
+        }
     }
 
-    private LocalDateTime startOfToday() {
-        return LocalDate.now(zone()).atStartOfDay();
+    private Notification buildNotification(NotificationRequest request) {
+        return Notification.builder()
+                .title(request.getTitle())
+                .message(request.getMessage())
+                .actionBy(request.getActionBy())
+                .actionType(request.getActionType())
+                .actionDate(request.getActionDate())
+                .companyId(request.getCompanyId())
+                .isRead(false)
+                .build();
     }
 
-    private LocalDateTime endExclusive(LocalDateTime start, Duration length) {
-        return start.plus(length);
+    /**
+     * Get notifications for the currently logged-in user.
+     * This includes:
+     * - Notifications sent specifically to their User ID.
+     * - Notifications sent to their Roles (within their Company or Global).
+     */
+    @Transactional(readOnly = true)
+    public Page<NotificationResponse> getMyNotifications(Pageable pageable) {
+        AppUser user = helper.getCurrentUser();
+        //System.out.println("Fetching notifications for user: " + user.getId());
+        Long userId = user.getId();
+        List<String> userRoles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+        Long companyId = null;
+        if (!userRoles.contains("ROLE_SUPER_ADMIN")) {
+            try {
+                companyId = helper.getCurrentCompanyId();
+            } catch (Exception e) {
+                // Not in a company context
+            }
+        }
+        return notificationRepo.findNotificationsForUser(userId, userRoles, companyId, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
-    public Page<NotificationWithSeenDTO> getAllNotification(Pageable pageable) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Long userId = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"))
-                .getId();
-
-        return notificationRepository.findAllWithSeen(userId, pageable);
-    }
-    private LocalDateTime startOfWeekISO() {
-        LocalDate today = LocalDate.now(zone());
-        LocalDate monday = today.with(DayOfWeek.MONDAY);
-        return monday.atStartOfDay();
-    }
-
-    private LocalDateTime startOfMonth() {
-        LocalDate first = LocalDate.now(zone()).with(TemporalAdjusters.firstDayOfMonth());
-        return first.atStartOfDay();
-    }
-
-    private LocalDateTime startOfYear() {
-        LocalDate first = LocalDate.now(zone()).with(TemporalAdjusters.firstDayOfYear());
-        return first.atStartOfDay();
-    }
-
-    public List<AppNotification> getToday() {
-        LocalDateTime start = startOfToday();
-        LocalDateTime end   = start.plusDays(1);
-        return notificationRepository.findByNotificationDateBetween(start, end);
-    }
-
-    public List<AppNotification> getThisWeek() {
-        LocalDateTime start = startOfWeekISO();
-        LocalDateTime end   = startOfToday();
-        return notificationRepository.findByNotificationDateBetween(start, end);
-    }
-
-    public List<AppNotification> getThisMonth() {
-        LocalDateTime start = startOfMonth();
-        LocalDateTime end   = startOfWeekISO();
-        return notificationRepository.findByNotificationDateBetween(start, end);
-    }
-
-    public List<AppNotification> getThisYear() {
-        LocalDateTime start = startOfYear();
-        LocalDateTime end   = startOfMonth();
-        return notificationRepository.findByNotificationDateBetween(start, end);
-    }
-
-
-//    public void sendNotificationToDevice(String deviceToken, String title, String body) {
-//        try {
-//            Message message = Message.builder()
-//                    .setToken(deviceToken)
-//                    .setNotification(Notification.builder()
-//                            .setTitle(title)
-//                            .setBody(body)
-//                            .build())
-//                    .build();
-//            String response = FirebaseMessaging.getInstance().send(message);
-//            System.out.println("Successfully sent message: " + response);
-//        } catch (FirebaseMessagingException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
-//    @Async
-//    public void insertNotificationAsync(AppNotification notification) {
-//        AppNotification saved = notificationRepository.save(notification);
-//    }
-
-//    public void sendNotificationToDevice(String title, String body) {
-//        try {
-//            Message message = Message.builder()
-//                    .setTopic("all_users")
-//                    .setNotification(com.google.firebase.messaging.Notification.builder()
-//                            .setTitle(title)
-//                            .setBody(body)
-//                            .build())
-//                    .build();
-//
-//            String response = FirebaseMessaging.getInstance().send(message);
-//            System.out.println("Successfully sent message: " + response);
-//        } catch (FirebaseMessagingException e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-
-    public void sendNotificationToMultipleDevices(List<String> deviceTokens, String title, String body) {
-        try {
-            MulticastMessage message = MulticastMessage.builder()
-                    .addAllTokens(deviceTokens)
-                    .setNotification(com.google.firebase.messaging.Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .build())
-                    .build();
-            BatchResponse response = FirebaseMessaging.getInstance().sendMulticast(message);
-            System.out.println("Successfully sent messages: " + response.getSuccessCount());
-        } catch (FirebaseMessagingException e) {
-            e.printStackTrace();
+    public long getUnreadCount() {
+        AppUser user = helper.getCurrentUser();
+        List<String> userRoles = user.getRoles().stream().map(Role::getName).collect(Collectors.toList());
+        Long companyId = null;
+        if (!userRoles.contains("ROLE_SUPER_ADMIN")) {
+            try {
+                companyId = helper.getCurrentCompanyId();
+            } catch (Exception e) {
+                // Not in a company context
+            }
         }
+
+        return notificationRepo.countUnreadNotifications(user.getId(), userRoles, companyId);
     }
 
-    public void sendNotificationToTopic(String topic, String title, String body) {
-        try {
-            Message message = Message.builder()
-                    .setTopic(topic)
-                    .setNotification(com.google.firebase.messaging.Notification.builder()
-                            .setTitle(title)
-                            .setBody(body)
-                            .build())
-                    .build();
-            String response = FirebaseMessaging.getInstance().send(message);
-            System.out.println("Successfully sent message to topic: " + response);
-        } catch (FirebaseMessagingException e) {
-            e.printStackTrace();
-        }
-    }
-//    public NotificationService(ApplicationEventPublisher publisher) {
-//        this.publisher = publisher;
-//    }
-
-    // Called as before; now just publishes an event
-    public void sendNotificationToDevice(String title, String body) {
-        publisher.publishEvent(new NotificationSendEvent(title, body));
+    @Transactional
+    public void markAsRead(Long notificationId) {
+        Notification notification = notificationRepo.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Notification not found with id: " + notificationId
+                ));
+        notification.setRead(true);
     }
 
-    // Called as before; now just publishes an event
-    public void insertNotificationAsync(AppNotification notification) {
-        publisher.publishEvent(new NotificationSaveEvent(notification));
+    private NotificationResponse toResponse(Notification n) {
+        return NotificationResponse.builder()
+                .id(n.getId())
+                .title(n.getTitle())
+                .message(n.getMessage())
+                .actionBy(n.getActionBy())
+                .actionType(n.getActionType())
+                .actionDate(n.getActionDate())
+                .companyId(n.getCompanyId())
+                .isRead(n.isRead())
+                .createdAt(n.getCreatedAt())
+                .targetRole(n.getTargetRole())
+                .targetUserId(n.getTargetUserId())
+                .build();
     }
 }
-
-
-/*
- super admin notification
- 1- add  , remove , update
- 2- Subscription renewal
- 3- Subscription expired
-
- -------------------------------------
- company
- 1- Subscription renewal & expired
- 2- Contract (Add, delete, update)
- 3- Payment (All)
- 4- when update Installment
- 5- when delete Installment
- 7- when create Installment
- */
-
-
-
-

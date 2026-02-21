@@ -25,6 +25,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.ahd.backend.carcontracts.notification.service.NotificationService;
+import com.ahd.backend.carcontracts.notification.dto.NotificationRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,6 +47,7 @@ public class PersonService {
     private final S3UrlService s3UrlService;
     private final PersonAttachmentRepository personAttachmentRepository;
     private final Helper helper;
+    private final NotificationService notificationService ;
     /**
      * Add person with attachments
      */
@@ -65,6 +68,20 @@ public class PersonService {
                 }
             }
         }
+    var currentUser = helper.getCurrentUser();
+    
+    NotificationRequest notification = new NotificationRequest();
+    notification.setTitle("اضافة مستخدم");
+    notification.setMessage(req.getFirstName() + " تم اضافة المستخدم");
+    notification.setActionBy(currentUser.getUsername());
+    notification.setActionType("اضافة مستخدم");
+    notification.setCompanyId(getCompanyId());
+    notification.setTargetUserIds(Arrays.asList(currentUser.getId()));
+    
+    notificationService.sendNotification(notification);
+            
+        
+        
         return PersonMapper.toResponse(person);
     }
 

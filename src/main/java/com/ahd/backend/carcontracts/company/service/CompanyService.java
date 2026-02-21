@@ -20,7 +20,7 @@ import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.exception.ConflictException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
-import com.ahd.backend.carcontracts.notification.model.AppNotification;
+// import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
 import jakarta.persistence.criteria.Expression;
@@ -43,7 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import com.ahd.backend.carcontracts.notification.service.NotificationService;
+//import com.ahd.backend.carcontracts.notification.service.NotificationService;
 
 
 import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreateUserRequest;
@@ -61,7 +61,7 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final CompanyMapper companyMapper;
     private final PasswordEncoder passwordEncoder;
-    private final NotificationService notificationService;
+    //private final NotificationService notificationService;
     private final RolePermissionService rolePermissionService;
     private final Helper helper;
     private final EntityManager em;
@@ -225,17 +225,17 @@ public class CompanyService {
         if (req.expirationDate().isEmpty()) return false;
         company.setExpirationDate(req.expirationDate().get());
         company.setSubscriptionDate(LocalDate.now());
-        notificationService.sendNotificationToDevice(
-                "تغير تاريخ نفاذ الصلاحية",
-                "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName()
-        );
-        AppNotification notif = new AppNotification();
-        notif.setTitle("تغير تاريخ نفاذ الصلاحية");
-        notif.setBody("تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() );
-        notif.setNotificationDate(LocalDateTime.now());
-        //  notif.setCompany(company);
-        notif.setPermisson("ADMIN");
-        notificationService.insertNotificationAsync(notif);
+        // notificationService.sendNotificationToDevice(
+        //         "تغير تاريخ نفاذ الصلاحية",
+        //         "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName()
+        // );
+        // AppNotification notif = new AppNotification();
+        // notif.setTitle("تغير تاريخ نفاذ الصلاحية");
+        // notif.setBody("تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() );
+        // notif.setNotificationDate(LocalDateTime.now());
+        // //  notif.setCompany(company);
+        // notif.setPermisson("ADMIN");
+        // notificationService.insertNotificationAsync(notif);
 
         return true;
     }
@@ -279,10 +279,10 @@ public class CompanyService {
             company.setStatus(CompanyStatus.EXPIRED);
             companyRepository.save(company);
 
-            notificationService.sendNotificationToDevice(
-                    "انتهاء صلاحية ",
-                    "لقد نفذت صلاحية شركة" + company.getCompanyName()
-            );
+            // notificationService.sendNotificationToDevice(
+            //         "انتهاء صلاحية ",
+            //         "لقد نفذت صلاحية شركة" + company.getCompanyName()
+            // );
         }
     }
     /* ----------------------------------------------------

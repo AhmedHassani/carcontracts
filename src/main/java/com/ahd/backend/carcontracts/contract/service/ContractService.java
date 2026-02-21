@@ -8,7 +8,7 @@ import com.ahd.backend.carcontracts.contract.dto.*;
 import com.ahd.backend.carcontracts.contract.mapper.ContractMapper;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
-import com.ahd.backend.carcontracts.notification.model.AppNotification;
+//import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
@@ -25,7 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import com.ahd.backend.carcontracts.notification.service.NotificationService;
+//import com.ahd.backend.carcontracts.notification.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -40,7 +40,7 @@ public class ContractService {
     private final PersonRepository personRepo;
     private final CarRepository carRepo;
     private final PaymentPlanRepository planRepo;
-    private final NotificationService notificationService;
+    //private final NotificationService notificationService;
     private final Helper helper;
 
 
@@ -166,10 +166,10 @@ public class ContractService {
                     .forEach(i -> i.setDeleted(true));
         }
         contract.setDeleted(true);
-        notificationService.sendNotificationToDevice(
-                "حذف عقد",
-                "تم حذف العقد رقم" + contract.getId() + " بنجاح "
-        );
+        // notificationService.sendNotificationToDevice(
+        //         "حذف عقد",
+        //         "تم حذف العقد رقم" + contract.getId() + " بنجاح "
+        // );
 //        AppNotification notif = new AppNotification();
 //        notif.setTitle("حذف عقد");
 //        notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");

@@ -105,5 +105,7 @@ public class AppUser implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+    @Column(name = "fcm_token", length = 500)
+    private String fcmToken;
 }
 
