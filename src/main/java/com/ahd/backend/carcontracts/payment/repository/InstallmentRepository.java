@@ -108,4 +108,11 @@ List<Object[]> getInstallmentPaymentsByMonth(
     @Param("companyId") Long companyId
 );
 
+@Query("SELECT i.companyId, COUNT(i) FROM Installment i " +
+            "WHERE i.dueDate < :date AND i.status NOT IN (:excludedStatuses) " +
+            "GROUP BY i.companyId")
+    List<Object[]> countOverdueInstallmentsByCompany(@Param("date") LocalDate date,
+            @Param("excludedStatuses") List<InstallmentStatus> excludedStatuses);
+
+
 }

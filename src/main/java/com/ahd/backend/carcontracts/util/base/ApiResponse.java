@@ -28,7 +28,15 @@ public class ApiResponse<T> {
             timezone = "Asia/Baghdad")
     private Instant date = Instant.now();
 
-
+public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message(HttpStatus.OK.name())
+                .code(HttpStatus.OK.value())
+                .data(data)
+                .date(Instant.now())
+                .build();
+    }
 
     public static <T> ApiResponse<List<T>> success(Page<T> page) {
         return ApiResponse.<List<T>>builder()

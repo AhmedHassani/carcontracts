@@ -6,12 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
-import com.ahd.backend.carcontracts.notification.model.AppNotification;
+////import com.ahd.backend.carcontracts.notification.model.AppNotification;
 import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
-import com.ahd.backend.carcontracts.notification.service.NotificationService;
+//import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.payment.model.Installment;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.InstallmentRepository;
@@ -42,7 +42,7 @@ public class PaymentPlanService {
 
     @Autowired
     private InstallmentRepository installmentRepository;
-    private final NotificationService notificationService;
+//    private final NotificationService notificationService;
 
     private final ContractsRepository contractsRepository;
     //the notfication in the contract

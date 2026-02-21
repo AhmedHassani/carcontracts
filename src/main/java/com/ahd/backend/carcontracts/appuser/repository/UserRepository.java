@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<AppUser, Long> {
@@ -31,5 +32,14 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
             @Param("startDate") java.time.LocalDate startDate,
             @Param("endDate")   java.time.LocalDate endDate
     );
+    @Query("SELECT u.fcmToken FROM AppUser u WHERE u.id IN :userIds AND u.fcmToken IS NOT NULL")
+    List<String> findFcmTokensByUserIds(@Param("userIds") List<Long> userIds);
+
+    @Query("SELECT u.fcmToken FROM AppUser u " +
+            "JOIN u.roles r " +
+            "JOIN CompanyUser cu ON cu.user.id = u.id " +
+            "WHERE r.name IN :roleNames AND cu.company.id = :companyId AND u.fcmToken IS NOT NULL")
+    List<String> findFcmTokensByRolesAndCompany(@Param("roleNames") List<String> roleNames,
+            @Param("companyId") Long companyId);
 }
 
