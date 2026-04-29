@@ -32,6 +32,8 @@ public class UpdateCarRequestDTO {
     private String typeOfCarPlate;
     private String initPrice;
     private String description;
+    private Long currentPossessorId;
+  private String carPrice;
 
 
     public boolean isEmpty() {

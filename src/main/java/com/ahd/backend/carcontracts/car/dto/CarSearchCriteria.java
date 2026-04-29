@@ -26,7 +26,9 @@ public record CarSearchCriteria(
         String chassisNumber,
         String status,
         String description ,
-        String name
-
+        String name,
+        String possessorName,
+        String possessorPhone,
+        Long carPrice
 
 ) implements BaseCriteria { }

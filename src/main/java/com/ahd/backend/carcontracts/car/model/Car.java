@@ -5,7 +5,7 @@ import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.Where;
-
+import com.ahd.backend.carcontracts.person.model.Person;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,9 +82,14 @@ public class Car {
     private String initPrice;
 
     private String status;
-
+    
     private String description;
-
+    @ManyToOne
+    @JoinColumn(name = "current_possessor_id")
+    private Person currentPossessor;
+    
+    @Column(name = "car_price")
+    private String carPrice;
 
     @PrePersist
     void onCreate() {

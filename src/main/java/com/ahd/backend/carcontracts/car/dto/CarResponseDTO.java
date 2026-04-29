@@ -4,7 +4,8 @@ import com.ahd.backend.carcontracts.car.model.CarAttachment;
 import com.ahd.backend.carcontracts.util.base.Pagination;
 import lombok.Builder;
 import lombok.Data;
-
+import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
+import com.ahd.backend.carcontracts.person.model.Person;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,5 +31,6 @@ public class CarResponseDTO {
     private String status;
     private String initPrice;
     private String description;
-
+    private ContractResponse.PersonDTO currentPossessor;
+    private String carPrice;
 }

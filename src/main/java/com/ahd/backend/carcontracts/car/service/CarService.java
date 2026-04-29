@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.car.service;
 
 import com.ahd.backend.carcontracts.S3.S3FileStorageService;
-import com.ahd.backend.carcontracts.appuser.models.AppUser;
+import com.ahd.backend.carcontracts.S3.S3UrlService;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.car.dto.CarRequestDTO;
@@ -13,13 +13,12 @@ import com.ahd.backend.carcontracts.car.model.Car;
 import com.ahd.backend.carcontracts.car.model.CarAttachment;
 import com.ahd.backend.carcontracts.car.repository.CarAttachmentRepository;
 import com.ahd.backend.carcontracts.car.repository.CarRepository;
-import com.ahd.backend.carcontracts.company.model.Company;
-import com.ahd.backend.carcontracts.company.model.CompanyUser;
-import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.exception.BadRequestException;
 import com.ahd.backend.carcontracts.exception.DuplicateResourceException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.person.model.Person;
+import com.ahd.backend.carcontracts.person.repository.PersonRepository;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,11 +26,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.ahd.backend.carcontracts.S3.S3UrlService;
 
 import java.util.List;
 import java.util.Objects;
@@ -46,44 +43,55 @@ public class CarService {
     private final S3UrlService s3UrlService;
     private final S3FileStorageService storageService;
     private final CarAttachmentRepository carAttachmentRepo;
-    private final CompanyUserRepository companyUserRepository ;
-    private final UserRepository userRepository ;
+    private final CompanyUserRepository companyUserRepository;
+    private final UserRepository userRepository;
     private final Helper helper;
+    private final PersonRepository personRepository;
+
     @Transactional
     @Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
-    //notification
-    //saved.getId(); قام المستخدم  ;helper.getCurrentUser.userName بانشاء سيارة رقم
-    //to all company
     public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         dto.setCompnayId(getCompanyId());
-        if(carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Pending") ||
-                carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber() , getCompanyId() , "Active")){
-                throw new DuplicateResourceException(
-                        "ChassisNumber", dto.getPlateNumber(), "Car with this Chassis Number already exists");
+        
+        // Check for existing chassis number
+        if (carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Pending") ||
+            carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Active")) {
+            throw new DuplicateResourceException("ChassisNumber", dto.getPlateNumber(), 
+                "Car with this Chassis Number already exists");
         }
-        if(carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber()
-                , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Pending") ||
-                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber()
-                        , dto.getWalletNumber() , dto.getTypeOfCarPlate() , getCompanyId() , "Active")){
-                throw new DuplicateResourceException(
-                        "plateNumber", dto.getPlateNumber(), "Car with this plate number already exists");
-
+        
+        // Check for existing plate number
+        if (carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
+                dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Pending") ||
+            carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
+                dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Active")) {
+            throw new DuplicateResourceException("plateNumber", dto.getPlateNumber(), 
+                "Car with this plate number already exists");
         }
 
         Car car = CarMapper.toEntity(dto);
+        
+        // Set current possessor if provided
+        if (dto.getCurrentPossessorId() != null) {
+            Person possessor = personRepository.findById(dto.getCurrentPossessorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Person not found with id: " + dto.getCurrentPossessorId()));
+            car.setCurrentPossessor(possessor);
+        }
+        
+        // Upload attachments
         if (files != null && !files.isEmpty()) {
             for (MultipartFile f : files) {
                 String key = storageService.upload(f);
                 CarAttachment att = CarAttachment.builder()
                         .car(car)
                         .fileKey(s3UrlService.getImageUrl(key))
-                        .mimeType(
-                                Optional.ofNullable(f.getContentType())
-                                        .orElse("application/octet-stream"))
+                        .mimeType(Optional.ofNullable(f.getContentType())
+                                .orElse("application/octet-stream"))
                         .build();
                 car.getAttachments().add(att);
             }
         }
+        
         car.setStatus("Pending");
         Car saved = carRepository.save(car);
         return CarMapper.toDto(saved);
@@ -91,44 +99,43 @@ public class CarService {
 
     @Transactional(readOnly = true)
     public CarResponseDTO getCar(Long id) {
-
         Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id, getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
-
         return CarMapper.toDto(car);
     }
 
-
     @Transactional
     @Auditable(operation = "تحديث معلومات سيارة", captureArgs = true, captureResult = true)
-    //notification
-    //id قام المستخدم  ;helper.getCurrentUser.userName بتحديث معلومات السيارة رقم
-    //to all company
     public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
         if (patch == null || patch.isEmpty()) {
             throw new BadRequestException("Update payload must contain at least one field");
         }
-        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id , getCompanyId())
+        
+        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id, getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
+        
+        // Check chassis number uniqueness if changed
         if (patch.getChassisNumber() != null &&
                 !patch.getChassisNumber().equals(car.getChassisNumber()) &&
-                carRepository.existsByChassisNumberAndCompanyIdAndStatus(patch.getChassisNumber() , getCompanyId() , "Pending")) {
-            throw new DuplicateResourceException(
-                    "chassisNumber", patch.getChassisNumber(),
+                carRepository.existsByChassisNumberAndCompanyIdAndStatus(patch.getChassisNumber(), getCompanyId(), "Pending")) {
+            throw new DuplicateResourceException("chassisNumber", patch.getChassisNumber(),
                     "Car with this chassis number already exists");
         }
+        
+        // Check plate number uniqueness if changed
         if (patch.getPlateNumber() != null &&
                 !patch.getPlateNumber().equals(car.getPlateNumber()) &&
-                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(patch.getPlateNumber()
-                        , patch.getWalletNumber() , patch.getTypeOfCarPlate() , getCompanyId() , "Pending")){
-            throw new DuplicateResourceException(
-                    "plateNumber", patch.getPlateNumber(),
+                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(patch.getPlateNumber(),
+                        patch.getWalletNumber(), patch.getTypeOfCarPlate(), getCompanyId(), "Pending")) {
+            throw new DuplicateResourceException("plateNumber", patch.getPlateNumber(),
                     "Car with this plate number already exists");
         }
+        
         Car carUpdated = CarMapper.updateEntity(car, patch);
         Car saved = carRepository.save(carUpdated);
         return CarMapper.toDto(saved);
     }
+
     @Auditable(operation = "حذف سيارة", captureArgs = true, captureResult = true)
     public void softDeleteCar(Long id) {
         Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id, getCompanyId())
@@ -142,52 +149,56 @@ public class CarService {
         }
     }
 
-
     @Transactional
     @Auditable(operation = "اضافة صور لسيارة", captureArgs = true, captureResult = true)
-
     public CarResponseDTO addAttachments(Long carId, List<MultipartFile> files) {
         if (files == null || files.isEmpty()) {
             throw new BadRequestException("No files provided");
         }
-        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId , getCompanyId())
+        
+        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId, getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + carId + " not found"));
+        
         for (MultipartFile file : files) {
-            String key  = storageService.upload(file);
-            String url  = s3UrlService.getImageUrl(key);
+            String key = storageService.upload(file);
+            String url = s3UrlService.getImageUrl(key);
             CarAttachment att = CarAttachment.builder()
                     .car(car)
                     .fileKey(url)
-                    .mimeType(
-                            Optional.ofNullable(file.getContentType())
-                                    .orElse("application/octet-stream"))
+                    .mimeType(Optional.ofNullable(file.getContentType())
+                            .orElse("application/octet-stream"))
                     .build();
             car.getAttachments().add(att);
         }
+        
         return CarMapper.toDto(car);
     }
 
     @Transactional
     @Auditable(operation = "حذف صور سيارة", captureArgs = true, captureResult = true)
-
     public CarResponseDTO deleteAttachment(Long carId, Long attachmentId) {
-        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId , getCompanyId())
+        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(carId, getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + carId + " not found"));
+        
         CarAttachment att = carAttachmentRepo.findByIdAndCarId(attachmentId, carId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Attachment " + attachmentId + " not found for car " + carId));
+                .orElseThrow(() -> new ResourceNotFoundException("Attachment " + attachmentId + " not found for car " + carId));
+        
         storageService.delete(att.getFileKey());
         car.getAttachments().remove(att);
+        
         return CarMapper.toDto(car);
     }
+
     @Transactional
-    public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria,Pageable pageable) {
+    public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria, Pageable pageable) {
         Sort.Direction dir = "DESC".equalsIgnoreCase(criteria.sortDirection())
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
         String sortBy = Optional.ofNullable(criteria.sortBy()).orElse("id");
+        
         Pageable page = PageRequest.of(pageable.getPageNumber(),
                 pageable.getPageSize(),
                 Sort.by(dir, sortBy));
+        
         CarSearchCriteria enrichedCriteria = CarSearchCriteria.builder()
                 .keyword(criteria.keyword())
                 .sortBy(criteria.sortBy())
@@ -203,11 +214,14 @@ public class CarService {
                 .maxCylinders(criteria.maxCylinders())
                 .companyId(getCompanyId())
                 .plateNumber(criteria.plateNumber())
-                .chassisNumber((criteria.chassisNumber()))
+                .chassisNumber(criteria.chassisNumber())
                 .model(criteria.model())
                 .status(criteria.status())
                 .description(criteria.description())
                 .name(criteria.name())
+                .possessorName(criteria.possessorName())
+                .possessorPhone(criteria.possessorPhone())
+                .carPrice(criteria.carPrice())
                 .build();
 
         Specification<Car> spec = new CarSpecification(enrichedCriteria);
@@ -215,7 +229,7 @@ public class CarService {
                 .map(CarMapper::toDto);
     }
 
-    public Long getCompanyId (){
-        return  helper.getCurrentCompanyId();
+    public Long getCompanyId() {
+        return helper.getCurrentCompanyId();
     }
 }

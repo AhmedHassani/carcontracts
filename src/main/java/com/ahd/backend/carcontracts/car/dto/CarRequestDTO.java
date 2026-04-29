@@ -35,5 +35,6 @@ public class CarRequestDTO {
     private String typeOfCarPlate;
     private String initPrice;
     private String description;
-
+    private Long currentPossessorId;
+    private String carPrice;
 }
