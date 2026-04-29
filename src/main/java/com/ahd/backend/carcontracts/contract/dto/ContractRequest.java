@@ -30,5 +30,6 @@ public class ContractRequest {
     private Long paymentId;
     private Long companyId;
     private Long possessorId;
+    private boolean onus ; 
 
 }

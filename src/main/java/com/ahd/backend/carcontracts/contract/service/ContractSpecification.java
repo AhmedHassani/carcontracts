@@ -147,6 +147,9 @@ public class ContractSpecification {
             if (criteria.id() != null) {
                 predicates.add(cb.equal(root.get("id"), criteria.id()));
             }
+            if (criteria.onus()) {
+                predicates.add(cb.isTrue(root.get("onus")));
+            }
 
             predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
 

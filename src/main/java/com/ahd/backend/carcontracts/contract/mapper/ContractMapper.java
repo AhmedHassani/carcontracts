@@ -28,6 +28,7 @@ public final class ContractMapper {
         dto.setCar(toCarDTO(c.getCar()));
         dto.setPaymentPlan(toPaymentPlanDTO(c.getPaymentPlan()));
         dto.setTemplateId(c.getTemplateId());
+        dto.setOnus(c.isOnus());
         return dto;
     }
 

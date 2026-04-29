@@ -9,6 +9,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDate;
+
 @Entity
 @Data
 @Table(name = "car_contracts")
@@ -47,4 +48,7 @@ public class Contracts {
 
     @Column(name = "template_id")
     private Long templateId;
+
+    @Column(name = "onus", nullable = false)
+    private boolean onus = true; 
 }

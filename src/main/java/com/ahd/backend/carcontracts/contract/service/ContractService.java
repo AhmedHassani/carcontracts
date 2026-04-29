@@ -116,6 +116,7 @@ public class ContractService {
                 .SellerPhone(criteria.SellerPhone())
                 .possessorName(criteria.possessorName())  // ADD THIS
                 .possessorPhone(criteria.possessorPhone())  // ADD THIS
+                .onus(criteria.onus())  
                 .name(criteria.name())
                 .companyId(getCompanyId())
                 .possessorName(criteria.possessorName())

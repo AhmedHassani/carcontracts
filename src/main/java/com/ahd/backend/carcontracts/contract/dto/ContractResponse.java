@@ -25,6 +25,7 @@ public class ContractResponse {
     private CarDTO car;
     private PaymentPlanDTO paymentPlan;
     private Long templateId;
+    private boolean onus;
 
 
     @Getter @Setter
