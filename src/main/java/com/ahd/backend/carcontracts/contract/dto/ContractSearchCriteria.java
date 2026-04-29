@@ -23,6 +23,8 @@ public record ContractSearchCriteria(
 //        String sellerNationalId,
         String chassisNumber,
         String status ,
-        String name
+        String name ,
+        String possessorName,
+        String possessorPhone
 
 ) implements BaseCriteria { }

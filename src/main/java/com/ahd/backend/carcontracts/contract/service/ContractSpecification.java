@@ -1,20 +1,26 @@
 package com.ahd.backend.carcontracts.contract.service;
 
-
 import com.ahd.backend.carcontracts.contract.dto.ContractSearchCriteria;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.List;
+
 public class ContractSpecification {
 
     public static Specification<Contracts> buildSpecification(ContractSearchCriteria criteria) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            
+            // ADD THIS: Possessor join (needed for possessor filters)
+            Join<Object, Object> possessor = root.join("possessor", JoinType.LEFT);
 
             if (criteria.keyword() != null && !criteria.keyword().isBlank()) {
                 String pattern = "%" + criteria.keyword().toLowerCase() + "%";
@@ -60,18 +66,13 @@ public class ContractSpecification {
                         "%" + criteria.BuyerPhone().toLowerCase() + "%"
                 ));
             }
+            
             if (criteria.status() != null && !criteria.status().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("paymentPlan").get("status")),
-                         criteria.status().toLowerCase()
+                        criteria.status().toLowerCase()
                 ));
             }
-//            if (criteria.buyerNationalId() != null && !criteria.buyerNationalId().isBlank()) {
-//                predicates.add(cb.like(
-//                        cb.lower(root.join("buyer").get("buyerNationalId")),
-//                        "%" + criteria.buyerNationalId().toLowerCase() + "%"
-//                ));
-//            }
 
             if (criteria.SellerPhone() != null && !criteria.SellerPhone().isBlank()) {
                 predicates.add(cb.like(
@@ -79,12 +80,6 @@ public class ContractSpecification {
                         "%" + criteria.SellerPhone().toLowerCase() + "%"
                 ));
             }
-//            if (criteria.sellerNationalId() != null && !criteria.sellerNationalId().isBlank()) {
-//                predicates.add(cb.like(
-//                        cb.lower(root.join("seller").get("sellerNationalId")),
-//                        "%" + criteria.sellerNationalId().toLowerCase() + "%"
-//                ));
-//            }
 
             if (criteria.StatusPaymant() != null && !criteria.StatusPaymant().isBlank()) {
                 predicates.add(cb.like(
@@ -92,24 +87,28 @@ public class ContractSpecification {
                         "%" + criteria.StatusPaymant().toLowerCase() + "%"
                 ));
             }
+            
             if (criteria.carNumber() != null && !criteria.carNumber().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("plateNumber")),
                         "%" + criteria.carNumber().toLowerCase() + "%"
                 ));
             }
+            
             if (criteria.name() != null && !criteria.name().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("name")),
                         "%" + criteria.name().toLowerCase() + "%"
                 ));
             }
+            
             if (criteria.chassisNumber() != null && !criteria.chassisNumber().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("chassisNumber")),
                         "%" + criteria.chassisNumber().toLowerCase() + "%"
                 ));
             }
+            
             if (criteria.carType() != null && !criteria.carType().isBlank()) {
                 predicates.add(cb.like(
                         cb.lower(root.join("car").get("model")),
@@ -117,11 +116,37 @@ public class ContractSpecification {
                 ));
             }
 
+            // ADD THIS: Possessor name filter
+            if (criteria.possessorName() != null && !criteria.possessorName().isBlank()) {
+                String pattern = "%" + criteria.possessorName().toLowerCase().trim() + "%";
+                
+                Expression<String> possessorFirst = cb.coalesce(possessor.get("firstName"), cb.literal(""));
+                Expression<String> possessorFather = cb.coalesce(possessor.get("fatherName"), cb.literal(""));
+                Expression<String> possessorGrandfather = cb.coalesce(possessor.get("grandfatherName"), cb.literal(""));
+                Expression<String> possessorFourth = cb.coalesce(possessor.get("fourthName"), cb.literal(""));
+                Expression<String> possessorSurname = cb.coalesce(possessor.get("surname"), cb.literal(""));
+                
+                // Build full name: firstName + fatherName + grandfatherName + fourthName + surname
+                Expression<String> possessorFullName = cb.concat(
+                    cb.concat(cb.concat(possessorFirst, cb.literal(" ")), possessorFather),
+                    cb.concat(cb.literal(" "), cb.concat(
+                        cb.concat(possessorGrandfather, cb.literal(" ")),
+                        cb.concat(possessorFourth, cb.concat(cb.literal(" "), possessorSurname))
+                    ))
+                );
+                
+                predicates.add(cb.like(cb.lower(possessorFullName), pattern));
+            }
+
+            // ADD THIS: Possessor phone filter
+            if (criteria.possessorPhone() != null && !criteria.possessorPhone().isBlank()) {
+                String pattern = "%" + criteria.possessorPhone() + "%";
+                predicates.add(cb.like(possessor.get("phoneNumber"), pattern));
+            }
 
             if (criteria.id() != null) {
                 predicates.add(cb.equal(root.get("id"), criteria.id()));
             }
-
 
             predicates.add(cb.equal(root.get("companyId"), criteria.companyId()));
 

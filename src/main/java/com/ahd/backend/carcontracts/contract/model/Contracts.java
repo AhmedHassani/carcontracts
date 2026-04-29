@@ -32,6 +32,9 @@ public class Contracts {
 
     @ManyToOne
     Car car;
+    
+    @ManyToOne
+    Person possessor;
 
     @ManyToOne
     PaymentPlan paymentPlan;

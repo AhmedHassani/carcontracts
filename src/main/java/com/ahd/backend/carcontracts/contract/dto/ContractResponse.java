@@ -20,6 +20,7 @@ public class ContractResponse {
     private LocalDate contractDate;
     private PersonDTO seller;
     private PersonDTO buyer;
+    private PersonDTO possessor;
     private PersonDTO guarantor;
     private CarDTO car;
     private PaymentPlanDTO paymentPlan;
