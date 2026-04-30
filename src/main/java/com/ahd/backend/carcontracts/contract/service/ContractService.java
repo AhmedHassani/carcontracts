@@ -84,6 +84,7 @@ public class ContractService {
         contract.setGuarantor(guarantor);
         contract.setPossessor(possessor);  // ADD THIS LINE
         contract.setCar(car);
+        contract.setOnus(request.isOnus()); 
         contract.setPaymentPlan(paymentPlan);
         contract.setCompanyId(getCompanyId());
         contract = contractRepo.saveAndFlush(contract);
