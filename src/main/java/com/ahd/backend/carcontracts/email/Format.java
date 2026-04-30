@@ -1,6 +1,6 @@
 package com.ahd.backend.carcontracts.email;
 
-
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,13 +10,23 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Format {
+    
     @NotNull(message = "toEmail is required")
-    String toEmail;
-    String cc [];
+    @Email(message = "Invalid email format")
+    private String toEmail;
+    
+    private String[] cc;
+    
     @NotNull(message = "ownerName is required")
-    String ownerName;
+    private String ownerName;
+    
     @NotNull(message = "companyUsername is required")
-    String companyUsername;
+    private String companyUsername;
+    
     @NotNull(message = "companyPassword is required")
-    String companyPassword;
+    private String companyPassword;
+    
+    // Optional fields for simple text email
+    private String subject;
+    private String body;
 }

@@ -76,25 +76,49 @@ public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> 
   //           @Param("companyId") Long companyId
   //   );
     //version 2
-   @Query("""
-   SELECT COALESCE(SUM(p.totalAmount), 0)
-   FROM PaymentPlan p 
-   WHERE p.companyId = :companyId
-   AND (
-        (COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end)
-        OR
-        EXISTS (
-            SELECT 1 FROM Installment i 
-            WHERE i.paymentPlan = p 
-            AND i.status != 'PENDING' AND  i.status != 'OVERDUE'
-            AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)
-        )
-   )
-   """)
+//    @Query("""
+//    SELECT COALESCE(SUM(p.totalAmount), 0)
+//    FROM PaymentPlan p 
+//    WHERE p.companyId = :companyId
+//    AND (
+//         (COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end)
+//         OR
+//         EXISTS (
+//             SELECT 1 FROM Installment i 
+//             WHERE i.paymentPlan = p 
+//             AND i.status != 'PENDING' AND  i.status != 'OVERDUE'
+//             AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)
+//         )
+//    )
+//    """)
+// BigDecimal summationByStatusAndDateRangeCompleted(
+//         @Param("start") LocalDateTime start,
+//         @Param("end") LocalDateTime end,
+//         @Param("companyId") Long companyId
+// );
+    //version 3
+@Query(value = """
+    SELECT COALESCE(
+        (SELECT SUM(CAST(ca.car_price AS DECIMAL(18,2)))
+         FROM car ca 
+         JOIN car_contracts co ON co.car_id = ca.id
+         WHERE ca.current_possessor_id IS NOT NULL
+           AND co.onus = 0
+           AND co.contract_date BETWEEN :start AND :end
+           AND co.company_id = :companyId), 0)
+        +
+        COALESCE(
+        (SELECT SUM(pa.total_amount)
+         FROM car_contracts co 
+         JOIN payment_plans pa ON co.payment_plan_id = pa.id
+         WHERE co.contract_date BETWEEN :start AND :end
+           AND co.onus = 1
+           AND co.company_id = :companyId), 0) AS GrandTotal
+    """, nativeQuery = true)
 BigDecimal summationByStatusAndDateRangeCompleted(
-        @Param("start") LocalDateTime start,
-        @Param("end") LocalDateTime end,
-        @Param("companyId") Long companyId
+    @Param("start") LocalDateTime start,
+    @Param("end") LocalDateTime end,
+    @Param("companyId") Long companyId
 );
 
     

@@ -46,25 +46,30 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
             p.add(keywordPredicate);
         }
         
-        if (criteria.possessorName() != null && !criteria.possessorName().isBlank()) {
-            String pattern = "%" + criteria.possessorName().toLowerCase() + "%";
-            Predicate namePredicate = cb.or(
-                cb.like(cb.lower(possessorJoin.get("firstName")), pattern),
-                cb.like(cb.lower(possessorJoin.get("fatherName")), pattern),
-                cb.like(cb.lower(possessorJoin.get("grandfatherName")), pattern),
-                cb.like(cb.lower(possessorJoin.get("fourthName")), pattern),
-                cb.like(cb.lower(possessorJoin.get("surname")), pattern),
-                cb.like(cb.lower(cb.concat(possessorJoin.get("firstName"), 
-                    cb.concat(" ", possessorJoin.get("fatherName")))), pattern)
-            );
-            p.add(namePredicate);
-        }
-        
-        if (criteria.possessorPhone() != null && !criteria.possessorPhone().isBlank()) {
-            String pattern = "%" + criteria.possessorPhone() + "%";
-            p.add(cb.like(possessorJoin.get("phoneNumber"), pattern));
-        }
-        
+        if (criteria.currentPossessor() != null && 
+    criteria.currentPossessor().fullName() != null && 
+    !criteria.currentPossessor().fullName().isBlank()) {
+    
+    String pattern = "%" + criteria.currentPossessor().fullName().toLowerCase() + "%";
+    Predicate namePredicate = cb.or(
+        cb.like(cb.lower(possessorJoin.get("firstName")), pattern),
+        cb.like(cb.lower(possessorJoin.get("fatherName")), pattern),
+        cb.like(cb.lower(possessorJoin.get("grandfatherName")), pattern),
+        cb.like(cb.lower(possessorJoin.get("fourthName")), pattern),
+        cb.like(cb.lower(possessorJoin.get("surname")), pattern),
+        cb.like(cb.lower(cb.concat(possessorJoin.get("firstName"), 
+            cb.concat(" ", possessorJoin.get("fatherName")))), pattern)
+    );
+    p.add(namePredicate);
+}
+
+if (criteria.currentPossessor() != null && 
+    criteria.currentPossessor().phone() != null && 
+    !criteria.currentPossessor().phone().isBlank()) {
+    
+    String pattern = "%" + criteria.currentPossessor().phone() + "%";
+    p.add(cb.like(possessorJoin.get("phoneNumber"), pattern));
+}
         if (criteria.carPrice() != null) {
             p.add(cb.equal(
                 cb.function("CONVERT", Long.class, 

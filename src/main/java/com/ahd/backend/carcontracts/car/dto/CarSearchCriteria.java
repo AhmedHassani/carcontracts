@@ -1,16 +1,13 @@
 package com.ahd.backend.carcontracts.car.dto;
 
-
 import com.ahd.backend.carcontracts.util.base.BaseCriteria;
 import lombok.Builder;
 
 @Builder
 public record CarSearchCriteria(
-        /* BaseCriteria fields */
         String keyword,
         String sortBy,
         String sortDirection,
-        /* Car-specific filters */
         String type,
         String color,
         String engineType,
@@ -25,10 +22,8 @@ public record CarSearchCriteria(
         String plateNumber,
         String chassisNumber,
         String status,
-        String description ,
+        String description,
         String name,
-        String possessorName,
-        String possessorPhone,
-        Long carPrice
-
+        Long carPrice,
+        CurrentPossessorFilter currentPossessor  // Just reference it, don't define it here
 ) implements BaseCriteria { }

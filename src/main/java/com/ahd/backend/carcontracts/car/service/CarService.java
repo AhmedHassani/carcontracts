@@ -188,46 +188,44 @@ public class CarService {
         
         return CarMapper.toDto(car);
     }
+@Transactional
+public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria, Pageable pageable) {
+    Sort.Direction dir = "DESC".equalsIgnoreCase(criteria.sortDirection())
+            ? Sort.Direction.DESC : Sort.Direction.ASC;
+    String sortBy = Optional.ofNullable(criteria.sortBy()).orElse("id");
+    
+    Pageable page = PageRequest.of(pageable.getPageNumber(),
+            pageable.getPageSize(),
+            Sort.by(dir, sortBy));
+    
+    CarSearchCriteria enrichedCriteria = CarSearchCriteria.builder()
+            .keyword(criteria.keyword())
+            .sortBy(criteria.sortBy())
+            .sortDirection(criteria.sortDirection())
+            .type(criteria.type())
+            .color(criteria.color())
+            .engineType(criteria.engineType())
+            .origin(criteria.origin())
+            .deleted(criteria.deleted())
+            .minKm(criteria.minKm())
+            .maxKm(criteria.maxKm())
+            .minCylinders(criteria.minCylinders())
+            .maxCylinders(criteria.maxCylinders())
+            .companyId(getCompanyId())
+            .plateNumber(criteria.plateNumber())
+            .chassisNumber(criteria.chassisNumber())
+            .model(criteria.model())
+            .status(criteria.status())
+            .description(criteria.description())
+            .name(criteria.name())
+            .carPrice(criteria.carPrice())
+            .currentPossessor(criteria.currentPossessor()) 
+            .build();
 
-    @Transactional
-    public Page<CarResponseDTO> getAllCars(CarSearchCriteria criteria, Pageable pageable) {
-        Sort.Direction dir = "DESC".equalsIgnoreCase(criteria.sortDirection())
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-        String sortBy = Optional.ofNullable(criteria.sortBy()).orElse("id");
-        
-        Pageable page = PageRequest.of(pageable.getPageNumber(),
-                pageable.getPageSize(),
-                Sort.by(dir, sortBy));
-        
-        CarSearchCriteria enrichedCriteria = CarSearchCriteria.builder()
-                .keyword(criteria.keyword())
-                .sortBy(criteria.sortBy())
-                .sortDirection(criteria.sortDirection())
-                .type(criteria.type())
-                .color(criteria.color())
-                .engineType(criteria.engineType())
-                .origin(criteria.origin())
-                .deleted(criteria.deleted())
-                .minKm(criteria.minKm())
-                .maxKm(criteria.maxKm())
-                .minCylinders(criteria.minCylinders())
-                .maxCylinders(criteria.maxCylinders())
-                .companyId(getCompanyId())
-                .plateNumber(criteria.plateNumber())
-                .chassisNumber(criteria.chassisNumber())
-                .model(criteria.model())
-                .status(criteria.status())
-                .description(criteria.description())
-                .name(criteria.name())
-                .possessorName(criteria.possessorName())
-                .possessorPhone(criteria.possessorPhone())
-                .carPrice(criteria.carPrice())
-                .build();
-
-        Specification<Car> spec = new CarSpecification(enrichedCriteria);
-        return carRepository.findAll(spec, page)
-                .map(CarMapper::toDto);
-    }
+    Specification<Car> spec = new CarSpecification(enrichedCriteria);
+    return carRepository.findAll(spec, page)
+            .map(CarMapper::toDto);
+}
 
     public Long getCompanyId() {
         return helper.getCurrentCompanyId();
