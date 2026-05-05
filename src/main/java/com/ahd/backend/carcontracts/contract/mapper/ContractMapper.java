@@ -28,6 +28,7 @@ public final class ContractMapper {
         dto.setCar(toCarDTO(c.getCar()));
         dto.setPaymentPlan(toPaymentPlanDTO(c.getPaymentPlan()));
         dto.setTemplateId(c.getTemplateId());
+        dto.setContractNumber(c.getContractNumber());  // ADD THIS LINE
         dto.setOnus(c.isOnus());
         return dto;
     }
@@ -145,7 +146,8 @@ public final class ContractMapper {
                     Optional.ofNullable(buyer.getGrandfatherName()).orElse("") + " " +
                     Optional.ofNullable(buyer.getFourthName()).orElse("")
                 ).orElse("").trim();
-        
+
+        dto.setContractNumber(contract.getContractNumber());  
         dto.setCustomerName(customerName);
         dto.setCarName(Optional.ofNullable(contract.getCar())
                 .map(Car::getName)

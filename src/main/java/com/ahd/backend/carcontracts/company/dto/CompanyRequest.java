@@ -30,6 +30,9 @@ public record CompanyRequest(
         @Positive
         Integer userCount,
 
+        @NotNull
+        String code,
+
         /** موقع الشركة (اختياري) */
         @Size(max = 250)
         String companyLocation,

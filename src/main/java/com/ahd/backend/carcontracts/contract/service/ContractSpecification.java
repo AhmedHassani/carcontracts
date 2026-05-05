@@ -115,7 +115,12 @@ public class ContractSpecification {
                         "%" + criteria.carType().toLowerCase() + "%"
                 ));
             }
-
+            if (criteria.id() != null) {
+                predicates.add(cb.equal(root.get("id"), criteria.id()));
+            }
+            if (criteria.contractNumber() != null && !criteria.contractNumber().isBlank()) {
+                predicates.add(cb.equal(root.get("contractNumber"), criteria.contractNumber()));
+            }
             // ADD THIS: Possessor name filter
             if (criteria.possessorName() != null && !criteria.possessorName().isBlank()) {
                 String pattern = "%" + criteria.possessorName().toLowerCase().trim() + "%";

@@ -26,6 +26,8 @@ public record ContractSearchCriteria(
         String name ,
         String possessorName,
         String possessorPhone,
-        Boolean  onus
+        Boolean  onus,
+        String contractNumber
+
 
 ) implements BaseCriteria { }

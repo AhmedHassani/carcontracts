@@ -30,6 +30,7 @@ public class CompanyMapper {
                 .expirationDate(request.expirationDate())
                 .companyLocation(request.companyLocation())
                 .paymentCompanyType(request.paymentCompanyType())
+                .code(request.code())
                 .build();
     }
 
@@ -51,6 +52,7 @@ public class CompanyMapper {
                 .companyUsername(username)
                 .companyEmail(email)
                 .paymentCompanyType(company.getPaymentCompanyType())
+                .code(company.getCode())
                 .build();
     }
 

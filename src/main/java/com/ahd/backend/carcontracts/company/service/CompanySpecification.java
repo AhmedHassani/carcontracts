@@ -24,6 +24,10 @@ public class CompanySpecification {
             if (criteria.getStatus() != null) {
                 predicates.add(cb.equal(root.get("status"), criteria.getStatus()));
             }
+            // Code
+            if (criteria.getCode() != null) {
+                predicates.add(cb.equal(root.get("code"), criteria.getCode()));
+            }
             // Subscription date range
             if (criteria.getSubscriptionDateFrom() != null) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("subscriptionDate"), 

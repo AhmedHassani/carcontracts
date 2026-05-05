@@ -37,6 +37,8 @@ public class ContractService {
     private final PaymentPlanRepository planRepo;
     //private final NotificationService notificationService;  // Uncomment when needed
     private final Helper helper;
+    private final ContractNumberGeneratorService contractNumberGenerator; // ADD THIS
+
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Auditable(operation = "اضافة عقد", captureArgs = true, captureResult = true)
@@ -76,6 +78,10 @@ public class ContractService {
         } else {
             possessor = buyer;
         }
+
+        Long companyId = getCompanyId();
+        
+        String contractNumber = contractNumberGenerator.generateContractNumber(companyId);
         
         Contracts contract = new Contracts();
         contract.setContractDate(request.getContractDate());
@@ -87,8 +93,8 @@ public class ContractService {
         contract.setOnus(request.isOnus()); 
         contract.setPaymentPlan(paymentPlan);
         contract.setCompanyId(getCompanyId());
+        contract.setContractNumber(contractNumber); 
         contract = contractRepo.saveAndFlush(contract);
-        
         // Notification commented out for now
         // AppNotification notif = new AppNotification();
         // notif.setTitle("اضافة عقد");
@@ -125,6 +131,7 @@ public class ContractService {
                 .id(criteria.id())
                 .chassisNumber(criteria.chassisNumber())
                 .status(criteria.status())
+                .contractNumber(criteria.contractNumber())
                 .build();
 
         spec = ContractSpecification.buildSpecification(enrichedCriteria);
@@ -150,6 +157,7 @@ public class ContractService {
                 .possessorName(criteria.possessorName())  // ADD THIS
                 .possessorPhone(criteria.possessorPhone())  // ADD THIS
                 .companyId(getCompanyId())
+                .contractNumber(criteria.contractNumber())
                 .name(criteria.name())
                 .id(criteria.id())
                 .chassisNumber(criteria.chassisNumber())

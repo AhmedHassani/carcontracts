@@ -60,6 +60,9 @@ public class Company {
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
 
+    @Column(name = "code", unique = true, nullable = false)
+    private String code;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 }

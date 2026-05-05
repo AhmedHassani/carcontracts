@@ -14,6 +14,9 @@ import java.util.Optional;
 
 public interface ContractsRepository extends JpaRepository<Contracts, Long>, JpaSpecificationExecutor<Contracts> {
 
+@Query("SELECT c.contractNumber FROM Contracts c WHERE c.companyId = :companyId AND c.contractNumber IS NOT NULL ORDER BY c.id DESC LIMIT 1")
+String findLastContractNumberByCompanyId(@Param("companyId") Long companyId);
+
     Contracts findByPaymentPlanId(Long id);
     @EntityGraph(attributePaths = {
             "seller",
@@ -24,7 +27,7 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
             "paymentPlan.installments"
     })
     Optional<Contracts> findByIdAndCompanyId(Long id, Long companyId);
-
+  
     @Query("""
            SELECT COUNT(c)
            FROM Contracts c
@@ -61,3 +64,4 @@ public interface ContractsRepository extends JpaRepository<Contracts, Long>, Jpa
                                 @Param("end") LocalDate end,
                                 @Param("companyId") Long companyId);
 }
+

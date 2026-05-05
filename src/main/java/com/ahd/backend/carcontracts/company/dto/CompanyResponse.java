@@ -14,6 +14,7 @@ public class CompanyResponse {
     Long id;
     String companyName;
     String ownerName;
+    String code;
     String ownerContact;
     Integer userCount;
     LocalDate subscriptionDate;

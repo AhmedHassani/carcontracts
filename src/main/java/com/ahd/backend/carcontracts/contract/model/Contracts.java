@@ -40,6 +40,9 @@ public class Contracts {
     @ManyToOne
     PaymentPlan paymentPlan;
 
+    @Column(name = "contract_number", unique = true, nullable = false, length = 12)
+    String contractNumber;
+
     @Column(nullable = false)
     private boolean deleted = false;
 

@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ContractResponse {
     private Long id;
+    private String contractNumber;
     private LocalDate contractDate;
     private PersonDTO seller;
     private PersonDTO buyer;

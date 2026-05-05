@@ -17,7 +17,8 @@ public record ContractPaymentsSearchCriteria(
         Long companyId,
         Long contractId,
         String possessorName,
-        String possessorPhone 
+        String possessorPhone,
+        String contractNumber
   
   //      Long id
 ) implements BaseCriteria { }

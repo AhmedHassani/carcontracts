@@ -11,6 +11,7 @@ import java.util.List;
 public class ContractPaymentsResponse {
     private Long contractId;
     private String customerName;
+    private String contractNumber;
     private String carName;
     private BigDecimal totalAmount;
     private BigDecimal downPayment;

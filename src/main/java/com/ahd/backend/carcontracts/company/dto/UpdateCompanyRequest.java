@@ -13,6 +13,7 @@ public record UpdateCompanyRequest(
         Optional<String> companyLocation,
         Optional<String> companyUsername,
         Optional<String> companyPassword,
-        Optional<String> companyEmail
+        Optional<String> companyEmail,
+        Optional<String> code
 ) {}
 

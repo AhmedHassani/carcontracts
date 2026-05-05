@@ -22,6 +22,8 @@ public class CompanySearchCriteria {
     
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate expirationDateTo;
+
+    private String code; 
     
     private String sortBy = "id"; // Default sort field
     private String sortDirection = "ASC"; // Default sort direction
