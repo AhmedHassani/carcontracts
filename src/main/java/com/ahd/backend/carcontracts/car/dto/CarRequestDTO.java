@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
+import java.time.LocalDate;
 import lombok.Data;
 
 @Data
@@ -37,4 +38,7 @@ public class CarRequestDTO {
     private String description;
     private Long currentPossessorId;
     private String carPrice;
+    private String annualContractNumber;
+    private LocalDate annualContractDate;
+    private LocalDate inspectionDate;
 }

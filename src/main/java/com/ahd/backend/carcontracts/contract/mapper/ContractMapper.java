@@ -7,7 +7,7 @@ import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.person.model.Person;
-
+import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.Optional;
 
@@ -108,6 +108,9 @@ public final class ContractMapper {
         dto.setStatus(car.getStatus());
         dto.setDescription(car.getDescription());
         dto.setCreatedAt(car.getCreatedAt());
+        dto.setInspectionDate(car.getInspectionDate());
+        dto.setAnnualContractDate(car.getAnnualContractDate());
+        dto.setAnnualContractNumber(car.getAnnualContractNumber());
         
         return dto;
     }

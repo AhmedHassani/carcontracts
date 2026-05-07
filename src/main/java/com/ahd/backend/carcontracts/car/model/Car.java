@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.Where;
 import com.ahd.backend.carcontracts.person.model.Person;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,7 +91,16 @@ public class Car {
     
     @Column(name = "car_price")
     private String carPrice;
-
+    
+    @Column(name = "annual_contract_date")
+    private LocalDate annualContractDate; 
+    
+    @Column(name = "annual_contract_number", length = 100)
+    private String annualContractNumber;   
+    
+    @Column(name = "inspection_date")
+    private LocalDate inspectionDate;     
+    
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

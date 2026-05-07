@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -71,6 +72,9 @@ public class ContractResponse {
         String typeOfCarPlate;
         String status;
         String description;
+        String annualContractNumber ;
+        LocalDate annualContractDate;
+        LocalDate inspectionDate;
     }
 
     @Getter @Setter

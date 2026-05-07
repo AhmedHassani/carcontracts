@@ -7,7 +7,7 @@ import com.ahd.backend.carcontracts.car.model.Car;
 import com.ahd.backend.carcontracts.car.model.CarAttachment;
 import com.ahd.backend.carcontracts.contract.dto.ContractResponse;
 import com.ahd.backend.carcontracts.person.model.Person;
-// import com.ahd.backend.carcontracts.person.ma;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class CarMapper {
+  
   public static Car toEntity(CarRequestDTO dto) {
     if (dto == null)
       return null; 
@@ -37,13 +38,18 @@ public final class CarMapper {
       .initPrice(dto.getInitPrice())
       .description(dto.getDescription())
       .carPrice(dto.getCarPrice())
+      .annualContractNumber(dto.getAnnualContractNumber())
+      .annualContractDate(dto.getAnnualContractDate())  // ← Fixed: no parsing needed
+      .inspectionDate(dto.getInspectionDate())          // ← Fixed: no parsing needed
       .build();
   }
   
   public static CarResponseDTO toDto(Car car) {
     if (car == null)
       return null; 
-    List<CarAttachment> attachmentDTOs = (List<CarAttachment>)car.getAttachments().stream().map(com.ahd.backend.carcontracts.car.mapper.CarMapper::toDto).collect(Collectors.toList());
+    List<CarAttachment> attachmentDTOs = car.getAttachments().stream()
+      .map(com.ahd.backend.carcontracts.car.mapper.CarMapper::toDto)
+      .collect(Collectors.toList());
     return CarResponseDTO.builder()
       .id(car.getId())
       .name(car.getName())
@@ -66,6 +72,9 @@ public final class CarMapper {
       .description(car.getDescription())
       .currentPossessor(toPersonDTO(car.getCurrentPossessor()))
       .carPrice(car.getCarPrice())
+      .annualContractNumber(car.getAnnualContractNumber())
+      .annualContractDate(car.getAnnualContractDate())
+      .inspectionDate(car.getInspectionDate())
       .build();
   }
   
@@ -105,35 +114,43 @@ public final class CarMapper {
     if (target == null || patch == null)
       return null; 
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getName()).ifPresent(target::setName);
+    Optional.ofNullable(patch.getName()).ifPresent(target::setName);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getType()).ifPresent(target::setType);
+    Optional.ofNullable(patch.getType()).ifPresent(target::setType);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getColor()).ifPresent(target::setColor);
+    Optional.ofNullable(patch.getColor()).ifPresent(target::setColor);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getModel()).ifPresent(target::setModel);
+    Optional.ofNullable(patch.getModel()).ifPresent(target::setModel);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getPlateNumber()).ifPresent(target::setPlateNumber);
+    Optional.ofNullable(patch.getPlateNumber()).ifPresent(target::setPlateNumber);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getChassisNumber()).ifPresent(target::setChassisNumber);
+    Optional.ofNullable(patch.getChassisNumber()).ifPresent(target::setChassisNumber);
     Objects.requireNonNull(target);
-    Optional.<Integer>ofNullable(patch.getKilometers()).ifPresent(target::setKilometers);
+    Optional.ofNullable(patch.getKilometers()).ifPresent(target::setKilometers);
     Objects.requireNonNull(target);
-    Optional.<Integer>ofNullable(patch.getCylinderCount()).ifPresent(target::setCylinderCount);
+    Optional.ofNullable(patch.getCylinderCount()).ifPresent(target::setCylinderCount);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getPassengerCount()).ifPresent(target::setPassengerCount);
+    Optional.ofNullable(patch.getPassengerCount()).ifPresent(target::setPassengerCount);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getEngineType()).ifPresent(target::setEngineType);
+    Optional.ofNullable(patch.getEngineType()).ifPresent(target::setEngineType);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getOrigin()).ifPresent(target::setOrigin);
+    Optional.ofNullable(patch.getOrigin()).ifPresent(target::setOrigin);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getTypeOfCarPlate()).ifPresent(target::setTypeOfCarPlate);
+    Optional.ofNullable(patch.getTypeOfCarPlate()).ifPresent(target::setTypeOfCarPlate);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getInitPrice()).ifPresent(target::setInitPrice);
+    Optional.ofNullable(patch.getInitPrice()).ifPresent(target::setInitPrice);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getDescription()).ifPresent(target::setDescription);
+    Optional.ofNullable(patch.getDescription()).ifPresent(target::setDescription);
     Objects.requireNonNull(target);
-    Optional.<String>ofNullable(patch.getCarPrice()).ifPresent(target::setCarPrice);
+    Optional.ofNullable(patch.getCarPrice()).ifPresent(target::setCarPrice);
+    Objects.requireNonNull(target);
+    Optional.ofNullable(patch.getAnnualContractNumber()).ifPresent(target::setAnnualContractNumber);
+    Objects.requireNonNull(target);
+    // ← Fixed: No parsing needed, direct assignment
+    Optional.ofNullable(patch.getAnnualContractDate()).ifPresent(target::setAnnualContractDate);
+    Objects.requireNonNull(target);
+    // ← Fixed: No parsing needed, direct assignment
+    Optional.ofNullable(patch.getInspectionDate()).ifPresent(target::setInspectionDate);
     return target;
   }
 }
