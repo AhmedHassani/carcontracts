@@ -152,6 +152,7 @@ public class CompanyService {
                 .expirationDate(company.getExpirationDate())
                 .companyLocation(company.getCompanyLocation())
                 .status(company.getStatus())
+                .code(company.getCode())
                 .build();
     }
 
