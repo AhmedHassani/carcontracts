@@ -25,8 +25,4 @@ public class Format {
     
     @NotNull(message = "companyPassword is required")
     private String companyPassword;
-    
-    // Optional fields for simple text email
-    private String subject;
-    private String body;
 }

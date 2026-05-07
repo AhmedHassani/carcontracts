@@ -39,33 +39,32 @@ public class EmailController {
         }
     }
     
-    // Test endpoint without authentication
-    @PostMapping("/test")
-    public ApiResponse<?> testEmail() {
-        try {
-            Format format = Format.builder()
-                    .toEmail("alisafaa.ve911@gmail.com")
-                    .ownerName("Test Owner")
-                    .companyUsername("testcompany123")
-                    .companyPassword("TestPassword123")
-                    .build();
+    // @PostMapping("/test")
+    // public ApiResponse<?> testEmail() {
+    //     try {
+    //         Format format = Format.builder()
+    //                 .toEmail("alisafaa.ve911@gmail.com")
+    //                 .ownerName("علي الشركة")
+    //                 .companyUsername("شركة_علي")
+    //                 .companyPassword("AliCompany123")
+    //                 .build();
             
-            emailService.sendSimpleMail(format);
+    //         emailService.sendSimpleMail(format);
             
-            return ApiResponse.builder()
-                    .success(true)
-                    .message("Test email sent! Check alisafaa.ve911@gmail.com")
-                    .code(200)
-                    .date(Instant.now())
-                    .build();
-        } catch (Exception e) {
-            log.error("Test email failed", e);
-            return ApiResponse.builder()
-                    .success(false)
-                    .message("Test failed: " + e.getMessage())
-                    .code(500)
-                    .date(Instant.now())
-                    .build();
-        }
-    }
+    //         return ApiResponse.builder()
+    //                 .success(true)
+    //                 .message("Test email sent successfully!")
+    //                 .code(200)
+    //                 .date(Instant.now())
+    //                 .build();
+    //     } catch (Exception e) {
+    //         log.error("Test email failed", e);
+    //         return ApiResponse.builder()
+    //                 .success(false)
+    //                 .message("Test failed: " + e.getMessage())
+    //                 .code(500)
+    //                 .date(Instant.now())
+    //                 .build();
+    //     }
+    // }
 }

@@ -4,14 +4,20 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
+
+import java.nio.charset.StandardCharsets;
 
 @Service
 @Slf4j
 public class EmailService {
 
+    private static final String ARABIC_TEMPLATE_PATH = "email_template_ar.html";
+    
     @Value("${spring.mail.username}")
     private String fromEmail;
     
@@ -23,50 +29,25 @@ public class EmailService {
 
     public void sendSimpleMail(Format format) {
         try {
-            log.info("=== SENDING EMAIL ===");
-            log.info("From: {}", fromEmail);
-            log.info("To: {}", format.getToEmail());
+            log.info("📧 Sending email to: {}", format.getToEmail());
             
-            // Validate from email
-            if (fromEmail == null || fromEmail.isEmpty()) {
-                throw new RuntimeException("From email is not configured in application.yml");
-            }
-            
-            // Create HTML content
-            String htmlContent = String.format("""
-                <html>
-                <body style="font-family: Arial, sans-serif;">
-                    <div style="background-color: #1a56db; color: white; padding: 20px; text-align: center;">
-                        <h2>Welcome to Car Contracts System</h2>
-                    </div>
-                    <div style="padding: 20px;">
-                        <p>Dear <strong>%s</strong>,</p>
-                        <p>Your company account has been created successfully.</p>
-                        <div style="background-color: #f3f4f6; padding: 15px; margin: 20px 0;">
-                            <p><strong>Username:</strong> %s</p>
-                            <p><strong>Password:</strong> %s</p>
-                        </div>
-                        <p>Please login at: <a href="%s">%s</a></p>
-                        <p>Best regards,<br/>Car Contracts Team</p>
-                    </div>
-                </body>
-                </html>
-                """,
+            // Load Arabic template
+            String htmlContent = loadArabicTemplate(
                 format.getOwnerName(),
                 format.getCompanyUsername(),
                 format.getCompanyPassword(),
-                loginUri,
                 loginUri
             );
             
-            // Create email
+            String subject = "تفاصيل حساب شركتك في نظام عقود السيارات";
+            
+            // Create and send email
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             
-            // CRITICAL: Set the from address explicitly
             helper.setFrom(fromEmail);
             helper.setTo(format.getToEmail().trim());
-            helper.setSubject("Your Car Contracts Company Account Credentials");
+            helper.setSubject(subject);
             helper.setText(htmlContent, true);
             
             // Add CC if present
@@ -78,7 +59,6 @@ public class EmailService {
                 }
             }
             
-            log.info("Sending email...");
             mailSender.send(message);
             log.info("✅ Email sent successfully to: {}", format.getToEmail());
             
@@ -86,5 +66,33 @@ public class EmailService {
             log.error("❌ Failed to send email: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
+    }
+    
+    private String loadArabicTemplate(String ownerName, String username, String password, String loginUrl) {
+        try {
+            ClassPathResource resource = new ClassPathResource(ARABIC_TEMPLATE_PATH);
+            String template = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+            return String.format(template, ownerName, username, password, loginUrl);
+        } catch (Exception e) {
+            log.error("Failed to load Arabic template, using fallback", e);
+            return generateFallbackArabic(ownerName, username, password, loginUrl);
+        }
+    }
+    
+    private String generateFallbackArabic(String ownerName, String username, String password, String loginUrl) {
+        return String.format("""
+            <html dir="rtl">
+            <body style="font-family: 'Cairo', sans-serif;">
+                <h2>مرحبًا، %s!</h2>
+                <p>تم إنشاء حساب شركتكم بنجاح.</p>
+                <p><strong>تفاصيل الدخول:</strong></p>
+                <ul>
+                    <li><strong>اسم المستخدم:</strong> %s</li>
+                    <li><strong>كلمة المرور:</strong> %s</li>
+                </ul>
+                <p><a href="%s">تسجيل الدخول</a></p>
+            </body>
+            </html>
+            """, ownerName, username, password, loginUrl);
     }
 }
