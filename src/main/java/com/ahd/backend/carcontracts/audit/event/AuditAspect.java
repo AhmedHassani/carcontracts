@@ -7,7 +7,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -15,6 +17,8 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+
+import jakarta.annotation.PostConstruct;
 
 @Aspect
 @Component("auditAspect")
@@ -25,6 +29,13 @@ public class AuditAspect {
     private final Helper helper;
     private final ObjectMapper om = new ObjectMapper();
 
+    @PostConstruct
+    public void init() {
+        // Register JavaTimeModule to support LocalDate, LocalDateTime, etc.
+        om.registerModule(new JavaTimeModule());
+        // Disable writing dates as timestamps (use ISO format instead)
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     @Around("@annotation(auditable)")
     public Object around(ProceedingJoinPoint pjp, Auditable auditable) throws Throwable {
@@ -57,17 +68,18 @@ public class AuditAspect {
                     ? pjp.getSignature().toShortString()
                     : auditable.method();
 
-            publisher.publishEvent(AuditEventPayload.builder()
-                //    .eventId(java.util.UUID.randomUUID())
-                    .companyId(companyId)
-                    .userId(userId)
-                    .operation(auditable.operation())
-                    .method(methodName)
-                    .params(params)
-                    .result(result)
-                    .success(success)
-                    .errorMsg(error)
-                    .build());
+            // Create payload without builder
+            AuditEventPayload payload = new AuditEventPayload();
+            payload.setCompanyId(companyId);
+            payload.setUserId(userId);
+            payload.setOperation(auditable.operation());
+            payload.setMethod(methodName);
+            payload.setParams(params);
+            payload.setResult(result);
+            payload.setSuccess(success);
+            payload.setErrorMsg(error);
+            
+            publisher.publishEvent(payload);
         }
     }
 
@@ -84,12 +96,11 @@ public class AuditAspect {
                 @Override
                 public void serialize(MultipartFile value, JsonGenerator gen, SerializerProvider serializers)
                         throws java.io.IOException {
-                    gen.writeString("[file]"); // ← exactly what you wanted
+                    gen.writeString("[file]");
                 }
             });
             m.registerModule(mod);
 
-            // you can keep your top-level replacement if you like, but it's optional now
             var list = java.util.Arrays.stream(args)
                     .map(a -> (a instanceof MultipartFile) ? "[file]" : a)
                     .toList();
@@ -120,6 +131,4 @@ public class AuditAspect {
             return "[unserializable] : " + e;
         }
     }
-
-
 }

@@ -3,6 +3,7 @@ package com.ahd.backend.carcontracts.appuser.models;
 import com.ahd.backend.carcontracts.company.model.Company;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 
 import java.util.HashSet;
@@ -44,6 +45,7 @@ public class Role {
     private Company company;
 
     @ManyToMany(mappedBy = "roles")
+    @JsonIgnore
     private Set<AppUser> users = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
