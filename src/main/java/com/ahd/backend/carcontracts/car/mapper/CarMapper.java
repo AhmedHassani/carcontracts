@@ -19,6 +19,12 @@ public final class CarMapper {
   public static Car toEntity(CarRequestDTO dto) {
     if (dto == null)
       return null; 
+
+      String carPrice = dto.getCarPrice();
+    if (carPrice == null || carPrice.isEmpty() || "null".equalsIgnoreCase(carPrice)) {
+        carPrice = "0";
+    }
+
     return Car.builder()
       .name(dto.getName())
       .type(dto.getType())
@@ -37,7 +43,7 @@ public final class CarMapper {
       .typeOfCarPlate(dto.getTypeOfCarPlate())
       .initPrice(dto.getInitPrice())
       .description(dto.getDescription())
-      .carPrice(dto.getCarPrice())
+      .carPrice(carPrice)
       .annualContractNumber(dto.getAnnualContractNumber())
       .annualContractDate(dto.getAnnualContractDate())  // ← Fixed: no parsing needed
       .inspectionDate(dto.getInspectionDate())          // ← Fixed: no parsing needed
@@ -47,6 +53,8 @@ public final class CarMapper {
   public static CarResponseDTO toDto(Car car) {
     if (car == null)
       return null; 
+
+       
     List<CarAttachment> attachmentDTOs = car.getAttachments().stream()
       .map(com.ahd.backend.carcontracts.car.mapper.CarMapper::toDto)
       .collect(Collectors.toList());
