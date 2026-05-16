@@ -45,7 +45,7 @@ public class DropDownController {
     @PreAuthorize("hasRole('SUPER_ADMIN') ")
     public ResponseEntity<OptionResponseDTO> createOption(
              @RequestBody CreateOptionRequest request) {
-        log.debug("REST request to create option: {}", request);
+       //log.debug("REST request to create option: {}", request);
         OptionResponseDTO createdOption = dropDownService.createOption(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdOption);
     }

@@ -17,6 +17,11 @@ import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.exception.BadRequestException;
 import com.ahd.backend.carcontracts.exception.DuplicateResourceException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
+import com.ahd.backend.carcontracts.notification.dto.NotificationContext;  // ✅ أضف هذا الاستيراد
+import com.ahd.backend.carcontracts.notification.dto.NotificationRequest;
+import com.ahd.backend.carcontracts.notification.service.MessageService;  // ✅ أضف هذا الاستيراد
+import com.ahd.backend.carcontracts.notification.service.NotificationSender;  // ✅ أضف هذا الاستيراد
+import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.person.model.Person;
 import com.ahd.backend.carcontracts.person.repository.PersonRepository;
 import com.ahd.backend.carcontracts.util.Helper;
@@ -51,66 +56,69 @@ public class CarService {
     private final UserRepository userRepository;
     private final Helper helper;
     private final PersonRepository personRepository;
-    
-    // Add notification service
-    private final com.ahd.backend.carcontracts.notification.service.NotificationService notificationService;
+    private final NotificationService notificationService;
+    private final NotificationSender notificationSender;  // ✅ أضف هذا
+    private final MessageService messageService;  // ✅ أضف هذا
 
-  @Transactional
-@Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
-public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
-    dto.setCompnayId(getCompanyId());
-    
-    // Check for existing chassis number
-    if (carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Pending") ||
-        carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Active")) {
-        throw new DuplicateResourceException("ChassisNumber", dto.getPlateNumber(), 
-            "Car with this Chassis Number already exists");
-    }
-    
-    // Check for existing plate number
-    if (carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
-            dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Pending") ||
-        carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
-            dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Active")) {
-        throw new DuplicateResourceException("plateNumber", dto.getPlateNumber(), 
-            "Car with this plate number already exists");
-    }
+    @Transactional
+    @Auditable(operation = "انشاء سيارة", captureArgs = true, captureResult = true)
+    public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
+        dto.setCompnayId(getCompanyId());
+        
+        // Check for existing chassis number
+        if (carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Pending") ||
+            carRepository.existsByChassisNumberAndCompanyIdAndStatus(dto.getChassisNumber(), getCompanyId(), "Active")) {
+            throw new DuplicateResourceException("ChassisNumber", dto.getPlateNumber(), 
+                "Car with this Chassis Number already exists");
+        }
+        
+        // Check for existing plate number
+        if (carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
+                dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Pending") ||
+            carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(dto.getPlateNumber(),
+                dto.getWalletNumber(), dto.getTypeOfCarPlate(), getCompanyId(), "Active")) {
+            throw new DuplicateResourceException("plateNumber", dto.getPlateNumber(), 
+                "Car with this plate number already exists");
+        }
 
-    Car car = CarMapper.toEntity(dto);
-    
-    // Handle currentPossessorId - convert from String to Long and fetch Person
-    if (dto.getCurrentPossessorId() != null 
-        && !dto.getCurrentPossessorId().isEmpty() 
-        && !"null".equalsIgnoreCase(dto.getCurrentPossessorId())) {
-        try {
-            Long possessorId = Long.valueOf(dto.getCurrentPossessorId());
-            Person possessor = personRepository.findById(possessorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Person not found with id: " + possessorId));
-            car.setCurrentPossessor(possessor);
-        } catch (NumberFormatException e) {
-            log.warn("Invalid currentPossessorId: {}", dto.getCurrentPossessorId());
+        Car car = CarMapper.toEntity(dto);
+        
+        // Handle currentPossessorId - convert from String to Long and fetch Person
+        if (dto.getCurrentPossessorId() != null 
+            && !dto.getCurrentPossessorId().isEmpty() 
+            && !"null".equalsIgnoreCase(dto.getCurrentPossessorId())) {
+            try {
+                Long possessorId = Long.valueOf(dto.getCurrentPossessorId());
+                Person possessor = personRepository.findById(possessorId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Person not found with id: " + possessorId));
+                car.setCurrentPossessor(possessor);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid currentPossessorId: {}", dto.getCurrentPossessorId());
+            }
         }
-    }
-    // If null, empty, or "null", car.currentPossessor stays null
-    
-    // Upload attachments
-    if (files != null && !files.isEmpty()) {
-        for (MultipartFile f : files) {
-            String key = storageService.upload(f);
-            CarAttachment att = CarAttachment.builder()
-                    .car(car)
-                    .fileKey(s3UrlService.getImageUrl(key))
-                    .mimeType(Optional.ofNullable(f.getContentType())
-                            .orElse("application/octet-stream"))
-                    .build();
-            car.getAttachments().add(att);
+       
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile f : files) {
+                String key = storageService.upload(f);
+                CarAttachment att = CarAttachment.builder()
+                        .car(car)
+                        .fileKey(s3UrlService.getImageUrl(key))
+                        .mimeType(Optional.ofNullable(f.getContentType())
+                                .orElse("application/octet-stream"))
+                        .build();
+                car.getAttachments().add(att);
+            }
         }
+        
+        car.setStatus("Pending");
+        Car saved = carRepository.save(car);
+        
+        // ✅ إرسال إشعار الإضافة
+        NotificationContext context = notificationSender.createCarContext("CREATE", saved);
+        notificationSender.notifyCarOperation(context);
+        
+        return CarMapper.toDto(saved);
     }
-    
-    car.setStatus("Pending");
-    Car saved = carRepository.save(car);
-    return CarMapper.toDto(saved);
-}
 
     @Transactional(readOnly = true)
     public CarResponseDTO getCar(Long id) {
@@ -128,6 +136,10 @@ public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         
         Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id, getCompanyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
+        
+        // Store old values for notification
+        String oldName = car.getName();
+        String oldPlate = car.getPlateNumber();
         
         // Check chassis number uniqueness if changed
         if (patch.getChassisNumber() != null &&
@@ -148,6 +160,12 @@ public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         
         Car carUpdated = CarMapper.updateEntity(car, patch);
         Car saved = carRepository.save(carUpdated);
+        
+        // ✅ إرسال إشعار التحديث
+        String changeDetails = generateChangeDetailsFromProperties(oldName, oldPlate, saved);
+        NotificationContext context = notificationSender.createCarContext("UPDATE", saved, changeDetails);
+        notificationSender.notifyCarOperation(context);
+        
         return CarMapper.toDto(saved);
     }
 
@@ -157,10 +175,18 @@ public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
                 .orElseThrow(() -> new RuntimeException("Car not found or already deleted"));
 
         if (!Objects.equals(car.getStatus(), "Active")) {
+            String carName = car.getName();
+            String carPlate = car.getPlateNumber();
+            String carModel = car.getModel();
+            
             car.setDeleted(true);
             carRepository.save(car);
+            
+            // ✅ إرسال إشعار الحذف
+            NotificationContext context = notificationSender.createCarContext("DELETE", car);
+            notificationSender.notifyCarOperation(context);
         } else {
-            throw new IllegalStateException("You can't remove a car that is in an active contract");
+            throw new IllegalStateException(messageService.getMessage("notification.car.delete.active.error"));
         }
     }
 
@@ -242,9 +268,6 @@ public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         Page<CarResponseDTO> result = carRepository.findAll(spec, page)
                 .map(CarMapper::toDto);
         
-        // SIMPLE TEST NOTIFICATION WITH STATIC DATA
-    //    sendTestNotification();
-        
         return result;
     }
 
@@ -252,48 +275,19 @@ public CarResponseDTO createCar(CarRequestDTO dto, List<MultipartFile> files) {
         return helper.getCurrentCompanyId();
     }
     
-    /**
-     * Simple test notification with static data
-     * This is just for testing the notification system
-     */
-/**
- * Simple test notification with static data
- * This is just for testing the notification system
- */
-/**
- * Simple test notification with static data
- * This is just for testing the notification system
- */
-// private void sendTestNotification() {
-//     try {
-//         // Get the currently logged-in user (the one using Chrome)
-//         AppUser currentUser = helper.getCurrentUser();
+   
+    private String generateChangeDetailsFromProperties(String oldName, String oldPlate, Car updatedCar) {
+        StringBuilder changes = new StringBuilder();
         
-//         if (currentUser == null) {
-//             log.warn("⚠️ No user logged in, cannot send test notification");
-//             return;
-//         }
+        if (oldName != null && !oldName.equals(updatedCar.getName())) {
+            changes.append(messageService.getMessage("notification.car.change.name", oldName, updatedCar.getName()));
+            changes.append("\n");
+        }
         
-//         log.info("📱 Sending test notification to current user: {} (ID: {})", 
-//             currentUser.getEmail(), currentUser.getId());
-//         log.info("📱 User has FCM token: {}", currentUser.getFcmToken() != null ? "Yes" : "No");
+        if (oldPlate != null && !oldPlate.equals(updatedCar.getPlateNumber())) {
+            changes.append(messageService.getMessage("notification.car.change.plate", oldPlate, updatedCar.getPlateNumber()));
+        }
         
-//         com.ahd.backend.carcontracts.notification.dto.NotificationRequest testNotification = 
-//             com.ahd.backend.carcontracts.notification.dto.NotificationRequest.builder()
-//                 .title("🚗 TEST NOTIFICATION")
-//                 .message("You are viewing the cars list!")
-//                 .actionBy(String.valueOf(currentUser.getId()))
-//                 .actionType("VIEW_ALL_CARS")
-//                 .actionDate(LocalDateTime.now())
-//                 .companyId(getCompanyId())
-//                 .targetUserIds(List.of(currentUser.getId()))  // Send to current user
-//                 .build();
-        
-//         notificationService.sendNotification(testNotification);
-//         log.info("✅ Test notification sent successfully to user: {}", currentUser.getEmail());
-        
-//     } catch (Exception e) {
-//         log.error("❌ Failed to send test notification: {}", e.getMessage());
-//     }
-// }
+        return changes.length() > 0 ? changes.toString() : messageService.getMessage("notification.car.change.default");
+    }
 }

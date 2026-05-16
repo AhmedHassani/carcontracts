@@ -1,8 +1,6 @@
 package com.ahd.backend.carcontracts.appuser.repository;
 
-
 import java.util.Optional;
-
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +10,9 @@ import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<AppUser, Long> {
+    
     Optional<AppUser> findByUsername(String username);
+    
     @Query(value = """
         SELECT 
             COUNT(u1.id) AS totalCount,
@@ -30,8 +30,9 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
         """, nativeQuery = true)
     UserStatsProjection getUserStats(
             @Param("startDate") java.time.LocalDate startDate,
-            @Param("endDate")   java.time.LocalDate endDate
+            @Param("endDate") java.time.LocalDate endDate
     );
+    
     @Query("SELECT u.fcmToken FROM AppUser u WHERE u.id IN :userIds AND u.fcmToken IS NOT NULL")
     List<String> findFcmTokensByUserIds(@Param("userIds") List<Long> userIds);
 
@@ -41,5 +42,9 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
             "WHERE r.name IN :roleNames AND cu.company.id = :companyId AND u.fcmToken IS NOT NULL")
     List<String> findFcmTokensByRolesAndCompany(@Param("roleNames") List<String> roleNames,
             @Param("companyId") Long companyId);
-}
 
+    @Query("SELECT DISTINCT u FROM AppUser u " +
+           "JOIN CompanyUser cu ON cu.user.id = u.id " +
+           "WHERE cu.company.id = :companyId AND u.fcmToken IS NOT NULL")
+    List<AppUser> findByCompanyIdAndFcmTokenIsNotNull(@Param("companyId") Long companyId);
+}

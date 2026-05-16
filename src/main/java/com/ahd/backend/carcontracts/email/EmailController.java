@@ -20,7 +20,7 @@ public class EmailController {
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ROLE_COMPANY')")
     public ApiResponse<?> sendEmail(@RequestBody Format format) {
         try {
-            log.info("Received email request for: {}", format.getToEmail());
+           //log.info("Received email request for: {}", format.getToEmail());
             emailService.sendSimpleMail(format);
             return ApiResponse.builder()
                     .success(true)
@@ -29,7 +29,7 @@ public class EmailController {
                     .date(Instant.now())
                     .build();
         } catch (Exception e) {
-            log.error("Email sending failed", e);
+           //log.error("Email sending failed", e);
             return ApiResponse.builder()
                     .success(false)
                     .message("Failed to send email: " + e.getMessage())
@@ -58,7 +58,7 @@ public class EmailController {
     //                 .date(Instant.now())
     //                 .build();
     //     } catch (Exception e) {
-    //         log.error("Test email failed", e);
+    //        //log.error("Test email failed", e);
     //         return ApiResponse.builder()
     //                 .success(false)
     //                 .message("Test failed: " + e.getMessage())

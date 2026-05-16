@@ -122,7 +122,7 @@ public class UserService {
         Optional.ofNullable(request.getPhone()).ifPresent(user::setPhone);
         Optional.ofNullable(request.getPassword())
                .ifPresent(password -> user.setPassword(passwordEncoder.encode(password)));
-        log.info("Updating profile for user: {}", user.getUsername());
+       //log.info("Updating profile for user: {}", user.getUsername());
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
     @Transactional
@@ -137,7 +137,7 @@ public class UserService {
         }
         String imageKey = imageStorageService.upload(photo);
         user.setImage(imageKey);
-        log.info("Updating profile photo for user: {}", user.getUsername());
+       //log.info("Updating profile photo for user: {}", user.getUsername());
         return UserDetailsDTO.fromAppUser(userRepository.save(user));
     }
     @Transactional

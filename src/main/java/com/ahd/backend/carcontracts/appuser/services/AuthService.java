@@ -65,10 +65,10 @@ public class AuthService {
                     )
             );
 
-            log.info("User '{}' logged in successfully", request.getUsername());
+            //log.info("User '{}' logged in successfully", request.getUsername());
             return buildAuthResponse(authentication);
         } catch (AuthenticationException ex) {
-            log.warn("Login failed for user '{}': {}", request.getUsername(), ex.getMessage());
+            //log.warn("Login failed for user '{}': {}", request.getUsername(), ex.getMessage());
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid username or password");
         }
     }
@@ -83,7 +83,7 @@ public class AuthService {
         }
         String refreshToken = request.getRefreshToken();
         if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-            log.warn("Invalid refresh token provided");
+            //log.warn("Invalid refresh token provided");
             throw new ResponseStatusException(UNAUTHORIZED, "Invalid refresh token");
         }
 

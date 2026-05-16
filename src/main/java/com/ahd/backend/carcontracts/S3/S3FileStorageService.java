@@ -81,7 +81,7 @@ public class S3FileStorageService implements FileStorageService {
                             .build(),
                     RequestBody.fromInputStream(in, file.getSize()));
         } catch (IOException ex) {
-            log.error("S3 upload failed", ex);
+           //log.error("S3 upload failed", ex);
             throw new UncheckedIOException("Failed to upload file", ex);
         }
         return key;
@@ -96,7 +96,7 @@ public class S3FileStorageService implements FileStorageService {
                     .key(key)
                     .build());
         } catch (S3Exception ex) {
-            log.warn("S3 delete failed for key={} – {}", key, ex.awsErrorDetails().errorMessage());
+           //log.warn("S3 delete failed for key={} – {}", key, ex.awsErrorDetails().errorMessage());
         }
     }
 

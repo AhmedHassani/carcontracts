@@ -20,14 +20,14 @@ import java.util.Arrays;
 @EnableAsync
 public class FirebaseConfig {
 
-    @Value("${firebase.config.file:carcontact-aeaed-firebase-adminsdk-fbsvc-6bdb9533cc.json}")
+    @Value("${firebase.config.file:carcontact-aeaed-firebase-adminsdk-fbsvc-4b2bad74b3.json}")
     private String firebaseConfigPath;
 
     @PostConstruct
     public void initialize() {
         try {
             if (FirebaseApp.getApps().isEmpty()) {
-                //log.info("🔥 Initializing Firebase with config file: {}", firebaseConfigPath);
+               //log.info("🔥 Initializing Firebase with config file: {}", firebaseConfigPath);
                 // Check if file exists
                 ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
                 if (!resource.exists()) {
@@ -42,24 +42,24 @@ public class FirebaseConfig {
                                     "https://www.googleapis.com/auth/userinfo.email",
                                     "https://www.googleapis.com/auth/cloud-platform"
                             ));
-                    //log.info("🔐 Firebase credentials loaded with proper scopes");
+                   //log.info("🔐 Firebase credentials loaded with proper scopes");
                     FirebaseOptions options = FirebaseOptions.builder()
                             .setCredentials(credentials)
                             .setProjectId("carcontact-aeaed")
                             .build();
                     FirebaseApp app = FirebaseApp.initializeApp(options);
-                    //log.info("✅ Firebase FCM initialized successfully");
-                    //log.info("🏗️ Project ID: {}", app.getOptions().getProjectId());
+                   //log.info("✅ Firebase FCM initialized successfully");
+                   //log.info("🏗️ Project ID: {}", app.getOptions().getProjectId());
                 } catch (Exception e) {
-                    //log.error("❌ Failed to initialize Firebase: {}", e.getMessage());
+                   //log.error("❌ Failed to initialize Firebase: {}", e.getMessage());
                     throw new RuntimeException("Invalid Firebase service account file. Please regenerate the key.", e);
                 }
 
             } else {
-                //log.info("🔥 Firebase already initialized");
+               //log.info("🔥 Firebase already initialized");
             }
         } catch (Exception e) {
-            //log.error("💥 Failed to initialize Firebase: {}", e.getMessage(), e);
+           //log.error("💥 Failed to initialize Firebase: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to initialize Firebase", e);
         }
     }
@@ -68,10 +68,10 @@ public class FirebaseConfig {
     public FirebaseMessaging firebaseMessaging() {
         try {
             FirebaseMessaging messaging = FirebaseMessaging.getInstance();
-            //log.info("📨 FirebaseMessaging bean created successfully");
+           //log.info("📨 FirebaseMessaging bean created successfully");
             return messaging;
         } catch (Exception e) {
-            //log.error("❌ Failed to create FirebaseMessaging bean: {}", e.getMessage(), e);
+           //log.error("❌ Failed to create FirebaseMessaging bean: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to create FirebaseMessaging bean", e);
         }
     }

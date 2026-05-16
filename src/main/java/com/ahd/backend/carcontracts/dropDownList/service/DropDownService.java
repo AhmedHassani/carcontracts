@@ -60,7 +60,7 @@ public class DropDownService {
     @Transactional
     //@Auditable(operation = "انشاء خيار في القائمة المنسدلة", captureArgs = true, captureResult = true)
     public OptionResponseDTO createOption(CreateOptionRequest request) {
-       // log.debug("Creating option in dropdown id: {}", request.getDropDownId());
+       ////log.debug("Creating option in dropdown id: {}", request.getDropDownId());
 
         DropDown dropDown = dropDownRepository.findById(request.getDropDownId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -114,7 +114,7 @@ public class DropDownService {
 
         optionDropDownRepository.delete(option);
 
-       // log.info("Option deleted successfully with id: {}", optionId);
+       ////log.info("Option deleted successfully with id: {}", optionId);
     }
 
 }

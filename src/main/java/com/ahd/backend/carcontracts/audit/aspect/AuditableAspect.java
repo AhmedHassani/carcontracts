@@ -69,12 +69,12 @@ public class AuditableAspect {
                 payload.setUserId(getCurrentUserId());
                 payload.setCompanyId(getCurrentCompanyId());
                 
-                log.info("Publishing audit event for operation: {}", auditable.operation());
+               //log.info("Publishing audit event for operation: {}", auditable.operation());
                 eventPublisher.publishEvent(payload);
                 
             } catch (Exception e) {
-                log.error("Failed to publish audit event for method: {}", 
-                    joinPoint.getSignature().toShortString(), e);
+               //log.error("Failed to publish audit event for method: {}", 
+                    //joinPoint.getSignature().toShortString(), e);
             }
         }
     }
@@ -86,11 +86,11 @@ public class AuditableAspect {
         
         try {
             String json = objectMapper.writeValueAsString(obj);
-            log.debug("Serialized to JSON: {}", json.substring(0, Math.min(json.length(), 100)));
+           //log.debug("Serialized to JSON: {}", json.substring(0, Math.min(json.length(), 100)));
             return json;
         } catch (Exception e) {
-            log.error("Failed to serialize object of type {} to JSON for auditing", 
-                obj.getClass().getName(), e);
+           //log.error("Failed to serialize object of type {} to JSON for auditing", 
+                //obj.getClass().getName(), e);
             return "{\"error\": \"Serialization failed: " + e.getMessage() + "\"}";
         }
     }
@@ -103,7 +103,7 @@ public class AuditableAspect {
         try {
             return helper.getCurrentUserId();
         } catch (Exception e) {
-            log.warn("Could not get current user ID for audit", e);
+           //log.warn("Could not get current user ID for audit", e);
             return null;
         }
     }
@@ -112,7 +112,7 @@ public class AuditableAspect {
         try {
             return helper.getCurrentCompanyId();
         } catch (Exception e) {
-            log.warn("Could not get current company ID for audit", e);
+           //log.warn("Could not get current company ID for audit", e);
             return null;
         }
     }

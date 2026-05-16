@@ -33,7 +33,7 @@ public class LatePaymentJob {
     @Scheduled(cron = "0 0 9 * * ?") // Daily at 9 AM
     @Transactional
     public void checkForLatePayments() {
-        log.info("Starting scheduled job: Check Late Payments");
+       //log.info("Starting scheduled job: Check Late Payments");
         LocalDate today = LocalDate.now();
         // Find companies with late installments
         // Exclude PAID and CANCELLED
@@ -55,6 +55,6 @@ public class LatePaymentJob {
                         .build());
             }
         }
-        log.info("Completed scheduled job: Check Late Payments");
+       //log.info("Completed scheduled job: Check Late Payments");
     }
 }

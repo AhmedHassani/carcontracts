@@ -20,7 +20,7 @@ public class AuditEventListener {
     @org.springframework.transaction.annotation.Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void onAudit(AuditEventPayload e) {
         //log.info("=== AUDIT EVENT RECEIVED ===");
-        // log.info("Operation: {}, User: {}, Company: {}", 
+        //log.info("Operation: {}, User: {}, Company: {}", 
         //     e.getOperation(), e.getUserId(), e.getCompanyId());
         
         try {

@@ -29,7 +29,7 @@ public class EmailService {
 
     public void sendSimpleMail(Format format) {
         try {
-            log.info("📧 Sending email to: {}", format.getToEmail());
+           //log.info("📧 Sending email to: {}", format.getToEmail());
             
             // Load Arabic template
             String htmlContent = loadArabicTemplate(
@@ -60,10 +60,10 @@ public class EmailService {
             }
             
             mailSender.send(message);
-            log.info("✅ Email sent successfully to: {}", format.getToEmail());
+           //log.info("✅ Email sent successfully to: {}", format.getToEmail());
             
         } catch (Exception e) {
-            log.error("❌ Failed to send email: {}", e.getMessage(), e);
+           //log.error("❌ Failed to send email: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to send email: " + e.getMessage(), e);
         }
     }
@@ -74,7 +74,7 @@ public class EmailService {
             String template = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
             return String.format(template, ownerName, username, password, loginUrl);
         } catch (Exception e) {
-            log.error("Failed to load Arabic template, using fallback", e);
+            //log.error("Failed to load Arabic template, using fallback", e);
             return generateFallbackArabic(ownerName, username, password, loginUrl);
         }
     }
