@@ -170,6 +170,23 @@ public Map<LocalDate, Long> getInstallmentsDaily(LocalDate start, LocalDate end)
         result.merge(day, amount, Long::sum);
     }
     
+    // Add car prices sum for each day
+    LocalDate currentDate = start;
+    while (!currentDate.isAfter(end)) {
+        LocalDateTime startOfDay = currentDate.atStartOfDay();
+        LocalDateTime endOfDay = currentDate.plusDays(1).atStartOfDay();
+        
+        Long carPriceSum = carRepository.sumCarPriceByCompanyIdAndCreatedAtBetween(
+            companyId, startOfDay, endOfDay
+        );
+        
+        if (carPriceSum != null && carPriceSum > 0) {
+            result.merge(currentDate, carPriceSum, Long::sum);
+        }
+        
+        currentDate = currentDate.plusDays(1);
+    }
+    
     // Sort by date
     return new TreeMap<>(result);
 }
@@ -192,7 +209,34 @@ public Map<String, BigDecimal> getInstallmentsMonthly(LocalDate start, LocalDate
         result.merge(month, amount, BigDecimal::add);
     }
     
-    // Sort by month
+    // Add car prices sum for each month in range
+    LocalDate currentDate = start;
+    while (!currentDate.isAfter(end)) {
+        // Get first day of current month
+        LocalDate startOfMonth = currentDate.withDayOfMonth(1);
+        // Get last day of current month
+        LocalDate endOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+        
+        // Only process if this month is within our range
+        if (!startOfMonth.isBefore(start) && !endOfMonth.isAfter(end)) {
+            LocalDateTime startOfMonthDateTime = startOfMonth.atStartOfDay();
+            LocalDateTime endOfMonthDateTime = endOfMonth.plusDays(1).atStartOfDay();
+            
+            Long carPriceSum = carRepository.sumCarPriceByCompanyIdAndCreatedAtBetween(
+                companyId, startOfMonthDateTime, endOfMonthDateTime
+            );
+            
+            if (carPriceSum != null && carPriceSum > 0) {
+                String monthKey = startOfMonth.getYear() + "-" + String.format("%02d", startOfMonth.getMonthValue());
+                result.merge(monthKey, BigDecimal.valueOf(carPriceSum), BigDecimal::add);
+            }
+        }
+        
+        // Move to next month
+        currentDate = currentDate.plusMonths(1);
+    }
+    
+    // Sort by month (TreeMap will sort string keys naturally)
     return new TreeMap<>(result);
 }
 

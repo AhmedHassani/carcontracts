@@ -333,9 +333,8 @@ public class NotificationSender {
         
         return changes.length() > 0 ? changes.toString() : messageService.getMessage("notification.person.change.default");
     }
-    // Add these methods to your existing NotificationSender class
 
-// ==================== PAYMENT NOTIFICATIONS ====================
+    // ==================== PAYMENT NOTIFICATIONS ====================
 
 @Transactional
 public void notifyPaymentOperation(NotificationContext context) {
@@ -386,131 +385,5 @@ public void notifyPaymentOperation(NotificationContext context) {
         log.error(messageService.getMessage("notification.payment.log.failed", 
             context.getOperation(), context.getEntityId(), e.getMessage()));
     }
-}
-
-/**
- * Create notification context for installment status update
- */
-public NotificationContext createInstallmentStatusContext(Installment installment, BigDecimal paidAmount, String contractNumber) {
-    String title;
-    String message;
-    String operation;
-    String actionType;
-    
-    if (installment.getStatus() == InstallmentStatus.PAID) {
-        title = messageService.getMessage("notification.payment.installment.paid.title");
-        message = messageService.getMessage("notification.payment.installment.paid.body",
-            String.valueOf(installment.getInstallmentNumber()),
-            contractNumber != null ? contractNumber : String.valueOf(installment.getPaymentPlan().getId()),
-            paidAmount != null ? paidAmount.toString() : installment.getAmount().toString()
-        );
-        operation = "PAID";
-        actionType = "INSTALLMENT_PAID";
-    } else if (installment.getStatus() == InstallmentStatus.PARTIALLY_PAID) {
-        title = messageService.getMessage("notification.payment.installment.partial.title");
-        message = messageService.getMessage("notification.payment.installment.partial.body",
-            String.valueOf(installment.getInstallmentNumber()),
-            contractNumber != null ? contractNumber : String.valueOf(installment.getPaymentPlan().getId()),
-            paidAmount != null ? paidAmount.toString() : "0",
-            installment.getRemainingAmount() != null ? installment.getRemainingAmount().toString() : "0"
-        );
-        operation = "PARTIAL";
-        actionType = "INSTALLMENT_PARTIAL";
-    } else {
-        title = messageService.getMessage("notification.payment.installment.update.title");
-        message = messageService.getMessage("notification.payment.installment.update.body",
-            String.valueOf(installment.getInstallmentNumber()),
-            contractNumber != null ? contractNumber : String.valueOf(installment.getPaymentPlan().getId()),
-            installment.getAmount() != null ? installment.getAmount().toString() : "0",
-            installment.getStatus() != null ? installment.getStatus().toString() : "UNKNOWN"
-        );
-        operation = "UPDATE";
-        actionType = "INSTALLMENT_UPDATE";
-    }
-    
-    return NotificationContext.builder()
-        .operation(operation)
-        .title(title)
-        .message(message)
-        .actionType(actionType)
-        .entity(installment)
-        .entityId(installment.getId())
-        .entityName("قسط رقم " + installment.getInstallmentNumber())
-        .additionalData(Map.of(
-            "installmentId", String.valueOf(installment.getId()),
-            "installmentNumber", String.valueOf(installment.getInstallmentNumber()),
-            "paymentPlanId", String.valueOf(installment.getPaymentPlan().getId()),
-            "amount", installment.getAmount() != null ? installment.getAmount().toString() : "0",
-            "status", installment.getStatus() != null ? installment.getStatus().toString() : "",
-            "paidAmount", paidAmount != null ? paidAmount.toString() : "0",
-            "contractNumber", contractNumber != null ? contractNumber : ""
-        ))
-        .build();
-}
-
-/**
- * Create notification context for due date update
- */
-public NotificationContext createInstallmentDateContext(Installment installment, LocalDate oldDueDate, LocalDate newDueDate, String contractNumber) {
-    String title = messageService.getMessage("notification.payment.installment.date.update.title");
-    String message = messageService.getMessage("notification.payment.installment.date.update.body",
-        String.valueOf(installment.getInstallmentNumber()),
-        contractNumber != null ? contractNumber : String.valueOf(installment.getPaymentPlan().getId()),
-        oldDueDate != null ? oldDueDate.toString() : "غير محدد",
-        newDueDate != null ? newDueDate.toString() : "غير محدد"
-    );
-    
-    return NotificationContext.builder()
-        .operation("DATE_UPDATE")
-        .title(title)
-        .message(message)
-        .actionType("INSTALLMENT_DATE_UPDATE")
-        .entity(installment)
-        .entityId(installment.getId())
-        .entityName("قسط رقم " + installment.getInstallmentNumber())
-        .additionalData(Map.of(
-            "installmentId", String.valueOf(installment.getId()),
-            "installmentNumber", String.valueOf(installment.getInstallmentNumber()),
-            "oldDueDate", oldDueDate != null ? oldDueDate.toString() : "",
-            "newDueDate", newDueDate != null ? newDueDate.toString() : "",
-            "contractNumber", contractNumber != null ? contractNumber : ""
-        ))
-        .build();
-}
-
-/**
- * Create notification context for overdue installments
- */
-public NotificationContext createOverdueInstallmentsContext(List<Installment> overdueInstallments, BigDecimal totalOverdueAmount) {
-    String title = messageService.getMessage("notification.payment.installment.overdue.title");
-    
-    // Build detailed message
-    StringBuilder detailsBuilder = new StringBuilder();
-    for (Installment inst : overdueInstallments) {
-        detailsBuilder.append(messageService.getMessage("notification.payment.installment.overdue.details",
-            String.valueOf(inst.getInstallmentNumber()),
-            inst.getAmount() != null ? inst.getAmount().toString() : "0",
-            inst.getDueDate() != null ? inst.getDueDate().toString() : "غير محدد"
-        )).append("\n");
-    }
-    
-    String message = messageService.getMessage("notification.payment.installment.overdue.body",
-        String.valueOf(overdueInstallments.size()),
-        totalOverdueAmount != null ? totalOverdueAmount.toString() : "0"
-    ) + "\n\n" + detailsBuilder.toString();
-    
-    return NotificationContext.builder()
-        .operation("OVERDUE_CHECK")
-        .title(title)
-        .message(message)
-        .actionType("OVERDUE_INSTALLMENTS")
-        .entityId(null)
-        .entityName("الأقساط المتأخرة")
-        .additionalData(Map.of(
-            "overdueCount", String.valueOf(overdueInstallments.size()),
-            "totalOverdueAmount", totalOverdueAmount != null ? totalOverdueAmount.toString() : "0",
-            "checkDate", LocalDate.now().toString()
-        ))
-        .build();
 }
 }

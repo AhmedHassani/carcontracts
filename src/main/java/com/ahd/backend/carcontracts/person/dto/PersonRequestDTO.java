@@ -23,9 +23,7 @@ public class PersonRequestDTO {
     private String fatherName;
     @NotBlank
     private String grandfatherName;
-    @NotBlank
     private String fourthName;
-    @NotBlank
     private String surname;
     @NotBlank
     @Pattern(regexp = "^\\d{10,15}$",

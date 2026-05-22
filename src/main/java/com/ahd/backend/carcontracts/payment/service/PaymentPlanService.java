@@ -2,10 +2,9 @@ package com.ahd.backend.carcontracts.payment.service;
 
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
+import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.payment.dto.*;
 import com.ahd.backend.carcontracts.payment.enums.InstallmentStatus;
@@ -18,16 +17,16 @@ import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import com.ahd.backend.carcontracts.notification.dto.NotificationContext;
 import com.ahd.backend.carcontracts.notification.service.NotificationSender;
 import com.ahd.backend.carcontracts.notification.service.MessageService;
-import com.ahd.backend.carcontracts.contract.model.Contract;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -45,10 +44,62 @@ public class PaymentPlanService {
     private InstallmentRepository installmentRepository;
 
     private final ContractsRepository contractsRepository;
-    private final NotificationSender notificationSender;  // ✅ Add NotificationSender
-    private final MessageService messageService;  // ✅ Add MessageService
+    private final NotificationSender notificationSender;
+    private final MessageService messageService;
 
-    // ... (existing methods remain the same until getOverdueInstallments)
+    @Auditable(operation = "انشاء خطة دفع", captureArgs = true, captureResult = true)
+    public PaymentPlanResponse createPaymentPlan(PaymentPlanRequest request) {
+        PaymentPlan paymentPlan = PaymentPlan.builder()
+                .paymentType(request.getPaymentType())
+                .totalAmount(request.getTotalAmount())
+                .downPayment(request.getDownPayment() != null ? request.getDownPayment() : BigDecimal.ZERO)
+                .installmentPeriodDays(request.getInstallmentPeriodDays())
+                .companyId(getCompanyId())
+                .status(PaymentStatus.PENDING)
+                .installments(new ArrayList<>())
+                .build();
+
+        if (request.getPaymentType() == PaymentType.CASH) {
+            System.out.println("CASH payment detected - setting status to COMPLETED");
+            paymentPlan.setStatus(PaymentStatus.COMPLETED);
+        }
+        BigDecimal remainingAmount = paymentPlan.getTotalAmount().subtract(paymentPlan.getDownPayment());
+        paymentPlan.setRemainingAmount(remainingAmount);
+        if (request.getPaymentType() == PaymentType.INSTALLMENT) {
+            paymentPlan.setIntInstallment(paymentPlan.getDownPayment());
+            paymentPlan.setNumberOfInstallments(request.getNumberOfInstallments());
+            PaymentPlan savedPlan = paymentPlanRepository.save(paymentPlan);
+            List<Installment> installments = request.getInstallment().stream()
+                    .map(installment -> {
+                        installment.setPaymentPlan(savedPlan);
+                        installment.setCompanyId(getCompanyId());
+                        return installment;
+                    })
+                    .toList();
+            savedPlan.setInstallments(installments);
+        } else {
+            paymentPlan.setNumberOfInstallments(1);
+            paymentPlan = paymentPlanRepository.save(paymentPlan);
+        }
+
+        PaymentPlan savedPaymentPlan = paymentPlanRepository.findByIdAndCompanyIdWithInstallments(paymentPlan.getId(), getCompanyId())
+                .orElse(paymentPlan);
+
+        return mapToResponse(savedPaymentPlan);
+    }
+
+    public PaymentPlanResponse getPaymentPlan(Long id) {
+        PaymentPlan paymentPlan = paymentPlanRepository.findByIdAndCompanyIdWithInstallments(id, getCompanyId())
+                .orElseThrow(() -> new EntityNotFoundException("Payment plan not found with id: " + id));
+        return mapToResponse(paymentPlan);
+    }
+
+    public List<InstallmentResponse> getInstallments(Long paymentPlanId) {
+        List<Installment> installments = installmentRepository.findByPaymentPlanIdAndCompanyIdOrderByInstallmentNumber(paymentPlanId, getCompanyId());
+        return installments.stream()
+                .map(this::mapInstallmentToResponse)
+                .collect(Collectors.toList());
+    }
 
     /**
      * Get overdue installments and send notification
@@ -57,15 +108,45 @@ public class PaymentPlanService {
         List<Installment> overdueInstallments = installmentRepository.findOverdueInstallmentsByCompanyId(
                 LocalDate.now(), InstallmentStatus.PENDING, getCompanyId());
         
-        // ✅ Send notification if there are overdue installments
+        // Send notification if there are overdue installments
         if (overdueInstallments != null && !overdueInstallments.isEmpty()) {
             BigDecimal totalOverdueAmount = overdueInstallments.stream()
-                .map(Installment::getAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    .map(Installment::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             
-            NotificationContext context = notificationSender.createOverdueInstallmentsContext(
-                overdueInstallments, totalOverdueAmount);
+            // Build detailed message
+            StringBuilder detailsBuilder = new StringBuilder();
+            for (Installment inst : overdueInstallments) {
+                String contractNumber = getContractNumberByPaymentPlanId(inst.getPaymentPlan().getId());
+                detailsBuilder.append("• القسط رقم ").append(inst.getInstallmentNumber())
+                        .append(" (العقد: ").append(contractNumber != null ? contractNumber : "N/A")
+                        .append("): ").append(inst.getAmount())
+                        .append(" ريال - تاريخ الاستحقاق: ").append(inst.getDueDate()).append("\n");
+            }
+            
+            String title = messageService.getMessage("notification.payment.installment.overdue.title");
+            String message = messageService.getMessage("notification.payment.installment.overdue.body",
+                    String.valueOf(overdueInstallments.size()),
+                    totalOverdueAmount.toString()
+            ) + "\n\n" + detailsBuilder.toString();
+            
+            Map<String, Object> additionalData = new HashMap<>();
+            additionalData.put("overdueCount", overdueInstallments.size());
+            additionalData.put("totalOverdueAmount", totalOverdueAmount.toString());
+            additionalData.put("checkDate", LocalDate.now().toString());
+            
+            NotificationContext context = NotificationContext.builder()
+                    //.type("PAYMENT")
+                    .operation("OVERDUE")
+                    .title(title)
+                    .message(message)
+                    .actionType("OVERDUE_INSTALLMENTS")
+                    .entityId(null)
+                    .entityName("الأقساط المتأخرة")
+                    .additionalData(additionalData)
+                    .build();
+            
             notificationSender.notifyPaymentOperation(context);
         }
         
@@ -98,19 +179,45 @@ public class PaymentPlanService {
         installment.setStatus(InstallmentStatus.OVERDUE);
         installmentRepository.save(installment);
         
-        // ✅ Send notification for date update
+        // Send notification for date update
         String contractNumber = getContractNumberByPaymentPlanId(installment.getPaymentPlan().getId());
-        NotificationContext context = notificationSender.createInstallmentDateContext(
-            installment, oldDueDate, request.getDueDate(), contractNumber);
-        notificationSender.notifyPaymentOperation(context);
         
+        String title = messageService.getMessage("notification.payment.installment.date.update.title");
+        String message = messageService.getMessage("notification.payment.installment.date.update.body",
+                String.valueOf(installment.getInstallmentNumber()),
+                contractNumber != null ? contractNumber : String.valueOf(installment.getPaymentPlan().getId()),
+                oldDueDate != null ? oldDueDate.toString() : "غير محدد",
+                request.getDueDate() != null ? request.getDueDate().toString() : "غير محدد"
+        );
+        
+        Map<String, Object> additionalData = new HashMap<>();
+        additionalData.put("installmentId", installment.getId());
+        additionalData.put("installmentNumber", installment.getInstallmentNumber());
+        additionalData.put("paymentPlanId", installment.getPaymentPlan().getId());
+        additionalData.put("oldDueDate", oldDueDate != null ? oldDueDate.toString() : "");
+        additionalData.put("newDueDate", request.getDueDate() != null ? request.getDueDate().toString() : "");
+        additionalData.put("contractNumber", contractNumber != null ? contractNumber : "");
+        
+        NotificationContext context = NotificationContext.builder()
+                //.type("PAYMENT")type("PAYMENT")
+                .operation("DATE_UPDATE")
+                .title(title)
+                .message(message)
+                .actionType("INSTALLMENT_DATE_UPDATE")
+                .entityId(installment.getId())
+                .entityName("قسط رقم " + installment.getInstallmentNumber())
+                .additionalData(additionalData)
+                .build();
+        
+        notificationSender.notifyPaymentOperation(context);
+
         return PaymentResponse.builder()
                 .success(true)
-                .message("Installment processed successfully")
+                .message("Installment date updated successfully")
                 .paymentDate(LocalDate.now())
                 .build();
     }
-    
+
     /**
      * Update installment status with notification
      */
@@ -137,15 +244,11 @@ public class PaymentPlanService {
             throw new IllegalStateException("Installment amount is not set");
         }
 
-        // Check if paid amount exceeds remaining amount for partially paid installments
         if (paidAmount.compareTo(currentRemainingAmount) > 0 && 
             installment.getStatus() == InstallmentStatus.PARTIALLY_PAID) {
             throw new IllegalStateException("The amount is more than the remaining installment amount");
         }
 
-        // Store old status for notification
-        InstallmentStatus oldStatus = installment.getStatus();
-        
         // Calculate new remaining amount
         BigDecimal newRemainingAmount = currentRemainingAmount.subtract(paidAmount);
         
@@ -163,7 +266,6 @@ public class PaymentPlanService {
         if (installment.getPaidDate() == null) {
             installment.setPaidDate(LocalDate.now());
         }
-        
         installmentRepository.save(installment);
 
         // Update payment plan
@@ -203,31 +305,84 @@ public class PaymentPlanService {
 
         paymentPlanRepository.save(paymentPlan);
         
-        // ✅ Send notification for status update
+        // Send notification for status update
         String contractNumber = getContractNumberByPaymentPlanId(paymentPlanId);
-        NotificationContext context = notificationSender.createInstallmentStatusContext(
-            installment, paidAmount, contractNumber);
+        String title;
+        String message;
+        String operation;
+        
+        if (installment.getStatus() == InstallmentStatus.PAID) {
+            title = messageService.getMessage("notification.payment.installment.paid.title");
+            message = messageService.getMessage("notification.payment.installment.paid.body",
+                    String.valueOf(installment.getInstallmentNumber()),
+                    contractNumber != null ? contractNumber : String.valueOf(paymentPlanId),
+                    paidAmount.toString()
+            );
+            operation = "PAID";
+        } else if (installment.getStatus() == InstallmentStatus.PARTIALLY_PAID) {
+            title = messageService.getMessage("notification.payment.installment.partial.title");
+            message = messageService.getMessage("notification.payment.installment.partial.body",
+                    String.valueOf(installment.getInstallmentNumber()),
+                    contractNumber != null ? contractNumber : String.valueOf(paymentPlanId),
+                    paidAmount.toString(),
+                    newRemainingAmount.toString()
+            );
+            operation = "PARTIAL";
+        } else {
+            title = messageService.getMessage("notification.payment.installment.update.title");
+            message = messageService.getMessage("notification.payment.installment.update.body",
+                    String.valueOf(installment.getInstallmentNumber()),
+                    contractNumber != null ? contractNumber : String.valueOf(paymentPlanId),
+                    installment.getAmount().toString(),
+                    installment.getStatus().toString()
+            );
+            operation = "UPDATE";
+        }
+        
+        Map<String, Object> additionalData = new HashMap<>();
+        additionalData.put("installmentId", installment.getId());
+        additionalData.put("installmentNumber", installment.getInstallmentNumber());
+        additionalData.put("paymentPlanId", paymentPlanId);
+        additionalData.put("paidAmount", paidAmount.toString());
+        additionalData.put("remainingAmount", newRemainingAmount.toString());
+        additionalData.put("status", installment.getStatus().toString());
+        additionalData.put("contractNumber", contractNumber != null ? contractNumber : "");
+        
+        NotificationContext context = NotificationContext.builder()
+                //.type("PAYMENT")
+                .operation(operation)
+                .title(title)
+                .message(message)
+                .actionType("INSTALLMENT_" + operation)
+                .entityId(installment.getId())
+                .entityName("قسط رقم " + installment.getInstallmentNumber())
+                .additionalData(additionalData)
+                .build();
+        
         notificationSender.notifyPaymentOperation(context);
         
-        // ✅ Also send notification if this payment completed the entire plan
+        // Send completion notification if plan is fully paid
         if (allPaid) {
+            String completionTitle = "✅ اكتمال خطة الدفع";
+            String completionMessage = "تم اكتمال خطة الدفع رقم " + paymentPlanId + 
+                    " للعقد " + (contractNumber != null ? contractNumber : "") +
+                    " بالمبلغ الإجمالي " + paymentPlan.getTotalAmount() + " ريال";
+            
+            Map<String, Object> completionData = new HashMap<>();
+            completionData.put("paymentPlanId", paymentPlanId);
+            completionData.put("contractNumber", contractNumber != null ? contractNumber : "");
+            completionData.put("totalAmount", paymentPlan.getTotalAmount().toString());
+            
             NotificationContext completionContext = NotificationContext.builder()
-                .operation("PLAN_COMPLETED")
-                .title("✅ اكتمال خطة الدفع")
-                .message(messageService.getMessage("notification.payment.plan.completed",
-                    String.valueOf(paymentPlan.getId()),
-                    contractNumber != null ? contractNumber : "",
-                    paymentPlan.getTotalAmount() != null ? paymentPlan.getTotalAmount().toString() : "0"))
-                .actionType("PAYMENT_PLAN_COMPLETED")
-                .entity(paymentPlan)
-                .entityId(paymentPlan.getId())
-                .entityName("خطة دفع رقم " + paymentPlan.getId())
-                .additionalData(Map.of(
-                    "paymentPlanId", String.valueOf(paymentPlan.getId()),
-                    "contractNumber", contractNumber != null ? contractNumber : "",
-                    "totalAmount", paymentPlan.getTotalAmount() != null ? paymentPlan.getTotalAmount().toString() : "0"
-                ))
-                .build();
+                    //.type("PAYMENT")
+                    .operation("PLAN_COMPLETED")
+                    .title(completionTitle)
+                    .message(completionMessage)
+                    .actionType("PAYMENT_PLAN_COMPLETED")
+                    .entityId(paymentPlanId)
+                    .entityName("خطة دفع رقم " + paymentPlanId)
+                    .additionalData(completionData)
+                    .build();
             notificationSender.notifyPaymentOperation(completionContext);
         }
 
@@ -238,10 +393,12 @@ public class PaymentPlanService {
                 .build();
     }
 
-    // Helper method to get contract number by payment plan ID
+    /**
+     * Helper method to get contract number by payment plan ID
+     */
     private String getContractNumberByPaymentPlanId(Long paymentPlanId) {
         try {
-            Contract contract = contractsRepository.findByPaymentPlanId(paymentPlanId);
+            Contracts contract = contractsRepository.findByPaymentPlanId(paymentPlanId);
             return contract != null ? contract.getContractNumber() : null;
         } catch (Exception e) {
             log.warn("Could not find contract for payment plan: {}", paymentPlanId);
@@ -249,8 +406,6 @@ public class PaymentPlanService {
         }
     }
 
-    // ... (rest of your existing methods remain the same)
-    
     private PaymentPlanResponse mapToResponse(PaymentPlan paymentPlan) {
         List<InstallmentResponse> installmentResponses = paymentPlan.getInstallments().stream()
                 .map(this::mapInstallmentToResponse)

@@ -30,4 +30,6 @@ public class UpdatePerson {
     private String houseNo;
     private String issuingAuthority;
     private String infoOffice;
+
+    
 }

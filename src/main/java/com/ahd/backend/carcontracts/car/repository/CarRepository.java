@@ -45,4 +45,16 @@ public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificatio
                                                       @Param("status2") String status2,
                                                       @Param("start") LocalDateTime start,
                                                       @Param("end") LocalDateTime end);
+
+
+ @Query("""
+    SELECT SUM(CAST(c.carPrice AS long))
+    FROM Car c
+    WHERE c.companyId = :companyId
+      AND c.status != 'Pending'
+      AND c.paidAt BETWEEN :start AND :end
+    """)
+Long sumCarPriceByCompanyIdAndCreatedAtBetween(@Param("companyId") Long companyId,
+                                               @Param("start") LocalDateTime start,
+                                               @Param("end") LocalDateTime end);
 }

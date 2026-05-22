@@ -210,6 +210,13 @@ public class PersonService {
         
         // Store old values for notification (create a copy before update)
         Person oldPerson = copyPerson(existingPerson);
+       
+        if (personRequest.getFourthName() != null && personRequest.getFourthName().trim().isEmpty()) {
+        personRequest.setFourthName(null);
+        }
+        if (personRequest.getSurname() != null && personRequest.getSurname().trim().isEmpty()) {
+            personRequest.setSurname(null);
+        }
         
         // Update person
         Person updatedPerson = PersonMapper.merge(personRequest, existingPerson);
