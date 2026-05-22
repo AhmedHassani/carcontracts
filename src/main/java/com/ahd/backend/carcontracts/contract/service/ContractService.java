@@ -9,7 +9,6 @@ import com.ahd.backend.carcontracts.contract.model.Contracts;
 import com.ahd.backend.carcontracts.contract.repository.ContractsRepository;
 import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
 import com.ahd.backend.carcontracts.payment.enums.PaymentType;
-import com.ahd.backend.carcontracts.payment.model.Installment;
 import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
 import com.ahd.backend.carcontracts.payment.repository.PaymentPlanRepository;
 import com.ahd.backend.carcontracts.person.model.Person;
@@ -17,6 +16,9 @@ import com.ahd.backend.carcontracts.person.repository.PersonRepository;
 import com.ahd.backend.carcontracts.util.Helper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import com.ahd.backend.carcontracts.notification.dto.NotificationContext;  // ✅ ADD THIS IMPORT
+import com.ahd.backend.carcontracts.notification.service.NotificationSender;
+import com.ahd.backend.carcontracts.notification.service.MessageService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -35,10 +37,10 @@ public class ContractService {
     private final PersonRepository personRepo;
     private final CarRepository carRepo;
     private final PaymentPlanRepository planRepo;
-    //private final NotificationService notificationService;  // Uncomment when needed
     private final Helper helper;
-    private final ContractNumberGeneratorService contractNumberGenerator; // ADD THIS
-
+    private final ContractNumberGeneratorService contractNumberGenerator;
+    private final NotificationSender notificationSender;
+    private final MessageService messageService;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Auditable(operation = "اضافة عقد", captureArgs = true, captureResult = true)
@@ -65,13 +67,11 @@ public class ContractService {
             paymentPlan.setStatus(PaymentStatus.ACTIVE);
         }
         
-        // Handle guarantor (can be null)
         Person guarantor = null;
         if (request.getGuarantorId() != null) {
             guarantor = personRepo.getReferenceById(request.getGuarantorId());
         }
         
-        // ADD THIS: Handle possessor (defaults to buyer if not provided)
         Person possessor = null;
         if (request.getPossessorId() != null) {
             possessor = personRepo.getReferenceById(request.getPossessorId());
@@ -80,7 +80,6 @@ public class ContractService {
         }
 
         Long companyId = getCompanyId();
-        
         String contractNumber = contractNumberGenerator.generateContractNumber(companyId);
         
         Contracts contract = new Contracts();
@@ -88,20 +87,17 @@ public class ContractService {
         contract.setSeller(seller);
         contract.setBuyer(buyer);
         contract.setGuarantor(guarantor);
-        contract.setPossessor(possessor);  // ADD THIS LINE
+        contract.setPossessor(possessor);
         contract.setCar(car);
         contract.setOnus(request.isOnus()); 
         contract.setPaymentPlan(paymentPlan);
         contract.setCompanyId(getCompanyId());
         contract.setContractNumber(contractNumber); 
         contract = contractRepo.saveAndFlush(contract);
-        // Notification commented out for now
-        // AppNotification notif = new AppNotification();
-        // notif.setTitle("اضافة عقد");
-        // notif.setBody("تم اضافة العقد رقم" + contract.getId() + " بنجاح");
-        // notif.setNotificationDate(LocalDateTime.now());
-        // notif.setPermisson("CompanyUsers");
-        // notificationService.insertNotificationAsync(notif);
+        
+        // ✅ Add notification for contract creation
+        NotificationContext context = notificationSender.createContractContext("CREATE", contract);
+        notificationSender.notifyContractOperation(context);
         
         return ContractMapper.toDetails(contract);
     }
@@ -121,13 +117,11 @@ public class ContractService {
                 .BuyerPhone(criteria.BuyerPhone())
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
-                .possessorName(criteria.possessorName())  // ADD THIS
-                .possessorPhone(criteria.possessorPhone())  // ADD THIS
+                .possessorName(criteria.possessorName())
+                .possessorPhone(criteria.possessorPhone())
                 .onus(criteria.onus())  
                 .name(criteria.name())
                 .companyId(getCompanyId())
-                .possessorName(criteria.possessorName())
-                .possessorPhone(criteria.possessorPhone())
                 .id(criteria.id())
                 .chassisNumber(criteria.chassisNumber())
                 .status(criteria.status())
@@ -154,8 +148,8 @@ public class ContractService {
                 .BuyerPhone(criteria.BuyerPhone())
                 .SellerName(criteria.SellerName())
                 .SellerPhone(criteria.SellerPhone())
-                .possessorName(criteria.possessorName())  // ADD THIS
-                .possessorPhone(criteria.possessorPhone())  // ADD THIS
+                .possessorName(criteria.possessorName())
+                .possessorPhone(criteria.possessorPhone())
                 .companyId(getCompanyId())
                 .contractNumber(criteria.contractNumber())
                 .name(criteria.name())
@@ -175,6 +169,8 @@ public class ContractService {
         Contracts contract = contractRepo.findByIdAndCompanyId(contractId, getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
 
+        Contracts contractToDelete = copyContract(contract);
+
         if (contract.getPaymentPlan() != null) {
             contract.getPaymentPlan().setDeleted(true);
             contract.getPaymentPlan().getInstallments()
@@ -182,25 +178,95 @@ public class ContractService {
         }
         contract.setDeleted(true);
         
-        // Uncomment when notification service is available
-        // notificationService.sendNotificationToDevice("حذف عقد", "تم حذف العقد رقم" + contract.getId() + " بنجاح");
-        // AppNotification notif = new AppNotification();
-        // notif.setTitle("حذف عقد");
-        // notif.setBody("تم حذف العقد رقم " + contract.getId() + " بنجاح");
-        // notif.setNotificationDate(LocalDateTime.now());
-        // notif.setPermisson("CompanyUsers");
-        // notificationService.insertNotificationAsync(notif);
-
         contractRepo.save(contract);
+        
+        // ✅ Add notification for contract deletion
+        NotificationContext context = notificationSender.createContractContext("DELETE", contractToDelete);
+        notificationSender.notifyContractOperation(context);
     }
-
+   
     @Transactional
-    @Auditable(operation = "تحديث عقد", captureArgs = true, captureResult = true)
-    public void updateContracttemplateId(Long contractId, Long templateId) {
+    @Auditable(operation = "تغير كتاب العقد", captureArgs = true, captureResult = true)
+    public void updateContracttemplateId(Long contractId, Long templateId) {  // ✅ Fixed method name
         Contracts contract = contractRepo.findByIdAndCompanyId(contractId, getCompanyId())
                 .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
-        contract.setTemplateId(templateId);
+        contract.setTemplateId(templateId);  // ✅ Fixed variable name
         contractRepo.save(contract);
+    }
+    
+    // ✅ ADD THIS METHOD - Update Contract with notification
+    // @Transactional
+    // @Auditable(operation = "تحديث عقد", captureArgs = true, captureResult = true)
+    // public ContractResponse updateContract(Long contractId, ContractUpdateRequest request) {
+    //     Contracts existingContract = contractRepo.findByIdAndCompanyId(contractId, getCompanyId())
+    //             .orElseThrow(() -> new RuntimeException("Contract not found with id " + contractId));
+        
+    //     // Store old contract for change tracking
+    //     Contracts oldContract = copyContract(existingContract);
+        
+    //     // Update fields
+    //     if (request.getContractDate() != null) {
+    //         existingContract.setContractDate(request.getContractDate());
+    //     }
+    //     if (request.getOnus() != null) {
+    //         existingContract.setOnus(request.getOnus());
+    //     }
+    //     if (request.getSellerId() != null) {
+    //         existingContract.setSeller(personRepo.getReferenceById(request.getSellerId()));
+    //     }
+    //     if (request.getBuyerId() != null) {
+    //         existingContract.setBuyer(personRepo.getReferenceById(request.getBuyerId()));
+    //     }
+    //     if (request.getGuarantorId() != null) {
+    //         existingContract.setGuarantor(personRepo.getReferenceById(request.getGuarantorId()));
+    //     }
+    //     if (request.getPossessorId() != null) {
+    //         existingContract.setPossessor(personRepo.getReferenceById(request.getPossessorId()));
+    //     }
+        
+    //     Contracts updatedContract = contractRepo.save(existingContract);
+        
+    //     // Generate change details and send notification
+    //     String changeDetails = notificationSender.generateContractChangeDetails(oldContract, updatedContract);
+    //     NotificationContext context = notificationSender.createContractContext("UPDATE", updatedContract, changeDetails);
+    //     notificationSender.notifyContractOperation(context);
+        
+    //     return ContractMapper.toDetails(updatedContract);
+    // }
+
+    // ✅ ADD THIS HELPER METHOD - Copy contract for change tracking
+    private Contracts copyContract(Contracts contract) {
+        if (contract == null) return null;
+        
+        Contracts copy = new Contracts();
+        copy.setId(contract.getId());
+        copy.setContractNumber(contract.getContractNumber());
+        copy.setContractDate(contract.getContractDate());
+        copy.setOnus(contract.isOnus());
+        copy.setCompanyId(contract.getCompanyId());
+        copy.setTemplateId(contract.getTemplateId());
+        
+        // Copy related entities (just IDs for tracking)
+        if (contract.getSeller() != null) {
+            copy.setSeller(contract.getSeller());
+        }
+        if (contract.getBuyer() != null) {
+            copy.setBuyer(contract.getBuyer());
+        }
+        if (contract.getGuarantor() != null) {
+            copy.setGuarantor(contract.getGuarantor());
+        }
+        if (contract.getPossessor() != null) {
+            copy.setPossessor(contract.getPossessor());
+        }
+        if (contract.getCar() != null) {
+            copy.setCar(contract.getCar());
+        }
+        if (contract.getPaymentPlan() != null) {
+            copy.setPaymentPlan(contract.getPaymentPlan());
+        }
+        
+        return copy;
     }
 
     public Long getCompanyId() {

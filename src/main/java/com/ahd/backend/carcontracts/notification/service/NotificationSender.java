@@ -11,6 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ahd.backend.carcontracts.contract.model.Contracts;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Objects;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -384,6 +389,178 @@ public void notifyPaymentOperation(NotificationContext context) {
     } catch (Exception e) {
         log.error(messageService.getMessage("notification.payment.log.failed", 
             context.getOperation(), context.getEntityId(), e.getMessage()));
+    }
+}
+
+/////////////////////////////contract ///////////////////////////////////////
+  // Add these helper methods in the class
+private String formatDate(LocalDate date) {
+    if (date == null) return "غير محدد";
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    return date.format(formatter);
+}
+
+private String getPersonName(Person person) {
+    if (person == null) return "غير محدد";
+    return getPersonFullName(person);
+}
+
+public NotificationContext createContractContext(String operation, Contracts contract) {
+    return createContractContext(operation, contract, null);
+}
+
+public NotificationContext createContractContext(String operation, Contracts contract, String changeDetails) {
+    String titleKey = "notification.contract." + operation.toLowerCase() + ".title";
+    String bodyKey = "notification.contract." + operation.toLowerCase() + ".body";
+    
+    String buyerName = contract.getBuyer() != null ? 
+        getPersonFullName(contract.getBuyer()) : "غير محدد";
+    
+    String title = messageService.getMessage(titleKey);
+    String message;
+    
+    if ("UPDATE".equals(operation) && changeDetails != null && !changeDetails.isEmpty()) {
+        message = messageService.getMessage(bodyKey, contract.getContractNumber(), changeDetails);
+    } else if ("CREATE".equals(operation)) {
+        message = messageService.getMessage(bodyKey, buyerName, contract.getContractNumber());
+    } else if ("DELETE".equals(operation)) {
+        message = messageService.getMessage(bodyKey, buyerName, contract.getContractNumber());
+    } else {
+        message = messageService.getMessage(bodyKey, contract.getContractNumber(), changeDetails != null ? changeDetails : "");
+    }
+    
+    return NotificationContext.builder()
+            .operation(operation)
+            .title(title)
+            .message(message)
+            .actionType("CONTRACT_" + operation)
+            .entity(contract)
+            .entityId(contract.getId())
+            .entityName("Contract")
+            .additionalData(Map.of(
+                "contractNumber", contract.getContractNumber(),
+                "changeDetails", changeDetails != null ? changeDetails : "",
+                "buyerName", buyerName
+            ))
+            .build();
+}
+
+public String generateContractChangeDetails(Contracts oldContract, Contracts newContract) {
+    List<String> changes = new ArrayList<>();
+    
+    // Check contract date change
+    if (!Objects.equals(oldContract.getContractDate(), newContract.getContractDate())) {
+        changes.add(messageService.getMessage("notification.contract.change.contractDate",
+            formatDate(oldContract.getContractDate()),
+            formatDate(newContract.getContractDate())));
+    }
+    
+    // Check onus change
+    if (oldContract.isOnus() != newContract.isOnus()) {
+        changes.add(messageService.getMessage("notification.contract.change.onus",
+            oldContract.isOnus() ? "نعم" : "لا",
+            newContract.isOnus() ? "نعم" : "لا"));
+    }
+    
+    // Check seller change
+    Long oldSellerId = oldContract.getSeller() != null ? oldContract.getSeller().getId() : null;
+    Long newSellerId = newContract.getSeller() != null ? newContract.getSeller().getId() : null;
+    if (!Objects.equals(oldSellerId, newSellerId)) {
+        changes.add(messageService.getMessage("notification.contract.change.seller",
+            getPersonName(oldContract.getSeller()),
+            getPersonName(newContract.getSeller())));
+    }
+    
+    // Check buyer change
+    Long oldBuyerId = oldContract.getBuyer() != null ? oldContract.getBuyer().getId() : null;
+    Long newBuyerId = newContract.getBuyer() != null ? newContract.getBuyer().getId() : null;
+    if (!Objects.equals(oldBuyerId, newBuyerId)) {
+        changes.add(messageService.getMessage("notification.contract.change.buyer",
+            getPersonName(oldContract.getBuyer()),
+            getPersonName(newContract.getBuyer())));
+    }
+    
+    // Check guarantor change
+    Long oldGuarantorId = oldContract.getGuarantor() != null ? oldContract.getGuarantor().getId() : null;
+    Long newGuarantorId = newContract.getGuarantor() != null ? newContract.getGuarantor().getId() : null;
+    if (!Objects.equals(oldGuarantorId, newGuarantorId)) {
+        changes.add(messageService.getMessage("notification.contract.change.guarantor",
+            getPersonName(oldContract.getGuarantor()),
+            getPersonName(newContract.getGuarantor())));
+    }
+    
+    // Check possessor change
+    Long oldPossessorId = oldContract.getPossessor() != null ? oldContract.getPossessor().getId() : null;
+    Long newPossessorId = newContract.getPossessor() != null ? newContract.getPossessor().getId() : null;
+    if (!Objects.equals(oldPossessorId, newPossessorId)) {
+        changes.add(messageService.getMessage("notification.contract.change.possessor",
+            getPersonName(oldContract.getPossessor()),
+            getPersonName(newContract.getPossessor())));
+    }
+    
+    if (changes.isEmpty()) {
+        changes.add(messageService.getMessage("notification.contract.change.default"));
+    }
+    
+    return String.join("\n", changes);
+}
+
+public void notifyContractOperation(NotificationContext context) {
+    try {
+        AppUser currentUser = helper.getCurrentUser();
+        if (currentUser == null) {
+            log.warn(messageService.getMessage("notification.contract.error.no.user"));
+            return;
+        }
+        
+        Long companyId = helper.getCurrentCompanyId();
+        if (companyId == null) {
+            log.warn("No company context found for contract notification");
+            return;
+        }
+        
+        // Get users with FCM tokens in this company
+        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+        
+        if (companyUsers.isEmpty()) {
+            log.info(messageService.getMessage("notification.contract.error.no.token", companyId));
+            return;
+        }
+        
+        log.info(messageService.getMessage("notification.contract.log.sending",
+            context.getOperation(), companyUsers.size(), companyId));
+        
+        // ✅ FIX: Convert Map<String, Object> to Map<String, String>
+        Map<String, String> additionalData = new HashMap<>();
+        if (context.getAdditionalData() != null) {
+            context.getAdditionalData().forEach((k, v) -> 
+                additionalData.put(k, String.valueOf(v)));
+        }
+        
+        NotificationRequest request = NotificationRequest.builder()
+                .title(context.getTitle())
+                .message(context.getMessage())
+                .actionBy(currentUser.getEmail())
+                .actionType(context.getActionType())
+                .actionDate(LocalDateTime.now())
+                .companyId(companyId)
+                .targetUserIds(companyUsers.stream()
+                    .map(AppUser::getId)
+                    .collect(Collectors.toList()))
+                .additionalData(additionalData)  // ✅ Use the converted map
+                .build();
+        
+        notificationService.sendNotification(request);
+        
+        log.info(messageService.getMessage("notification.contract.log.success",
+            context.getOperation(),
+            String.valueOf(context.getEntityId())));
+            
+    } catch (Exception e) {
+        log.error(messageService.getMessage("notification.contract.log.failed",
+            context.getOperation(),
+            String.valueOf(context.getEntityId()),
+            e.getMessage()), e);
     }
 }
 }
