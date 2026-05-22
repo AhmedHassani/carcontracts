@@ -45,4 +45,7 @@ public class Authorization {
     @Column(name = "template_id")
     private Long templateId;
 
+    @Column(name = "is_change", nullable = false)
+    private boolean isChange = false; 
+
 }

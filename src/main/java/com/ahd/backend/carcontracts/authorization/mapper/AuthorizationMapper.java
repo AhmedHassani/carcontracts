@@ -22,6 +22,7 @@ public final class AuthorizationMapper {
                 .buyer(toPersonSummary(e.getBuyer()))
                 .car(toCarSummary(e.getCar()))
                 .templateId(e.getTemplateId())
+                .isChange(e.isChange())
                 .build();
     }
 

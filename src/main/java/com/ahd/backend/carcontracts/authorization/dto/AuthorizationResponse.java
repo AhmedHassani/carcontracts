@@ -17,6 +17,7 @@ public class AuthorizationResponse {
     private PersonSummary buyer;
     private CarSummary car;
     private Long templateId;
+    private boolean isChange;
 
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     public static class PersonSummary {
