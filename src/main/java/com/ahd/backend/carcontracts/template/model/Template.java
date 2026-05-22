@@ -1,0 +1,48 @@
+package com.ahd.backend.carcontracts.template.model;
+
+import com.ahd.backend.carcontracts.company.model.Company;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "template", indexes = { @Index(name = "ix_template_company_id", columnList = "company_id") })
+public class Template {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String name;
+
+//    @Column(name = "imageKey", length = 1024)
+//    private String imageKey;
+
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("zIndex ASC, id ASC")
+    @Builder.Default
+    private List<TemplateField> fields = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false)
+    private Company company;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+}

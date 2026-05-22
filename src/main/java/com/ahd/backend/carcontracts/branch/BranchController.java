@@ -1,0 +1,29 @@
+package com.ahd.backend.carcontracts.branch;
+
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("${application.api.base-path}/branches")
+@RequiredArgsConstructor
+public class BranchController {
+
+    private final BranchService branchService;
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('CREATE_BRANCH') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<BranchResponseDTO> create(@RequestBody BranchRequestDTO dto) {
+        return ResponseEntity.ok(branchService.createBranch(dto));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('GET_BRANCH') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<BranchResponseDTO>> getAll() {
+        return ResponseEntity.ok(branchService.getAllBranches());
+    }
+}

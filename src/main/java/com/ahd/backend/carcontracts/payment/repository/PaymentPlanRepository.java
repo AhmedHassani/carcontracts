@@ -1,0 +1,141 @@
+package com.ahd.backend.carcontracts.payment.repository;
+
+
+import com.ahd.backend.carcontracts.payment.enums.PaymentStatus;
+import com.ahd.backend.carcontracts.payment.enums.PaymentType;
+import com.ahd.backend.carcontracts.payment.model.PaymentPlan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface PaymentPlanRepository extends JpaRepository<PaymentPlan, Long> {
+
+//    Page<PaymentPlan> findByCompanyId(Long companyId);
+    Optional<PaymentPlan> findByIdAndCompanyId(Long id , Long companyId);
+
+//    List<PaymentPlan> findByStatusAndCompanyId(PaymentStatus status , Long companyId);
+
+
+    @Query("""
+       SELECT p
+       FROM PaymentPlan p
+       LEFT JOIN FETCH p.installments
+       WHERE p.id = :id
+         AND p.companyId = :companyId
+       """)
+    Optional<PaymentPlan> findByIdAndCompanyIdWithInstallments(@Param("id") Long id,
+                                                               @Param("companyId") Long companyId);
+
+    @Query("""
+       SELECT COUNT(p)
+       FROM PaymentPlan p
+       WHERE p.status = :status
+         AND p.createdAt BETWEEN :start AND :end
+         AND p.companyId = :companyId
+       """)
+    long countByStatusAndDateRange(@Param("status") PaymentStatus status,
+                                   @Param("start") LocalDateTime start,
+                                   @Param("end") LocalDateTime end,
+                                   @Param("companyId") Long companyId);
+    @Query("""
+       SELECT COUNT(p)
+       FROM PaymentPlan p
+       WHERE p.status = :status
+         AND p.complete_date BETWEEN :start AND :end
+         AND p.companyId = :companyId
+       """)
+    long countByStatusAndDateRangeCompleted(@Param("status") PaymentStatus status,
+                                   @Param("start") LocalDate start,
+                                   @Param("end") LocalDate end,
+                                   @Param("companyId") Long companyId);
+                                   
+  //version 1
+  //   @Query("""
+  //  SELECT COALESCE(SUM(p.totalAmount), 0)
+  //  FROM PaymentPlan p
+  //  WHERE p.status = :status
+  //    AND p.paymentType =:paymentType
+  //    AND p.createdAt BETWEEN :start AND :end
+  //    AND p.companyId = :companyId
+  //  """)
+  //   BigDecimal summationByStatusAndDateRangeCompleted(
+  //           @Param("status") PaymentStatus status,
+  //           @Param("paymentType") PaymentType paymentType,
+  //           @Param("start") LocalDateTime start,
+  //           @Param("end") LocalDateTime end,
+  //           @Param("companyId") Long companyId
+  //   );
+    //version 2
+//    @Query("""
+//    SELECT COALESCE(SUM(p.totalAmount), 0)
+//    FROM PaymentPlan p 
+//    WHERE p.companyId = :companyId
+//    AND (
+//         (COALESCE(p.intInstallment, 0) != 0 AND p.createdAt BETWEEN :start AND :end)
+//         OR
+//         EXISTS (
+//             SELECT 1 FROM Installment i 
+//             WHERE i.paymentPlan = p 
+//             AND i.status != 'PENDING' AND  i.status != 'OVERDUE'
+//             AND i.paidDate BETWEEN CAST(:start AS date) AND CAST(:end AS date)
+//         )
+//    )
+//    """)
+// BigDecimal summationByStatusAndDateRangeCompleted(
+//         @Param("start") LocalDateTime start,
+//         @Param("end") LocalDateTime end,
+//         @Param("companyId") Long companyId
+// );
+    //version 3
+@Query(value = """
+    SELECT COALESCE(
+        (SELECT SUM(CAST(ca.car_price AS DECIMAL(18,2)))
+         FROM car ca 
+         JOIN car_contracts co ON co.car_id = ca.id
+         WHERE ca.current_possessor_id IS NOT NULL
+           AND co.onus = 0
+           AND co.contract_date BETWEEN :start AND :end
+           AND co.company_id = :companyId), 0)
+        +
+        COALESCE(
+        (SELECT SUM(pa.total_amount)
+         FROM car_contracts co 
+         JOIN payment_plans pa ON co.payment_plan_id = pa.id
+         WHERE co.contract_date BETWEEN :start AND :end
+           AND co.onus = 1
+           AND co.company_id = :companyId), 0) AS GrandTotal
+    """, nativeQuery = true)
+BigDecimal summationByStatusAndDateRangeCompleted(
+    @Param("start") LocalDateTime start,
+    @Param("end") LocalDateTime end,
+    @Param("companyId") Long companyId
+);
+
+    
+    @Query("""
+   SELECT COALESCE(SUM(p.intInstallment), 0)
+   FROM PaymentPlan p
+   WHERE p.paymentType =:paymentType
+     AND p.createdAt BETWEEN :start AND :end
+     AND p.companyId = :companyId
+   """)
+    BigDecimal summationinitPaymentByDateRangeCompleted(
+            @Param("paymentType") PaymentType paymentType,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("companyId") Long companyId
+    );
+
+
+
+}
