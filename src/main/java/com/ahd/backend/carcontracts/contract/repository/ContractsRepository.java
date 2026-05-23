@@ -14,7 +14,8 @@ import java.util.Optional;
 
 public interface ContractsRepository extends JpaRepository<Contracts, Long>, JpaSpecificationExecutor<Contracts> {
 
-@Query("SELECT c.contractNumber FROM Contracts c WHERE c.companyId = :companyId AND c.contractNumber IS NOT NULL ORDER BY c.id DESC LIMIT 1")
+// This fetches ALL contracts (deleted AND not deleted)
+@Query(value = "SELECT TOP 1 c.contract_number FROM car_contracts c WHERE c.company_id = :companyId AND c.contract_number IS NOT NULL ORDER BY CAST(c.contract_number AS BIGINT) DESC", nativeQuery = true)
 String findLastContractNumberByCompanyId(@Param("companyId") Long companyId);
 
     Contracts findByPaymentPlanId(Long id);
