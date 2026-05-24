@@ -4,6 +4,7 @@ import com.ahd.backend.carcontracts.authorization.dto.AuthorizationResponse;
 import com.ahd.backend.carcontracts.authorization.dto.AuthorizationSearchCriteria;
 import com.ahd.backend.carcontracts.authorization.dto.AuthorizationUpsertRequest;
 import com.ahd.backend.carcontracts.authorization.dto.AuthorizationUpdateRequest;
+import com.ahd.backend.carcontracts.authorization.dto.AuthorizationHistoryResponse;
 import com.ahd.backend.carcontracts.authorization.mapper.AuthorizationMapper;
 import com.ahd.backend.carcontracts.authorization.model.AuthorizationHistory;
 import com.ahd.backend.carcontracts.authorization.service.AuthorizationService;
@@ -85,49 +86,13 @@ public class AuthorizationController {
                 .build());
     }
 
-    // NEW ENDPOINT: Update buyer and set is_change flag to true
-    @PutMapping("/{id}/change-buyer")
-    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<AuthorizationResponse>> changeBuyer(
-            @PathVariable Long id,
-            @Valid @RequestBody AuthorizationUpdateRequest request) {
-        request.setAuthorizationId(id);
-        AuthorizationResponse result = service.updateIsChange(request);
-        return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()
-                .success(true)
-                .message("Buyer changed successfully and is_change flag set to true")
-                .data(result)
-                .code(200)
-                .date(Instant.now())
-                .build());
-    }
+    
 
-    // Alternative simpler endpoint: Change buyer with just the new buyer ID
-    @PutMapping("/{id}/change-buyer/{newBuyerId}")
-    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<AuthorizationResponse>> changeBuyerSimple(
-            @PathVariable Long id,
-            @PathVariable Long newBuyerId) {
-        AuthorizationUpdateRequest request = AuthorizationUpdateRequest.builder()
-                .authorizationId(id)
-                .newBuyerId(newBuyerId)
-                .build();
-        AuthorizationResponse result = service.updateIsChange(request);
-        return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()
-                .success(true)
-                .message("Buyer changed successfully and is_change flag set to true")
-                .data(result)
-                .code(200)
-                .date(Instant.now())
-                .build());
-    }
-
-    // NEW ENDPOINT: Get change history for an authorization
     @GetMapping("/{id}/history")
     @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<List<AuthorizationHistory>>> getChangeHistory(@PathVariable Long id) {
-        List<AuthorizationHistory> history = service.getChangeHistory(id);
-        return ResponseEntity.ok(ApiResponse.<List<AuthorizationHistory>>builder()
+    public ResponseEntity<ApiResponse<List<AuthorizationHistoryResponse>>> getChangeHistory(@PathVariable Long id) {
+        List<AuthorizationHistoryResponse> history = service.getChangeHistory(id);
+        return ResponseEntity.ok(ApiResponse.<List<AuthorizationHistoryResponse>>builder()
                 .success(true)
                 .message("Change history retrieved successfully")
                 .data(history)
@@ -136,18 +101,22 @@ public class AuthorizationController {
                 .build());
     }
 
-    @PutMapping("/{id}/template/{templateId}")
-    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiResponse<AuthorizationResponse>> updatetemplateId(
-            @PathVariable Long id, 
-            @PathVariable Long templateId) {
-        AuthorizationResponse result = service.updatetemplateId(id, templateId);
-        return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()
-                .success(true)
-                .message("Template ID updated successfully")
-                .data(result)
-                .code(200)
-                .date(Instant.now())
-                .build());
-    }
+  @PutMapping("/{id}/change-buyer/{newBuyerId}")
+@PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+public ResponseEntity<ApiResponse<AuthorizationResponse>> changeBuyerSimple(  
+        @PathVariable Long id,
+        @PathVariable Long newBuyerId) {
+    AuthorizationUpdateRequest request = AuthorizationUpdateRequest.builder()
+            .authorizationId(id)
+            .newBuyerId(newBuyerId)
+            .build();
+    AuthorizationResponse result = service.updateIsChange(request);  
+    return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()  
+            .success(true)
+            .message("Buyer changed successfully and is_change flag set to true")
+            .data(result)
+            .code(200)
+            .date(Instant.now())
+            .build());
+}
 }

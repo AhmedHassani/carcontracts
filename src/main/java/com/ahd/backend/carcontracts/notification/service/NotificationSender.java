@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ahd.backend.carcontracts.contract.model.Contracts;
 import java.time.LocalDate;
+import com.ahd.backend.carcontracts.authorization.model.Authorization;  // ✅ ADD THIS IMPORT
+
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -558,6 +560,183 @@ public void notifyContractOperation(NotificationContext context) {
             
     } catch (Exception e) {
         log.error(messageService.getMessage("notification.contract.log.failed",
+            context.getOperation(),
+            String.valueOf(context.getEntityId()),
+            e.getMessage()), e);
+    }
+}
+
+// ==================== AUTHORIZATION NOTIFICATIONS ====================
+
+private String getAuthorizationBuyerName(Authorization authorization) {
+    if (authorization.getBuyer() == null) return "غير محدد";
+    return getPersonFullName(authorization.getBuyer());
+}
+
+private String getAuthorizationCarInfo(Authorization authorization) {
+    if (authorization.getCar() == null) return "غير محدد";
+    Car car = authorization.getCar();
+    String carInfo = "";
+    if (car.getName() != null) carInfo += car.getName();
+    if (car.getPlateNumber() != null) {
+        if (!carInfo.isEmpty()) carInfo += " - ";
+        carInfo += car.getPlateNumber();
+    }
+    return carInfo.isEmpty() ? "غير محدد" : carInfo;
+}
+
+public NotificationContext createAuthorizationContext(String operation, Authorization authorization) {
+    return createAuthorizationContext(operation, authorization, null);
+}
+
+public NotificationContext createAuthorizationContext(String operation, Authorization authorization, String changeDetails) {
+    String titleKey = "notification.authorization." + operation.toLowerCase() + ".title";
+    String bodyKey = "notification.authorization." + operation.toLowerCase() + ".body";
+    
+    String buyerName = getAuthorizationBuyerName(authorization);
+    String carInfo = getAuthorizationCarInfo(authorization);
+    
+    String title = messageService.getMessage(titleKey);
+    String message;
+    
+    if ("BUYER_CHANGE".equals(operation)) {
+        message = messageService.getMessage("notification.authorization.buyer.change.body",
+            authorization.getAuthorizationNumber(),
+            changeDetails != null ? changeDetails : "");
+    } else if ("UPDATE".equals(operation) && changeDetails != null && !changeDetails.isEmpty()) {
+        message = messageService.getMessage(bodyKey, authorization.getAuthorizationNumber(), changeDetails);
+    } else if ("CREATE".equals(operation)) {
+        message = messageService.getMessage(bodyKey, buyerName, carInfo, authorization.getAuthorizationNumber());
+    } else if ("DELETE".equals(operation)) {
+        message = messageService.getMessage(bodyKey, buyerName, carInfo, authorization.getAuthorizationNumber());
+    } else {
+        message = messageService.getMessage(bodyKey, authorization.getAuthorizationNumber(), changeDetails != null ? changeDetails : "");
+    }
+    
+    Map<String, Object> additionalData = new HashMap<>();
+    additionalData.put("authorizationNumber", authorization.getAuthorizationNumber());
+    additionalData.put("buyerName", buyerName);
+    additionalData.put("carInfo", carInfo);
+    additionalData.put("operation", operation);
+    if (changeDetails != null) {
+        additionalData.put("changeDetails", changeDetails);
+    }
+    
+    return NotificationContext.builder()
+            .operation(operation)
+            .title(title)
+            .message(message)
+            .actionType("AUTHORIZATION_" + operation)
+            .entity(authorization)
+            .entityId(authorization.getId())
+            .entityName("Authorization")
+            .additionalData(additionalData)
+            .build();
+}
+
+public String generateAuthorizationChangeDetails(Authorization oldAuth, Authorization newAuth) {
+    List<String> changes = new ArrayList<>();
+    
+    // Check authorization number change
+    if (!Objects.equals(oldAuth.getAuthorizationNumber(), newAuth.getAuthorizationNumber())) {
+        changes.add(messageService.getMessage("notification.authorization.change.number",
+            oldAuth.getAuthorizationNumber(), newAuth.getAuthorizationNumber()));
+    }
+    
+    // Check authorization date change
+    if (!Objects.equals(oldAuth.getAuthorizationDate(), newAuth.getAuthorizationDate())) {
+        changes.add(messageService.getMessage("notification.authorization.change.date",
+            formatDate(oldAuth.getAuthorizationDate()),
+            formatDate(newAuth.getAuthorizationDate())));
+    }
+    
+    // Check company agent change
+    if (!Objects.equals(oldAuth.getCompanyAgent(), newAuth.getCompanyAgent())) {
+        changes.add(messageService.getMessage("notification.authorization.change.agent",
+            oldAuth.getCompanyAgent() != null ? oldAuth.getCompanyAgent() : "غير محدد",
+            newAuth.getCompanyAgent() != null ? newAuth.getCompanyAgent() : "غير محدد"));
+    }
+    
+    // Check buyer change
+    Long oldBuyerId = oldAuth.getBuyer() != null ? oldAuth.getBuyer().getId() : null;
+    Long newBuyerId = newAuth.getBuyer() != null ? newAuth.getBuyer().getId() : null;
+    if (!Objects.equals(oldBuyerId, newBuyerId)) {
+        changes.add(messageService.getMessage("notification.authorization.change.buyer",
+            getPersonName(oldAuth.getBuyer()),
+            getPersonName(newAuth.getBuyer())));
+    }
+    
+    // Check car change
+    Long oldCarId = oldAuth.getCar() != null ? oldAuth.getCar().getId() : null;
+    Long newCarId = newAuth.getCar() != null ? newAuth.getCar().getId() : null;
+    if (!Objects.equals(oldCarId, newCarId)) {
+        String oldCarInfo = oldAuth.getCar() != null ? 
+            (oldAuth.getCar().getName() + " - " + oldAuth.getCar().getPlateNumber()) : "غير محدد";
+        String newCarInfo = newAuth.getCar() != null ? 
+            (newAuth.getCar().getName() + " - " + newAuth.getCar().getPlateNumber()) : "غير محدد";
+        changes.add(messageService.getMessage("notification.authorization.change.car", oldCarInfo, newCarInfo));
+    }
+    
+    if (changes.isEmpty()) {
+        changes.add(messageService.getMessage("notification.authorization.change.default"));
+    }
+    
+    return String.join("\n", changes);
+}
+
+public void notifyAuthorizationOperation(NotificationContext context) {
+    try {
+        AppUser currentUser = helper.getCurrentUser();
+        if (currentUser == null) {
+            log.warn(messageService.getMessage("notification.authorization.error.no.user"));
+            return;
+        }
+        
+        Long companyId = helper.getCurrentCompanyId();
+        if (companyId == null) {
+            log.warn("No company context found for authorization notification");
+            return;
+        }
+        
+        // Get users with FCM tokens in this company
+        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+        
+        if (companyUsers.isEmpty()) {
+            log.info(messageService.getMessage("notification.authorization.error.no.token", companyId));
+            return;
+        }
+        
+        log.info(messageService.getMessage("notification.authorization.log.sending",
+            context.getOperation(), companyUsers.size(), companyId));
+        
+        // Convert Map<String, Object> to Map<String, String>
+        Map<String, String> additionalData = new HashMap<>();
+        if (context.getAdditionalData() != null) {
+            context.getAdditionalData().forEach((k, v) -> 
+                additionalData.put(k, String.valueOf(v)));
+        }
+        
+        NotificationRequest request = NotificationRequest.builder()
+                .title(context.getTitle())
+                .message(context.getMessage())
+                .actionBy(currentUser.getEmail())
+                .actionType(context.getActionType())
+                .actionDate(LocalDateTime.now())
+                .companyId(companyId)
+                .targetUserIds(companyUsers.stream()
+                    .map(AppUser::getId)
+                    .collect(Collectors.toList()))
+                .additionalData(additionalData)
+                .build();
+        
+        notificationService.sendNotification(request);
+        
+        log.info(messageService.getMessage("notification.authorization.log.success",
+            context.getOperation(),
+            String.valueOf(context.getEntityId())));
+            
+    } catch (Exception e) {
+        log.error(messageService.getMessage("notification.authorization.log.failed",
             context.getOperation(),
             String.valueOf(context.getEntityId()),
             e.getMessage()), e);
