@@ -119,4 +119,18 @@ public ResponseEntity<ApiResponse<AuthorizationResponse>> changeBuyerSimple(
             .date(Instant.now())
             .build());
 }
+    @PutMapping("/Authid/{id}/templateId/{templateId}")
+    @PreAuthorize("hasRole('ROLE_COMPANY') or hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<AuthorizationResponse>> updatetemplateId(
+            @PathVariable Long id, 
+            @PathVariable Long templateId) {
+        AuthorizationResponse result = service.updatetemplateId(id, templateId);
+        return ResponseEntity.ok(ApiResponse.<AuthorizationResponse>builder()
+                .success(true)
+                .message("Template ID updated successfully")
+                .data(result)
+                .code(200)
+                .date(Instant.now())
+                .build());
+    }
 }
