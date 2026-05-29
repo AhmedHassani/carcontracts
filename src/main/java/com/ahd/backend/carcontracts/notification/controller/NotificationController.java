@@ -63,50 +63,68 @@ public class NotificationController {
     }
 
     // ✅ Register FCM Token endpoint - Using simple Map response
-    @PostMapping("/register-token")
-    public ResponseEntity<Map<String, Object>> registerFcmToken(@RequestBody Map<String, String> request) {
-       //log.info("📱 Registering FCM token endpoint called");
+  @PostMapping("/register-token")
+public ResponseEntity<Map<String, Object>> registerFcmToken(@RequestBody Map<String, String> request) {
+    Map<String, Object> response = new HashMap<>();
+    
+    try {
+        String token = request.get("token");
+        log.info("📱 Registering token request received");
         
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            String token = request.get("token");
-           //log.info("📱 Token received: {}", token != null ? token.substring(0, Math.min(token.length(), 30)) + "..." : "null");
-            
-            // Get current//logged-in user
-            AppUser currentUser = helper.getCurrentUser();
-            if (currentUser == null) {
-               //log.warn("⚠️ No user authenticated");
-                response.put("success", false);
-                response.put("message", "User not authenticated");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-            }
-            
-           //log.info("👤 User found: {} (ID: {})", currentUser.getEmail(), currentUser.getId());
-            
-            if (token != null && !token.isEmpty()) {
-                // Save token to user record
-                currentUser.setFcmToken(token);
-                userRepository.save(currentUser);
-               //log.info("✅ FCM token saved successfully for user: {}", currentUser.getEmail());
-               //log.info("📱 Token type: {}", token.contains(":APA91b") ? "Mobile Token" : "Web Token");
-                
-                response.put("success", true);
-                response.put("message", "Token registered successfully");
-                response.put("tokenType", token.contains(":APA91b") ? "mobile" : "web");
-                return ResponseEntity.ok(response);
-            } else {
-               //log.warn("⚠️ Received empty or null token");
-                response.put("success", false);
-                response.put("message", "Invalid token");
-                return ResponseEntity.badRequest().body(response);
-            }
-            
-        } catch (Exception e) {
-           //log.error("❌ Error registering token: {}", e.getMessage(), e);
+        // Get current logged-in user
+        AppUser currentUser = helper.getCurrentUser();
+        if (currentUser == null) {
+            log.warn("⚠️ No user authenticated");
             response.put("success", false);
-            response.put("message", "Internal server error: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            response.put("message", "User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
+        
+        log.info("👤 User found: {} (ID: {}, Username: {})", 
+            currentUser.getEmail(), currentUser.getId(), currentUser.getUsername());
+        
+        // Check if user is Super Admin
+        boolean isSuperAdmin = currentUser.getRoles().stream()
+            .anyMatch(role -> role.getName().equals("ROLE_SUPER_ADMIN"));
+        log.info("👑 Is Super Admin: {}", isSuperAdmin);
+        
+        if (token != null && !token.isEmpty()) {
+            log.info("💾 Saving token for user ID: {}", currentUser.getId());
+            log.info("📝 Token preview: {}", token.substring(0, Math.min(token.length(), 50)) + "...");
+            
+            // Save token to user record
+            currentUser.setFcmToken(token);
+            
+            // Try to save and log the result
+            AppUser savedUser = userRepository.save(currentUser);
+            log.info("✅ User saved successfully, token in DB: {}", savedUser.getFcmToken() != null);
+            
+            response.put("success", true);
+            response.put("message", "Token registered successfully");
+            response.put("userId", currentUser.getId());
+            response.put("isSuperAdmin", isSuperAdmin);
+            return ResponseEntity.ok(response);
+        } else {
+            log.warn("⚠️ Received empty or null token");
+            response.put("success", false);
+            response.put("message", "Invalid token");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+    } catch (Exception e) {
+        log.error("❌ Error registering token: {}", e.getMessage(), e);
+        
+        // Log the root cause
+        Throwable rootCause = e;
+        while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
+            rootCause = rootCause.getCause();
+        }
+        log.error("❌ Root cause: {}", rootCause.getMessage());
+        
+        response.put("success", false);
+        response.put("message", "Internal server error: " + e.getMessage());
+        response.put("rootCause", rootCause.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+}
 }

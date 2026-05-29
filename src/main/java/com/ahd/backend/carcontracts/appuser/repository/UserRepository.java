@@ -47,4 +47,7 @@ public interface UserRepository extends JpaRepository<AppUser, Long> {
            "JOIN CompanyUser cu ON cu.user.id = u.id " +
            "WHERE cu.company.id = :companyId AND u.fcmToken IS NOT NULL")
     List<AppUser> findByCompanyIdAndFcmTokenIsNotNull(@Param("companyId") Long companyId);
+
+    @Query("SELECT u FROM AppUser u WHERE u.fcmToken IS NOT NULL")
+    List<AppUser> findByFcmTokenIsNotNull();
 }

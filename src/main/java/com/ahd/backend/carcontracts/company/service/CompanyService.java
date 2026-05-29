@@ -1,4 +1,5 @@
 package com.ahd.backend.carcontracts.company.service;
+
 import com.ahd.backend.carcontracts.appuser.services.RolePermissionService;
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.util.Helper;
@@ -20,7 +21,9 @@ import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.company.repository.CompanyUserRepository;
 import com.ahd.backend.carcontracts.exception.ConflictException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
-// import com.ahd.backend.carcontracts.notification.model.AppNotification;
+import com.ahd.backend.carcontracts.notification.dto.NotificationContext;
+import com.ahd.backend.carcontracts.notification.service.NotificationSender;
+import com.ahd.backend.carcontracts.notification.service.MessageService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
 import jakarta.persistence.criteria.Expression;
@@ -36,15 +39,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-//import com.ahd.backend.carcontracts.notification.service.NotificationService;
-
 
 import static com.ahd.backend.carcontracts.company.mapper.CompanyMapper.toCreateUserRequest;
 
@@ -61,20 +62,43 @@ public class CompanyService {
     private final UserRepository userRepository;
     private final CompanyMapper companyMapper;
     private final PasswordEncoder passwordEncoder;
-    //private final NotificationService notificationService;
     private final RolePermissionService rolePermissionService;
     private final Helper helper;
     private final EntityManager em;
+    
+    // ✅ ADD NOTIFICATION DEPENDENCIES
+    private final NotificationSender notificationSender;
+    private final MessageService messageService;
+
+    // ==================== HELPER METHODS FOR CHANGE TRACKING ====================
+    
+    /**
+     * Copy company for change tracking
+     */
+    private Company copyCompany(Company company) {
+        if (company == null) return null;
+        
+        Company copy = new Company();
+        copy.setId(company.getId());
+        copy.setCompanyName(company.getCompanyName());
+        copy.setOwnerName(company.getOwnerName());
+        copy.setOwnerContact(company.getOwnerContact());
+        copy.setUserCount(company.getUserCount());
+        copy.setCompanyLocation(company.getCompanyLocation());
+        copy.setSubscriptionDate(company.getSubscriptionDate());
+        copy.setExpirationDate(company.getExpirationDate());
+        copy.setStatus(company.getStatus());
+        copy.setCode(company.getCode());
+        copy.setPaymentCompanyType(company.getPaymentCompanyType());
+        
+        return copy;
+    }
 
     @Auditable(operation = "انشاء شركة", captureArgs = true, captureResult = true)
-    //notification
-    //savedCompany.getCompanyName()  قام المستخدم  ;helper.getCurrentUser.userName انشاء شركة
-    //to all company
     public CompanyResponse createCompany(CompanyRequest request) {
-        //log.info("Creating company: {}", request.companyName());
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
                 .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
-        var createUser = toCreateUserRequest(request,companyRole);
+        var createUser = toCreateUserRequest(request, companyRole);
         var user = authService.createUser(createUser);
         Company company = companyMapper.toEntity(request);
         company.setStatus(CompanyStatus.ACTIVE);
@@ -85,16 +109,11 @@ public class CompanyService {
                 .role(CompanyUserRole.OWNER)
                 .build();
         companyUserRepository.save(relation);
-//        notificationService.sendNotificationToDevice(
-//                "إضافة شركة جديدة",
-//                "تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح"
-//        );
-//        AppNotification notif = new AppNotification();
-//        notif.setTitle("إضافة شركة جديدة");
-//        notif.setBody("تم إضافة شركة " + savedCompany.getCompanyName() + " بنجاح");
-//        notif.setNotificationDate(LocalDateTime.now());
-//        notif.setPermisson("ADMIN");
-//        notificationService.insertNotificationAsync(notif);
+        
+        // ✅ ADD NOTIFICATION FOR COMPANY CREATION
+        NotificationContext context = notificationSender.createCompanyContext("CREATE", savedCompany);
+        notificationSender.notifyCompanyOperation(context);
+        
         return companyMapper.toResponse(
                 savedCompany,
                 request.companyPassword(),
@@ -103,11 +122,10 @@ public class CompanyService {
         );
     }
 
-
-        public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
+    public ApiResponse<List<CompanyResponse>> getAllCompanies(CompanySearchCriteria criteria, Pageable pageable) {
         Specification<Company> spec = CompanySpecification.buildSpecification(criteria);
         Page<CompanyResponse> pageResult = companyRepository
-                .findAll(spec,pageable).map(this::mapToDto);
+                .findAll(spec, pageable).map(this::mapToDto);
         return ApiResponse.<List<CompanyResponse>>builder()
                 .success(true)
                 .message("OK")
@@ -131,13 +149,9 @@ public class CompanyService {
      * Mapping: Entity → ResponseDTO
      * -------------------------------------------------- */
     private CompanyResponse mapToDto(Company company) {
-//        System.out.println("companyId = " + company.getId());
-
         CompanyUser ownerLink = companyUserRepository
                 .findByCompanyIdAndRole(company.getId(), CompanyUserRole.OWNER)
                 .orElse(null);
-
-//        System.out.println("ownerLink = " + String.valueOf(ownerLink));
 
         return CompanyResponse.builder()
                 .id(company.getId())
@@ -158,12 +172,13 @@ public class CompanyService {
 
     @Transactional
     @Auditable(operation = "تحديث معلومات الشركة", captureArgs = true, captureResult = true)
-    //notification
-    //saved.getCompanyName()  قام المستخدم  ;helper.getCurrentUser.userName انشاء شركة
-    //to all company
     public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
         final Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
+        
+        // ✅ Store old company for change tracking
+        Company oldCompany = copyCompany(company);
+        
         applyBasicUpdates(company, request);
         boolean expirationChanged = applyDateUpdates(company, request);
         if (expirationChanged) {
@@ -172,17 +187,20 @@ public class CompanyService {
         AppUser user = updateOwnerUser(company, request);
         userRepository.save(user);
         Company saved = companyRepository.save(company);
-//        notificationService.sendNotificationToDevice(
-//                "التعديل معلومات الشركة",
-//                "لقد تغير معلومات شركة" + company.getCompanyName() + "بنجاح "
-//        );
-//        AppNotification notif = new AppNotification();
-//        notif.setTitle("لتعديل معلومات الشركة");
-//        notif.setBody("لقد تغير معلومات شركة" + company.getCompanyName() + " بنجاح");
-//        notif.setNotificationDate(LocalDateTime.now());
-//      //  notif.setCompany(company);
-//        notif.setPermisson("ADMIN");
-//        notificationService.insertNotificationAsync(notif);
+        
+        // ✅ ADD NOTIFICATION FOR COMPANY UPDATE
+        String changeDetails = notificationSender.generateCompanyChangeDetails(oldCompany, saved);
+        NotificationContext context = notificationSender.createCompanyContext("UPDATE", saved, changeDetails);
+        notificationSender.notifyCompanyOperation(context);
+        
+        // ✅ ADD SEPARATE NOTIFICATION FOR STATUS CHANGE IF STATUS CHANGED
+        if (oldCompany.getStatus() != saved.getStatus()) {
+            String statusChangeDetails = messageService.getMessage("notification.company.status.details",
+                oldCompany.getStatus() != null ? oldCompany.getStatus().toString() : "غير محدد",
+                saved.getStatus() != null ? saved.getStatus().toString() : "غير محدد");
+            NotificationContext statusContext = notificationSender.createCompanyContext("STATUS_CHANGE", saved, statusChangeDetails);
+            notificationSender.notifyCompanyOperation(statusContext);
+        }
 
         return companyMapper.toResponse(
                 saved,
@@ -221,46 +239,27 @@ public class CompanyService {
         return user;
     }
 
-
     private boolean applyDateUpdates(Company company, UpdateCompanyRequest req) {
         if (req.expirationDate().isEmpty()) return false;
         company.setExpirationDate(req.expirationDate().get());
         company.setSubscriptionDate(LocalDate.now());
-        // notificationService.sendNotificationToDevice(
-        //         "تغير تاريخ نفاذ الصلاحية",
-        //         "تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName()
-        // );
-        // AppNotification notif = new AppNotification();
-        // notif.setTitle("تغير تاريخ نفاذ الصلاحية");
-        // notif.setBody("تم تغير تاريخ انتهاء صلاحية شركة " + company.getCompanyName() );
-        // notif.setNotificationDate(LocalDateTime.now());
-        // //  notif.setCompany(company);
-        // notif.setPermisson("ADMIN");
-        // notificationService.insertNotificationAsync(notif);
-
         return true;
     }
 
     @Transactional
     @Auditable(operation = "حذف الشركة", captureArgs = true, captureResult = true)
-    //notification
-    //id قام المستخدم  ;helper.getCurrentUser.userName حذف الشركة رقم
     public ApiResponse<Void> deleteCompany(Long id) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + id));
-
+        
+        // ✅ Store company info before deletion for notification
+        Company companyToDelete = copyCompany(company);
+        
         companyRepository.delete(company);
-
-//        notificationService.sendNotificationToDevice(
-//                "حذف شركة",
-//                "تم حذف شركة " + company.getCompanyName() + " بنجاح"
-//        );
-//        var notif = new AppNotification();
-//        notif.setTitle("حذف شركة");
-//        notif.setBody("تم حذف شركة " + company.getCompanyName() + " بنجاح");
-//        notif.setNotificationDate(LocalDateTime.now());
-//        notif.setPermisson("ADMIN");
-//        notificationService.insertNotificationAsync(notif);
+        
+        // ✅ ADD NOTIFICATION FOR COMPANY DELETION
+        NotificationContext context = notificationSender.createCompanyContext("DELETE", companyToDelete);
+        notificationSender.notifyCompanyOperation(context);
 
         return ApiResponse.<Void>builder()
                 .success(true)
@@ -270,50 +269,47 @@ public class CompanyService {
                 .build();
     }
 
-
     @Scheduled(cron = "0 0 0 * * ?")
     public void checkExpiredCompanies() {
         LocalDate today = LocalDate.now();
         List<Company> expiredCompanies = companyRepository.findByExpirationDateBefore(today);
 
         for (Company company : expiredCompanies) {
+            Company oldCompany = copyCompany(company);
             company.setStatus(CompanyStatus.EXPIRED);
             companyRepository.save(company);
-
-            // notificationService.sendNotificationToDevice(
-            //         "انتهاء صلاحية ",
-            //         "لقد نفذت صلاحية شركة" + company.getCompanyName()
-            // );
+            
+            // ✅ ADD NOTIFICATION FOR COMPANY EXPIRATION
+            String statusChangeDetails = messageService.getMessage("notification.company.status.details",
+                oldCompany.getStatus() != null ? oldCompany.getStatus().toString() : "غير محدد",
+                CompanyStatus.EXPIRED.toString());
+            NotificationContext context = notificationSender.createCompanyContext("STATUS_CHANGE", company, statusChangeDetails);
+            notificationSender.notifyCompanyOperation(context);
         }
     }
+    
     /* ----------------------------------------------------
      * Add a user to a company
      * -------------------------------------------------- */
     @Transactional
     @Auditable(operation = "اضافة موظف للشركة", captureArgs = true, captureResult = true)
-    //notification
-    //request.companyId()  قام المستخدم  ;helper.getCurrentUser.userName اضافة موظف للشركة
-    //to all company
     public void addUserToCompany(AddUserToCompanyRequest request) {
-
         Company company = companyRepository.findById(request.companyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + request.companyId()));
-        if(!getCompanyId(request.companyId())){
+        if (!getCompanyId(request.companyId())) {
             throw new ResourceNotFoundException("Company authorization not found: " + request.companyId());
         }
         long currentUserCount = companyUserRepository.countByCompanyId(request.companyId());
         if (currentUserCount >= company.getUserCount()) {
             throw new ConflictException("The company has reached its maximum allowed users.");
         }
-//        Role companyRole = roleRepository.findByName("ROLE_STAFF")
-//                .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
+        
         var userInfo = CreateUserRequest.builder()
                 .email(request.email())
                 .password(request.password())
                 .username(request.username())
                 .fullName(request.fullName())
                 .phone(request.phone())
-//                .roleIds(Set.of(companyRole.getId()))
                 .roleIds(Collections.emptySet())
                 .build();
         var user = authService.createUser(userInfo);
@@ -325,6 +321,12 @@ public class CompanyService {
                 .build();
         companyUserRepository.save(companyUser);
         em.flush();
+        
+        // ✅ ADD NOTIFICATION FOR USER ADDED TO COMPANY
+        String userDetails = messageService.getMessage("notification.company.user.details",
+            request.fullName(), request.username(), request.email());
+        NotificationContext context = notificationSender.createCompanyContext("USER_ADD", company, userDetails);
+        notificationSender.notifyCompanyOperation(context);
     }
 
     @Transactional
@@ -332,39 +334,63 @@ public class CompanyService {
     public void removeUserFromCompany(Long companyId, Long userId) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        if(!getCompanyId(companyId)){
+        if (!getCompanyId(companyId)) {
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot remove the company owner");
         }
+        
+        String userName = companyUser.getUser().getFullName() != null ? 
+            companyUser.getUser().getFullName() : companyUser.getUser().getUsername();
+        
         companyUserRepository.delete(companyUser);
+        
+        // ✅ ADD NOTIFICATION FOR USER REMOVED FROM COMPANY
+        Company company = companyRepository.findById(companyId).orElse(null);
+        if (company != null) {
+            String userDetails = messageService.getMessage("notification.company.user.details",
+                userName, "", "");
+            NotificationContext context = notificationSender.createCompanyContext("USER_REMOVE", company, userDetails);
+            notificationSender.notifyCompanyOperation(context);
+        }
     }
-
 
     @Transactional
     @Auditable(operation = "تحديث صلاحيات المستخدم", captureArgs = true, captureResult = true)
     public void updateUserCompanyRole(Long companyId, Long userId, CompanyUserRole newRole) {
         CompanyUser companyUser = companyUserRepository.findByCompanyIdAndUserId(companyId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User is not associated with this company"));
-        if(!getCompanyId(companyId)){
+        if (!getCompanyId(companyId)) {
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         if (companyUser.getRole() == CompanyUserRole.OWNER) {
             throw new IllegalArgumentException("Cannot change the company owner's role");
         }
+        
+        String oldRoleName = companyUser.getRole() != null ? companyUser.getRole().toString() : "غير محدد";
+        String newRoleName = newRole.toString();
+        String userName = companyUser.getUser().getFullName() != null ? 
+            companyUser.getUser().getFullName() : companyUser.getUser().getUsername();
+        
         companyUser.setRole(newRole);
         companyUserRepository.save(companyUser);
+        
+        // ✅ ADD NOTIFICATION FOR USER ROLE UPDATED
+        Company company = companyRepository.findById(companyId).orElse(null);
+        if (company != null) {
+            String roleDetails = notificationSender.generateUserChangeDetails(userName, oldRoleName, newRoleName);
+            NotificationContext context = notificationSender.createCompanyContext("USER_ROLE_UPDATE", company, roleDetails);
+            notificationSender.notifyCompanyOperation(context);
+        }
     }
-
 
     public ApiResponse getCompanyUsers(
             Long companyId,
             CompanyUserSearchCriteria criteria,
             Pageable pageable
     ) {
-        if(!getCompanyId(companyId)){
-
+        if (!getCompanyId(companyId)) {
             throw new ResourceNotFoundException("Company authorization not found: " + companyId);
         }
         Pageable sortedPageable = PageRequest.of(
@@ -381,7 +407,6 @@ public class CompanyService {
                 )
         );
 
-        // 2) Build the Specification
         Specification<CompanyUser> spec = (root, query, cb) -> {
             Predicate companyPred = cb.equal(root.get("company").get("id"), companyId);
 
@@ -394,7 +419,7 @@ public class CompanyService {
             String likePattern = "%" + kw.toLowerCase() + "%";
             Expression<String> emailExpr = cb.lower(root.get("user").get("email"));
             Expression<String> phoneExpr = root.get("user").get("phone");
-            Expression<String> nameExpr  = cb.lower(root.get("user").get("fullName"));
+            Expression<String> nameExpr = cb.lower(root.get("user").get("fullName"));
             Predicate keywordPred;
             if (kw.matches("^[\\w\\-.]+@[\\w\\-]+\\.[A-Za-z]{2,}$")) {
                 keywordPred = cb.like(emailExpr, likePattern);
@@ -420,13 +445,11 @@ public class CompanyService {
                 .build();
     }
 
-
     public boolean isUserInCompany(String username, Long companyId) {
         return userRepository.findByUsername(username)
                 .map(user -> companyUserRepository.existsByCompanyIdAndUserId(companyId, user.getId()))
                 .orElse(false);
     }
-
 
     public boolean isUserInCompanyWithRole(String username, Long companyId, CompanyUserRole role) {
         return userRepository.findByUsername(username)
@@ -451,25 +474,64 @@ public class CompanyService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User " + req.userId() + " not in company " + req.companyId()));
 
-        if(!getCompanyId(req.companyId())){
+        if (!getCompanyId(req.companyId())) {
             throw new ResourceNotFoundException("Company authorization not found: " + req.companyId());
         }
         AppUser appUser = cu.getUser();
+        
+        // Track old values for notification
+        String oldFullName = appUser.getFullName();
+        String oldUsername = appUser.getUsername();
+        String oldEmail = appUser.getEmail();
+        String oldPhone = appUser.getPhone();
+        CompanyUserRole oldRole = cu.getRole();
+        
+        // Apply updates
         req.email().ifPresent(appUser::setEmail);
         req.username().ifPresent(appUser::setUsername);
         req.fullName().ifPresent(appUser::setFullName);
         req.phone().ifPresent(appUser::setPhone);
         req.password().ifPresent(appUser::setPassword);
         authService.updateUser(appUser);
+        
+        StringBuilder changes = new StringBuilder();
+        if (req.fullName().isPresent() && !req.fullName().get().equals(oldFullName)) {
+            changes.append("• تغير الاسم من '").append(oldFullName).append("' إلى '").append(req.fullName().get()).append("'\n");
+        }
+        if (req.username().isPresent() && !req.username().get().equals(oldUsername)) {
+            changes.append("• تغير اسم المستخدم من '").append(oldUsername).append("' إلى '").append(req.username().get()).append("'\n");
+        }
+        if (req.email().isPresent() && !req.email().get().equals(oldEmail)) {
+            changes.append("• تغير البريد الإلكتروني من '").append(oldEmail).append("' إلى '").append(req.email().get()).append("'\n");
+        }
+        if (req.phone().isPresent() && !req.phone().get().equals(oldPhone)) {
+            changes.append("• تغير رقم الهاتف من '").append(oldPhone).append("' إلى '").append(req.phone().get()).append("'\n");
+        }
+        
         req.companyUserRole().ifPresent(newRole -> {
-            cu.setRole(newRole);
-            companyUserRepository.save(cu);
+            if (newRole != oldRole) {
+                changes.append("• تغير الصلاحية من '").append(oldRole).append("' إلى '").append(newRole).append("'\n");
+                cu.setRole(newRole);
+                companyUserRepository.save(cu);
+            }
         });
+        
+        // ✅ ADD NOTIFICATION FOR USER UPDATE
+        if (changes.length() > 0) {
+            Company company = companyRepository.findById(req.companyId()).orElse(null);
+            if (company != null) {
+                String userDetails = messageService.getMessage("notification.company.user.update.details",
+                    req.fullName().orElse(appUser.getFullName()), changes.toString());
+                NotificationContext context = notificationSender.createCompanyContext("USER_ROLE_UPDATE", company, userDetails);
+                notificationSender.notifyCompanyOperation(context);
+            }
+        }
     }
-    public Boolean getCompanyId (Long companyId){
-        if(companyId == helper.getCurrentCompanyId() ){
+    
+    public Boolean getCompanyId(Long companyId) {
+        if (companyId == helper.getCurrentCompanyId()) {
             return true;
         }
-        return false ;
+        return false;
     }
 }
