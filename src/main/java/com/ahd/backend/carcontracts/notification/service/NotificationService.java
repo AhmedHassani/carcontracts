@@ -16,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,6 +78,10 @@ public class NotificationService {
     }
 
     private Notification buildNotification(NotificationRequest request) {
+        // Get current time in Baghdad (UTC+3)
+        ZoneId baghdadZone = ZoneId.of("Asia/Baghdad");
+        LocalDateTime baghdadTime = ZonedDateTime.now(baghdadZone).toLocalDateTime();
+        
         return Notification.builder()
                 .title(request.getTitle())
                 .message(request.getMessage())
@@ -83,6 +90,7 @@ public class NotificationService {
                 .actionDate(request.getActionDate())
                 .companyId(request.getCompanyId())
                 .isRead(false)
+                .createdAt(baghdadTime)  // Set Baghdad time explicitly
                 .build();
     }
 
