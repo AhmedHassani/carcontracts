@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class NotificationController {
     private final Helper helper;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<NotificationResponse>>> getMyNotifications(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -42,6 +44,7 @@ public class NotificationController {
     }
 
     @GetMapping("/unread-count")
+    @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount() {
         NotificationRequest request = new NotificationRequest();
         request.setTitle("Test Notification");
@@ -57,6 +60,7 @@ public class NotificationController {
     }
 
     @PutMapping("/{id}/read")
+    @PreAuthorize("hasAuthority('GET_NOTIFICATTIONS') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         notificationService.markAsRead(id);
         return ResponseEntity.ok().build();

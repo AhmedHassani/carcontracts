@@ -42,6 +42,36 @@ public interface CompanyRepository extends JpaRepository<Company, Long> , JpaSpe
 
     Optional<Company> findByIdAndDeletedFalseAndExpirationDateGreaterThanEqual(Long id, LocalDate today);
 
+
+
+List<Company> findByDeletedFalse();
+    
+    // Get companies with expiring subscriptions
+    @Query("SELECT c FROM Company c WHERE c.deleted = false " +
+           "AND c.expirationDate <= :endDate")
+    List<Company> findCompaniesWithExpiringSubscription(@Param("endDate") LocalDate endDate);
+    
+    // Get companies with expired subscriptions
+    @Query("SELECT c FROM Company c WHERE c.deleted = false " +
+           "AND c.expirationDate < :today")
+    List<Company> findCompaniesWithExpiredSubscription(@Param("today") LocalDate today);
+    
+    // Get companies expiring within date range
+    @Query("SELECT c FROM Company c WHERE c.deleted = false " +
+           "AND c.expirationDate BETWEEN :startDate AND :endDate")
+    List<Company> findCompaniesExpiringBetween(@Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+    
+    // Count companies by expiration status
+    @Query("SELECT COUNT(c) FROM Company c WHERE c.deleted = false " +
+           "AND c.expirationDate < :today")
+    long countExpiredCompanies(@Param("today") LocalDate today);
+    
+    @Query("SELECT COUNT(c) FROM Company c WHERE c.deleted = false " +
+           "AND c.expirationDate BETWEEN :startDate AND :endDate")
+    long countCompaniesExpiringBetween(@Param("startDate") LocalDate startDate,
+                                       @Param("endDate") LocalDate endDate);
+
 }
 
 

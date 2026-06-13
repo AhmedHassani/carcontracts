@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -57,4 +57,39 @@ public interface CarRepository extends JpaRepository<Car, Long>, JpaSpecificatio
 Long sumCarPriceByCompanyIdAndCreatedAtBetween(@Param("companyId") Long companyId,
                                                @Param("start") LocalDateTime start,
                                                @Param("end") LocalDateTime end);
+
+List<Car> findByDeletedFalse();
+
+ @Query("SELECT c FROM Car c WHERE c.deleted = false " +
+           "AND c.annualContractDate IS NOT NULL " +
+           "AND c.annualContractDate <= :endDate")
+    List<Car> findCarsWithAnnualContractExpiringBefore(@Param("endDate") LocalDate endDate);
+
+    // Get cars with expired annual contracts
+    @Query("SELECT c FROM Car c WHERE c.deleted = false " +
+           "AND c.annualContractDate IS NOT NULL " +
+           "AND c.annualContractDate < :today")
+    List<Car> findCarsWithExpiredAnnualContract(@Param("today") LocalDate today);
+    
+    // Get cars with expiring inspections
+    @Query("SELECT c FROM Car c WHERE c.deleted = false " +
+           "AND c.inspectionDate IS NOT NULL " +
+           "AND c.inspectionDate <= :endDate")
+    List<Car> findCarsWithInspectionExpiringBefore(@Param("endDate") LocalDate endDate);
+    
+    // Get cars with expired inspections
+    @Query("SELECT c FROM Car c WHERE c.deleted = false " +
+           "AND c.inspectionDate IS NOT NULL " +
+           "AND c.inspectionDate < :today")
+    List<Car> findCarsWithExpiredInspection(@Param("today") LocalDate today);
+    
+    // Get cars by company with expiring dates
+    @Query("SELECT c FROM Car c WHERE c.deleted = false " +
+           "AND c.companyId = :companyId " +
+           "AND c.annualContractDate BETWEEN :startDate AND :endDate")
+    List<Car> findCarsByCompanyWithAnnualContractExpiring(@Param("companyId") Long companyId,
+                                                          @Param("startDate") LocalDate startDate,
+                                                          @Param("endDate") LocalDate endDate);
+
+
 }
