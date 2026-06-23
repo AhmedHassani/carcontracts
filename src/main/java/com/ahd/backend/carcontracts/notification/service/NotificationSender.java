@@ -39,6 +39,35 @@ public class NotificationSender {
     private final Helper helper;
     private final MessageService messageService;
 
+    /**
+     * Check if user has GET_NOTIFICATIONS permission
+     */
+    private boolean hasGetNotificationsPermission(AppUser user) {
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        
+        // Check through user's roles and their permissions
+        return user.getRoles().stream()
+            .filter(role -> role.getPermissions() != null)
+            .flatMap(role -> role.getPermissions().stream())
+            .anyMatch(permission -> "GET_NOTIFICATIONS".equals(permission.getName()));
+    }
+
+    /**
+     * Filter users by GET_NOTIFICATIONS permission and valid FCM token
+     */
+    private List<AppUser> filterUsersWithNotificationPermission(List<AppUser> users) {
+        if (users == null || users.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return users.stream()
+            .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isEmpty())
+            .filter(this::hasGetNotificationsPermission)
+            .collect(Collectors.toList());
+    }
+
     // ==================== CAR NOTIFICATIONS ====================
     
     @Transactional
@@ -54,13 +83,16 @@ public class NotificationSender {
             
             List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
             
-            if (companyUsers.isEmpty()) {
-                log.info(messageService.getMessage("notification.car.error.no.token", companyId));
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
                 return;
             }
             
             log.info(messageService.getMessage("notification.car.log.sending", 
-                context.getOperation(), companyUsers.size(), companyId));
+                context.getOperation(), authorizedUsers.size(), companyId));
             
             NotificationRequest request = NotificationRequest.builder()
                 .title(context.getTitle())
@@ -69,7 +101,7 @@ public class NotificationSender {
                 .actionType(context.getActionType())
                 .actionDate(LocalDateTime.now())
                 .companyId(companyId)
-                .targetUserIds(companyUsers.stream()
+                .targetUserIds(authorizedUsers.stream()
                     .map(AppUser::getId)
                     .collect(Collectors.toList()))
                 .build();
@@ -165,13 +197,16 @@ public class NotificationSender {
             
             List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
             
-            if (companyUsers.isEmpty()) {
-                log.info(messageService.getMessage("notification.person.error.no.token", companyId));
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
                 return;
             }
             
             log.info(messageService.getMessage("notification.person.log.sending", 
-                context.getOperation(), companyUsers.size(), companyId));
+                context.getOperation(), authorizedUsers.size(), companyId));
             
             NotificationRequest request = NotificationRequest.builder()
                 .title(context.getTitle())
@@ -180,7 +215,7 @@ public class NotificationSender {
                 .actionType(context.getActionType())
                 .actionDate(LocalDateTime.now())
                 .companyId(companyId)
-                .targetUserIds(companyUsers.stream()
+                .targetUserIds(authorizedUsers.stream()
                     .map(AppUser::getId)
                     .collect(Collectors.toList()))
                 .build();
@@ -357,13 +392,16 @@ public class NotificationSender {
             
             List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
             
-            if (companyUsers.isEmpty()) {
-                log.info(messageService.getMessage("notification.payment.error.no.token", companyId));
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
                 return;
             }
             
             log.info(messageService.getMessage("notification.payment.log.sending", 
-                context.getOperation(), companyUsers.size(), companyId));
+                context.getOperation(), authorizedUsers.size(), companyId));
             
             NotificationRequest request = NotificationRequest.builder()
                 .title(context.getTitle())
@@ -372,7 +410,7 @@ public class NotificationSender {
                 .actionType(context.getActionType())
                 .actionDate(LocalDateTime.now())
                 .companyId(companyId)
-                .targetUserIds(companyUsers.stream()
+                .targetUserIds(authorizedUsers.stream()
                     .map(AppUser::getId)
                     .collect(Collectors.toList()))
                 .build();
@@ -525,13 +563,16 @@ public class NotificationSender {
             // Get users with FCM tokens in this company
             List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
             
-            if (companyUsers.isEmpty()) {
-                log.info(messageService.getMessage("notification.contract.error.no.token", companyId));
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
                 return;
             }
             
             log.info(messageService.getMessage("notification.contract.log.sending",
-                context.getOperation(), companyUsers.size(), companyId));
+                context.getOperation(), authorizedUsers.size(), companyId));
             
             Map<String, String> additionalData = new HashMap<>();
             if (context.getAdditionalData() != null) {
@@ -546,7 +587,7 @@ public class NotificationSender {
                     .actionType(context.getActionType())
                     .actionDate(LocalDateTime.now())
                     .companyId(companyId)
-                    .targetUserIds(companyUsers.stream()
+                    .targetUserIds(authorizedUsers.stream()
                         .map(AppUser::getId)
                         .collect(Collectors.toList()))
                     .additionalData(additionalData)
@@ -701,13 +742,16 @@ public class NotificationSender {
             // Get users with FCM tokens in this company
             List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
             
-            if (companyUsers.isEmpty()) {
-                log.info(messageService.getMessage("notification.authorization.error.no.token", companyId));
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
                 return;
             }
             
             log.info(messageService.getMessage("notification.authorization.log.sending",
-                context.getOperation(), companyUsers.size(), companyId));
+                context.getOperation(), authorizedUsers.size(), companyId));
             
             // Convert Map<String, Object> to Map<String, String>
             Map<String, String> additionalData = new HashMap<>();
@@ -723,7 +767,7 @@ public class NotificationSender {
                     .actionType(context.getActionType())
                     .actionDate(LocalDateTime.now())
                     .companyId(companyId)
-                    .targetUserIds(companyUsers.stream()
+                    .targetUserIds(authorizedUsers.stream()
                         .map(AppUser::getId)
                         .collect(Collectors.toList()))
                     .additionalData(additionalData)
@@ -912,200 +956,204 @@ public class NotificationSender {
     /**
      * Send company notification
      */
-  @Transactional
-public void notifyCompanyOperation(NotificationContext context) {
-    try {
-        AppUser currentUser = helper.getCurrentUser();
-        Long companyId = helper.getCurrentCompanyId();
-        
-        if (currentUser == null) {
-            log.warn(messageService.getMessage("notification.company.error.no.user"));
-            return;
+    @Transactional
+    public void notifyCompanyOperation(NotificationContext context) {
+        try {
+            AppUser currentUser = helper.getCurrentUser();
+            Long companyId = helper.getCurrentCompanyId();
+            
+            if (currentUser == null) {
+                log.warn(messageService.getMessage("notification.company.error.no.user"));
+                return;
+            }
+            
+            // Get users with FCM tokens in this company
+            List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+            
+            // ✅ Filter company users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedCompanyUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            // Get Super Admin and other admin users (users with no company or ROLE_SUPER_ADMIN)
+            List<AppUser> adminUsers = userRepository.findAll().stream()
+                .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isEmpty())
+                .filter(user -> {
+                    // Check if user is Super Admin
+                    boolean isSuperAdmin = user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equals("ROLE_SUPER_ADMIN"));
+                    return isSuperAdmin;
+                })
+                .collect(Collectors.toList());
+            
+            // ✅ Filter admin users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedAdminUsers = filterUsersWithNotificationPermission(adminUsers);
+            
+            // Combine both lists and remove duplicates
+            Set<AppUser> allTargetUsers = new HashSet<>();
+            allTargetUsers.addAll(authorizedCompanyUsers);
+            allTargetUsers.addAll(authorizedAdminUsers);
+            
+            if (allTargetUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company notification");
+                return;
+            }
+            
+            log.info(messageService.getMessage("notification.company.log.sending",
+                context.getOperation(), allTargetUsers.size()));
+            
+            Map<String, String> additionalData = new HashMap<>();
+            if (context.getAdditionalData() != null) {
+                context.getAdditionalData().forEach((k, v) -> 
+                    additionalData.put(k, String.valueOf(v)));
+            }
+            
+            NotificationRequest request = NotificationRequest.builder()
+                .title(context.getTitle())
+                .message(context.getMessage())
+                .actionBy(currentUser.getEmail())
+                .actionType(context.getActionType())
+                .actionDate(LocalDateTime.now())
+                .companyId(companyId)
+                .targetUserIds(allTargetUsers.stream()
+                    .map(AppUser::getId)
+                    .collect(Collectors.toList()))
+                .additionalData(additionalData)
+                .build();
+            
+            notificationService.sendNotification(request);
+            
+            log.info(messageService.getMessage("notification.company.log.success",
+                context.getOperation(), context.getEntityId()));
+            
+        } catch (Exception e) {
+            log.error(messageService.getMessage("notification.company.log.failed",
+                context.getOperation(), context.getEntityId(), e.getMessage()));
         }
-        
-        // ✅ Get users with FCM tokens in this company
-        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
-        
-        // ✅ ALSO get Super Admin and other admin users (users with no company or ROLE_SUPER_ADMIN)
-        List<AppUser> adminUsers = userRepository.findAll().stream()
-            .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isEmpty())
-            .filter(user -> {
-                // Check if user is Super Admin or has no company
-                boolean isSuperAdmin = user.getRoles().stream()
-                    .anyMatch(role -> role.getName().equals("ROLE_SUPER_ADMIN"));
-                boolean hasNoCompany = true;
-                // Check if user has any company association
-                // You may need to check via CompanyUser repository
-                return isSuperAdmin || hasNoCompany;
-            })
-            .collect(Collectors.toList());
-        
-        // ✅ Combine both lists and remove duplicates
-        Set<AppUser> allTargetUsers = new HashSet<>();
-        allTargetUsers.addAll(companyUsers);
-        allTargetUsers.addAll(adminUsers);
-        
-        if (allTargetUsers.isEmpty()) {
-            log.info(messageService.getMessage("notification.company.error.no.token"));
-            return;
-        }
-        
-        log.info(messageService.getMessage("notification.company.log.sending",
-            context.getOperation(), allTargetUsers.size()));
-        
-        Map<String, String> additionalData = new HashMap<>();
-        if (context.getAdditionalData() != null) {
-            context.getAdditionalData().forEach((k, v) -> 
-                additionalData.put(k, String.valueOf(v)));
-        }
-        
-        NotificationRequest request = NotificationRequest.builder()
-            .title(context.getTitle())
-            .message(context.getMessage())
-            .actionBy(currentUser.getEmail())
-            .actionType(context.getActionType())
-            .actionDate(LocalDateTime.now())
-            .companyId(companyId)
-            .targetUserIds(allTargetUsers.stream()
-                .map(AppUser::getId)
-                .collect(Collectors.toList()))
-            .additionalData(additionalData)
-            .build();
-        
-        notificationService.sendNotification(request);
-        
-        log.info(messageService.getMessage("notification.company.log.success",
-            context.getOperation(), context.getEntityId()));
-        
-    } catch (Exception e) {
-        log.error(messageService.getMessage("notification.company.log.failed",
-            context.getOperation(), context.getEntityId(), e.getMessage()));
     }
-}
+    
     // ==================== DROPDOWN NOTIFICATIONS ====================
 
-/**
- * Create notification context for dropdown option operations
- */
-public NotificationContext createDropDownContext(String operation, OptionDropDown option, String dropDownName, String... changeDetails) {
-    String title;
-    String message;
-    String actionType = "DROPDOWN_" + operation;
-    
-    switch (operation.toUpperCase()) {
-        case "CREATE":
-            title = messageService.getMessage("notification.dropdown.create.title");
-            message = messageService.getMessage("notification.dropdown.create.body",
-                dropDownName != null ? dropDownName : "",
-                option.getLabel() != null ? option.getLabel() : "",
-                option.getValue() != null ? option.getValue() : ""
-            );
-            break;
-            
-        case "UPDATE":
-            title = messageService.getMessage("notification.dropdown.update.title");
-            String changes = (changeDetails != null && changeDetails.length > 0) 
-                ? changeDetails[0] 
-                : messageService.getMessage("notification.dropdown.change.default");
-            message = messageService.getMessage("notification.dropdown.update.body",
-                dropDownName != null ? dropDownName : "",
-                option.getLabel() != null ? option.getLabel() : "",
-                changes
-            );
-            break;
-            
-        case "DELETE":
-            title = messageService.getMessage("notification.dropdown.delete.title");
-            message = messageService.getMessage("notification.dropdown.delete.body",
-                dropDownName != null ? dropDownName : "",
-                option.getLabel() != null ? option.getLabel() : "",
-                option.getValue() != null ? option.getValue() : ""
-            );
-            break;
-            
-        default:
-            title = messageService.getMessage("notification.dropdown.default.title");
-            message = messageService.getMessage("notification.dropdown.default.body", dropDownName);
-    }
-    
-    Map<String, Object> additionalData = new HashMap<>();
-    additionalData.put("optionId", String.valueOf(option.getId()));
-    additionalData.put("optionLabel", option.getLabel() != null ? option.getLabel() : "");
-    additionalData.put("optionValue", option.getValue() != null ? option.getValue() : "");
-    additionalData.put("dropDownId", String.valueOf(option.getDropDownId()));
-    additionalData.put("dropDownName", dropDownName != null ? dropDownName : "");
-    additionalData.put("operation", operation);
-    if (changeDetails != null && changeDetails.length > 0) {
-        additionalData.put("changeDetails", changeDetails[0]);
-    }
-    
-    return NotificationContext.builder()
-        .operation(operation)
-        .title(title)
-        .message(message)
-        .actionType(actionType)
-        .entity(option)
-        .entityId(option.getId())
-        .entityName(option.getLabel())
-        .additionalData(additionalData)
-        .build();
-}
-
-/**
- * Send dropdown notification
- */
-@Transactional
-public void notifyDropDownOperation(NotificationContext context) {
-    try {
-        AppUser currentUser = helper.getCurrentUser();
-        Long companyId = helper.getCurrentCompanyId();
+    /**
+     * Create notification context for dropdown option operations
+     */
+    public NotificationContext createDropDownContext(String operation, OptionDropDown option, String dropDownName, String... changeDetails) {
+        String title;
+        String message;
+        String actionType = "DROPDOWN_" + operation;
         
-        if (currentUser == null || companyId == null) {
-            log.warn(messageService.getMessage("notification.dropdown.error.no.user"));
-            return;
+        switch (operation.toUpperCase()) {
+            case "CREATE":
+                title = messageService.getMessage("notification.dropdown.create.title");
+                message = messageService.getMessage("notification.dropdown.create.body",
+                    dropDownName != null ? dropDownName : "",
+                    option.getLabel() != null ? option.getLabel() : "",
+                    option.getValue() != null ? option.getValue() : ""
+                );
+                break;
+                
+            case "UPDATE":
+                title = messageService.getMessage("notification.dropdown.update.title");
+                String changes = (changeDetails != null && changeDetails.length > 0) 
+                    ? changeDetails[0] 
+                    : messageService.getMessage("notification.dropdown.change.default");
+                message = messageService.getMessage("notification.dropdown.update.body",
+                    dropDownName != null ? dropDownName : "",
+                    option.getLabel() != null ? option.getLabel() : "",
+                    changes
+                );
+                break;
+                
+            case "DELETE":
+                title = messageService.getMessage("notification.dropdown.delete.title");
+                message = messageService.getMessage("notification.dropdown.delete.body",
+                    dropDownName != null ? dropDownName : "",
+                    option.getLabel() != null ? option.getLabel() : "",
+                    option.getValue() != null ? option.getValue() : ""
+                );
+                break;
+                
+            default:
+                title = messageService.getMessage("notification.dropdown.default.title");
+                message = messageService.getMessage("notification.dropdown.default.body", dropDownName);
         }
         
-        // Get users with FCM tokens in this company
-        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
-        
-        if (companyUsers.isEmpty()) {
-            log.info(messageService.getMessage("notification.dropdown.error.no.token", companyId));
-            return;
+        Map<String, Object> additionalData = new HashMap<>();
+        additionalData.put("optionId", String.valueOf(option.getId()));
+        additionalData.put("optionLabel", option.getLabel() != null ? option.getLabel() : "");
+        additionalData.put("optionValue", option.getValue() != null ? option.getValue() : "");
+        additionalData.put("dropDownId", String.valueOf(option.getDropDownId()));
+        additionalData.put("dropDownName", dropDownName != null ? dropDownName : "");
+        additionalData.put("operation", operation);
+        if (changeDetails != null && changeDetails.length > 0) {
+            additionalData.put("changeDetails", changeDetails[0]);
         }
         
-        log.info(messageService.getMessage("notification.dropdown.log.sending",
-            context.getOperation(), companyUsers.size(), companyId));
-        
-        Map<String, String> additionalData = new HashMap<>();
-        if (context.getAdditionalData() != null) {
-            context.getAdditionalData().forEach((k, v) -> 
-                additionalData.put(k, String.valueOf(v)));
-        }
-        
-        NotificationRequest request = NotificationRequest.builder()
-            .title(context.getTitle())
-            .message(context.getMessage())
-            .actionBy(currentUser.getEmail())
-            .actionType(context.getActionType())
-            .actionDate(LocalDateTime.now())
-            .companyId(companyId)
-            .targetUserIds(companyUsers.stream()
-                .map(AppUser::getId)
-                .collect(Collectors.toList()))
+        return NotificationContext.builder()
+            .operation(operation)
+            .title(title)
+            .message(message)
+            .actionType(actionType)
+            .entity(option)
+            .entityId(option.getId())
+            .entityName(option.getLabel())
             .additionalData(additionalData)
             .build();
-        
-        notificationService.sendNotification(request);
-        
-        log.info(messageService.getMessage("notification.dropdown.log.success",
-            context.getOperation(), context.getEntityId()));
-        
-    } catch (Exception e) {
-        log.error(messageService.getMessage("notification.dropdown.log.failed",
-            context.getOperation(), context.getEntityId(), e.getMessage()));
     }
-}
 
-
-
+    /**
+     * Send dropdown notification
+     */
+    @Transactional
+    public void notifyDropDownOperation(NotificationContext context) {
+        try {
+            AppUser currentUser = helper.getCurrentUser();
+            Long companyId = helper.getCurrentCompanyId();
+            
+            if (currentUser == null || companyId == null) {
+                log.warn(messageService.getMessage("notification.dropdown.error.no.user"));
+                return;
+            }
+            
+            // Get users with FCM tokens in this company
+            List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+            
+            // ✅ Filter users with GET_NOTIFICATIONS permission
+            List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+            
+            if (authorizedUsers.isEmpty()) {
+                log.info("No users with GET_NOTIFICATIONS permission found for company: {}", companyId);
+                return;
+            }
+            
+            log.info(messageService.getMessage("notification.dropdown.log.sending",
+                context.getOperation(), authorizedUsers.size(), companyId));
+            
+            Map<String, String> additionalData = new HashMap<>();
+            if (context.getAdditionalData() != null) {
+                context.getAdditionalData().forEach((k, v) -> 
+                    additionalData.put(k, String.valueOf(v)));
+            }
+            
+            NotificationRequest request = NotificationRequest.builder()
+                .title(context.getTitle())
+                .message(context.getMessage())
+                .actionBy(currentUser.getEmail())
+                .actionType(context.getActionType())
+                .actionDate(LocalDateTime.now())
+                .companyId(companyId)
+                .targetUserIds(authorizedUsers.stream()
+                    .map(AppUser::getId)
+                    .collect(Collectors.toList()))
+                .additionalData(additionalData)
+                .build();
+            
+            notificationService.sendNotification(request);
+            
+            log.info(messageService.getMessage("notification.dropdown.log.success",
+                context.getOperation(), context.getEntityId()));
+            
+        } catch (Exception e) {
+            log.error(messageService.getMessage("notification.dropdown.log.failed",
+                context.getOperation(), context.getEntityId(), e.getMessage()));
+        }
+    }
 }

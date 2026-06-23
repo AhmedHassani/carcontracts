@@ -5,6 +5,7 @@ import com.ahd.backend.carcontracts.car.repository.CarRepository;
 import com.ahd.backend.carcontracts.notification.dto.NotificationRequest;
 import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,9 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -101,6 +100,53 @@ public class CarExpirationJob {
         return notificationCount;
     }
     
+    /**
+     * Check if user has GET_NOTIFICATIONS permission
+     */
+    private boolean hasGetNotificationsPermission(AppUser user) {
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        
+        // Check through user's roles and their permissions
+        return user.getRoles().stream()
+            .filter(role -> role.getPermissions() != null)
+            .flatMap(role -> role.getPermissions().stream())
+            .anyMatch(permission -> "GET_NOTIFICATIONS".equals(permission.getName()));
+    }
+
+    /**
+     * Filter users by GET_NOTIFICATIONS permission
+     */
+    private List<AppUser> filterUsersWithNotificationPermission(List<AppUser> users) {
+        if (users == null || users.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return users.stream()
+            .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isEmpty())
+            .filter(this::hasGetNotificationsPermission)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get users with GET_NOTIFICATIONS permission by company ID
+     */
+    private List<AppUser> getAuthorizedUsersByCompany(Long companyId) {
+        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+        return filterUsersWithNotificationPermission(companyUsers);
+    }
+
+    /**
+     * Get user IDs with GET_NOTIFICATIONS permission by company ID
+     */
+    private List<Long> getAuthorizedUserIdsByCompany(Long companyId) {
+        List<AppUser> authorizedUsers = getAuthorizedUsersByCompany(companyId);
+        return authorizedUsers.stream()
+            .map(AppUser::getId)
+            .collect(Collectors.toList());
+    }
+    
     private boolean checkAnnualContractExpiration(Car car, LocalDate today, 
                                                    LocalDate nextWeek, LocalDate nextMonth) {
         LocalDate contractDate = car.getAnnualContractDate();
@@ -108,10 +154,11 @@ public class CarExpirationJob {
         
         log.debug("Annual contract for car {} expires in {} days", car.getId(), daysUntilExpiration);
         
-        // Get all company users
-        List<Long> allUserIds = userRepository.findUserIdsByCompanyId(car.getCompanyId());
-        if (allUserIds.isEmpty()) {
-            log.warn("No users found for company {}", car.getCompanyId());
+        // ✅ Get only users with GET_NOTIFICATIONS permission
+        List<Long> authorizedUserIds = getAuthorizedUserIdsByCompany(car.getCompanyId());
+        if (authorizedUserIds.isEmpty()) {
+            log.info("No users with GET_NOTIFICATIONS permission found for company {} when checking annual contract for car {}", 
+                     car.getCompanyId(), car.getId());
             return false;
         }
         
@@ -131,13 +178,14 @@ public class CarExpirationJob {
                 contractDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "❌ انتهاء العقد السنوي للسيارة", 
                 message, 
                 "ANNUAL_CONTRACT_EXPIRED",
                 additionalData);
             
-            log.info("✅ Sent EXPIRED notification for car {} annual contract", car.getId());
+            log.info("✅ Sent EXPIRED notification for car {} annual contract to {} authorized users", 
+                     car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -151,14 +199,14 @@ public class CarExpirationJob {
                 contractDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "⚠️ تنبيه: اقتراب انتهاء العقد السنوي", 
                 message, 
                 "ANNUAL_CONTRACT_EXPIRING_SOON",
                 additionalData);
             
-            log.info("✅ Sent EXPIRING SOON ({} days) notification for car {} annual contract", 
-                     daysUntilExpiration, car.getId());
+            log.info("✅ Sent EXPIRING SOON ({} days) notification for car {} annual contract to {} authorized users", 
+                     daysUntilExpiration, car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -172,14 +220,14 @@ public class CarExpirationJob {
                 contractDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "📅 تذكير: العقد السنوي على وشك الانتهاء", 
                 message, 
                 "ANNUAL_CONTRACT_EXPIRING",
                 additionalData);
             
-            log.info("✅ Sent EXPIRING ({} days) notification for car {} annual contract", 
-                     daysUntilExpiration, car.getId());
+            log.info("✅ Sent EXPIRING ({} days) notification for car {} annual contract to {} authorized users", 
+                     daysUntilExpiration, car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -195,10 +243,11 @@ public class CarExpirationJob {
         
         log.debug("Inspection for car {} expires in {} days", car.getId(), daysUntilExpiration);
         
-        // Get all company users
-        List<Long> allUserIds = userRepository.findUserIdsByCompanyId(car.getCompanyId());
-        if (allUserIds.isEmpty()) {
-            log.warn("No users found for company {}", car.getCompanyId());
+        // ✅ Get only users with GET_NOTIFICATIONS permission
+        List<Long> authorizedUserIds = getAuthorizedUserIdsByCompany(car.getCompanyId());
+        if (authorizedUserIds.isEmpty()) {
+            log.info("No users with GET_NOTIFICATIONS permission found for company {} when checking inspection for car {}", 
+                     car.getCompanyId(), car.getId());
             return false;
         }
         
@@ -218,13 +267,14 @@ public class CarExpirationJob {
                 inspectionDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "🔧 انتهاء صلاحية فحص السيارة", 
                 message, 
                 "INSPECTION_EXPIRED",
                 additionalData);
             
-            log.info("✅ Sent EXPIRED notification for car {} inspection", car.getId());
+            log.info("✅ Sent EXPIRED notification for car {} inspection to {} authorized users", 
+                     car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -238,14 +288,14 @@ public class CarExpirationJob {
                 inspectionDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "⚠️ تنبيه: اقتراب انتهاء صلاحية الفحص", 
                 message, 
                 "INSPECTION_EXPIRING_SOON",
                 additionalData);
             
-            log.info("✅ Sent EXPIRING SOON ({} days) notification for car {} inspection", 
-                     daysUntilExpiration, car.getId());
+            log.info("✅ Sent EXPIRING SOON ({} days) notification for car {} inspection to {} authorized users", 
+                     daysUntilExpiration, car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -259,14 +309,14 @@ public class CarExpirationJob {
                 inspectionDate
             );
             
-            sendNotificationToUsers(car.getCompanyId(), allUserIds, 
+            sendNotificationToUsers(car.getCompanyId(), authorizedUserIds, 
                 "📅 تذكير: فحص السيارة على وشك الانتهاء", 
                 message, 
                 "INSPECTION_EXPIRING",
                 additionalData);
             
-            log.info("✅ Sent EXPIRING ({} days) notification for car {} inspection", 
-                     daysUntilExpiration, car.getId());
+            log.info("✅ Sent EXPIRING ({} days) notification for car {} inspection to {} authorized users", 
+                     daysUntilExpiration, car.getId(), authorizedUserIds.size());
             return true;
         }
         
@@ -279,6 +329,11 @@ public class CarExpirationJob {
                                          String title, String message, 
                                          String actionType, Map<String, String> additionalData) {
         try {
+            if (userIds == null || userIds.isEmpty()) {
+                log.debug("No authorized users to send notification for company {}", companyId);
+                return;
+            }
+            
             NotificationRequest request = NotificationRequest.builder()
                     .title(title)
                     .message(message)
@@ -291,7 +346,7 @@ public class CarExpirationJob {
                     .build();
             
             notificationService.sendNotification(request);
-            log.debug("Notification sent to {} users in company {}", userIds.size(), companyId);
+            log.debug("Notification sent to {} authorized users in company {}", userIds.size(), companyId);
             
         } catch (Exception e) {
             log.error("Error sending car expiration notification: {}", e.getMessage(), e);

@@ -5,6 +5,7 @@ import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
 import com.ahd.backend.carcontracts.notification.dto.NotificationRequest;
 import com.ahd.backend.carcontracts.notification.service.NotificationService;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
+import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,10 +17,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -67,6 +66,74 @@ public class CompanyExpirationJob {
         }
     }
     
+    /**
+     * Check if user has GET_NOTIFICATIONS permission
+     */
+    private boolean hasGetNotificationsPermission(AppUser user) {
+        if (user == null || user.getRoles() == null) {
+            return false;
+        }
+        
+        // Check through user's roles and their permissions
+        return user.getRoles().stream()
+            .filter(role -> role.getPermissions() != null)
+            .flatMap(role -> role.getPermissions().stream())
+            .anyMatch(permission -> "GET_NOTIFICATIONS".equals(permission.getName()));
+    }
+
+    /**
+     * Filter users by GET_NOTIFICATIONS permission and valid FCM token
+     */
+    private List<AppUser> filterUsersWithNotificationPermission(List<AppUser> users) {
+        if (users == null || users.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return users.stream()
+            .filter(user -> user.getFcmToken() != null && !user.getFcmToken().isEmpty())
+            .filter(this::hasGetNotificationsPermission)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get Super Admin users with GET_NOTIFICATIONS permission
+     */
+    private List<Long> getAuthorizedSuperAdminUserIds() {
+        List<AppUser> superAdminUsers = userRepository.findUsersByRole("ROLE_SUPER_ADMIN");
+        List<AppUser> authorizedSuperAdmins = filterUsersWithNotificationPermission(superAdminUsers);
+        
+        return authorizedSuperAdmins.stream()
+            .map(AppUser::getId)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get company users with GET_NOTIFICATIONS permission
+     */
+    private List<Long> getAuthorizedCompanyUserIds(Long companyId) {
+        List<AppUser> companyUsers = userRepository.findByCompanyIdAndFcmTokenIsNotNull(companyId);
+        List<AppUser> authorizedUsers = filterUsersWithNotificationPermission(companyUsers);
+        
+        return authorizedUsers.stream()
+            .map(AppUser::getId)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all authorized recipients (Super Admins + Company Users) with GET_NOTIFICATIONS permission
+     */
+    private List<Long> getAllAuthorizedRecipients(Long companyId) {
+        Set<Long> allRecipients = new HashSet<>();
+        
+        // Add authorized Super Admins
+        allRecipients.addAll(getAuthorizedSuperAdminUserIds());
+        
+        // Add authorized company users
+        allRecipients.addAll(getAuthorizedCompanyUserIds(companyId));
+        
+        return new ArrayList<>(allRecipients);
+    }
+    
     private int checkAndSendCompanyNotifications(Company company, LocalDate today) {
         LocalDate expirationDate = company.getExpirationDate();
         
@@ -80,32 +147,24 @@ public class CompanyExpirationJob {
         log.debug("Company: {} (ID: {}), Expiration: {}, Days left: {}", 
                  company.getCompanyName(), company.getId(), expirationDate, daysUntilExpiration);
         
-        // Get SUPER_ADMIN users (system-wide)
-        List<Long> superAdminUserIds = userRepository.findUserIdsByRole("ROLE_SUPER_ADMIN");
+        // ✅ Get only users with GET_NOTIFICATIONS permission (Super Admins + Company Users)
+        List<Long> authorizedRecipients = getAllAuthorizedRecipients(company.getId());
         
-        // Get company users (users belonging to this company)
-        List<Long> companyUserIds = userRepository.findUserIdsByCompanyId(company.getId());
-        
-        // Combine recipients
-        List<Long> allRecipients = new ArrayList<>();
-        allRecipients.addAll(superAdminUserIds);
-        allRecipients.addAll(companyUserIds);
-        
-        // Remove duplicates if any
-        allRecipients = allRecipients.stream().distinct().collect(java.util.stream.Collectors.toList());
-        
-        if (allRecipients.isEmpty()) {
-            log.warn("No recipients found for company {} expiration", company.getId());
+        if (authorizedRecipients.isEmpty()) {
+            log.info("No users with GET_NOTIFICATIONS permission found for company {} expiration", company.getId());
             return 0;
         }
+        
+        log.debug("Found {} authorized recipients for company {} (with GET_NOTIFICATIONS permission)", 
+                  authorizedRecipients.size(), company.getId());
         
         Map<String, String> additionalData = new HashMap<>();
         additionalData.put("companyId", String.valueOf(company.getId()));
         additionalData.put("companyName", company.getCompanyName());
         additionalData.put("expirationDate", expirationDate.toString());
         additionalData.put("daysUntilExpiration", String.valueOf(daysUntilExpiration));
-        additionalData.put("ownerName", company.getOwnerName());
-        additionalData.put("ownerContact", company.getOwnerContact());
+        additionalData.put("ownerName", company.getOwnerName() != null ? company.getOwnerName() : "");
+        additionalData.put("ownerContact", company.getOwnerContact() != null ? company.getOwnerContact() : "");
         
         // 1. Check if EXPIRED
         if (expirationDate.isBefore(today)) {
@@ -116,10 +175,11 @@ public class CompanyExpirationJob {
                 expirationDate
             );
             
-            sendNotificationToUsers(allRecipients, company.getId(), title, message, 
+            sendNotificationToUsers(authorizedRecipients, company.getId(), title, message, 
                                    "COMPANY_SUBSCRIPTION_EXPIRED", additionalData);
             
-            log.info("✅ Sent EXPIRED notification for company {}", company.getId());
+            log.info("✅ Sent EXPIRED notification for company {} to {} authorized users", 
+                     company.getId(), authorizedRecipients.size());
             return 1;
         }
         
@@ -133,11 +193,11 @@ public class CompanyExpirationJob {
                 expirationDate
             );
             
-            sendNotificationToUsers(allRecipients, company.getId(), title, message, 
+            sendNotificationToUsers(authorizedRecipients, company.getId(), title, message, 
                                    "COMPANY_SUBSCRIPTION_EXPIRING_SOON", additionalData);
             
-            log.info("✅ Sent EXPIRING SOON ({} days) notification for company {}", 
-                     daysUntilExpiration, company.getId());
+            log.info("✅ Sent EXPIRING SOON ({} days) notification for company {} to {} authorized users", 
+                     daysUntilExpiration, company.getId(), authorizedRecipients.size());
             return 1;
         }
         
@@ -151,11 +211,11 @@ public class CompanyExpirationJob {
                 expirationDate
             );
             
-            sendNotificationToUsers(allRecipients, company.getId(), title, message, 
+            sendNotificationToUsers(authorizedRecipients, company.getId(), title, message, 
                                    "COMPANY_SUBSCRIPTION_EXPIRING", additionalData);
             
-            log.info("✅ Sent EXPIRING ({} days) notification for company {}", 
-                     daysUntilExpiration, company.getId());
+            log.info("✅ Sent EXPIRING ({} days) notification for company {} to {} authorized users", 
+                     daysUntilExpiration, company.getId(), authorizedRecipients.size());
             return 1;
         }
         
@@ -168,6 +228,11 @@ public class CompanyExpirationJob {
                                          String title, String message, 
                                          String actionType, Map<String, String> additionalData) {
         try {
+            if (userIds == null || userIds.isEmpty()) {
+                log.debug("No authorized users to send company expiration notification for company {}", companyId);
+                return;
+            }
+            
             NotificationRequest request = NotificationRequest.builder()
                     .title(title)
                     .message(message)
@@ -180,7 +245,7 @@ public class CompanyExpirationJob {
                     .build();
             
             notificationService.sendNotification(request);
-            log.debug("Notification sent to {} users for company {}", userIds.size(), companyId);
+            log.debug("Notification sent to {} authorized users for company {}", userIds.size(), companyId);
             
         } catch (Exception e) {
             log.error("Error sending company expiration notification: {}", e.getMessage(), e);
