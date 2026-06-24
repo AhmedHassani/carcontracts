@@ -118,47 +118,32 @@ public final class CarMapper {
       .build();
   }
   
-  public static Car updateEntity(Car target, UpdateCarRequestDTO patch) {
+public static Car updateEntity(Car target, UpdateCarRequestDTO patch) {
     if (target == null || patch == null)
-      return null; 
+        return null;
+    
     Objects.requireNonNull(target);
     Optional.ofNullable(patch.getName()).ifPresent(target::setName);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getType()).ifPresent(target::setType);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getColor()).ifPresent(target::setColor);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getModel()).ifPresent(target::setModel);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getPlateNumber()).ifPresent(target::setPlateNumber);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getChassisNumber()).ifPresent(target::setChassisNumber);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getKilometers()).ifPresent(target::setKilometers);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getCylinderCount()).ifPresent(target::setCylinderCount);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getPassengerCount()).ifPresent(target::setPassengerCount);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getEngineType()).ifPresent(target::setEngineType);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getOrigin()).ifPresent(target::setOrigin);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getTypeOfCarPlate()).ifPresent(target::setTypeOfCarPlate);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getInitPrice()).ifPresent(target::setInitPrice);
-    Objects.requireNonNull(target);
     Optional.ofNullable(patch.getDescription()).ifPresent(target::setDescription);
-    Objects.requireNonNull(target);
-    Optional.ofNullable(patch.getCarPrice()).ifPresent(target::setCarPrice);
-    Objects.requireNonNull(target);
+    // Don't handle carPrice here - it's handled in the service
+    // Don't handle currentPossessorId here - it's handled in the service
     Optional.ofNullable(patch.getAnnualContractNumber()).ifPresent(target::setAnnualContractNumber);
-    Objects.requireNonNull(target);
-    // ← Fixed: No parsing needed, direct assignment
     Optional.ofNullable(patch.getAnnualContractDate()).ifPresent(target::setAnnualContractDate);
-    Objects.requireNonNull(target);
-    // ← Fixed: No parsing needed, direct assignment
     Optional.ofNullable(patch.getInspectionDate()).ifPresent(target::setInspectionDate);
+    Optional.ofNullable(patch.getWalletNumber()).ifPresent(target::setWalletNumber);
+    
     return target;
-  }
+}
 }

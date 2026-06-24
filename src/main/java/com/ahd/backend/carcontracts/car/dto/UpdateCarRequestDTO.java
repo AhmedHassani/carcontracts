@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import java.time.LocalDate;
 
-
 @Data
 @Builder
 public class UpdateCarRequestDTO {
@@ -35,28 +34,57 @@ public class UpdateCarRequestDTO {
     private String initPrice;
     private String description;
     private Long currentPossessorId;
-  private String carPrice;
+    private String carPrice;
     private String annualContractNumber;
     private LocalDate annualContractDate;
     private LocalDate inspectionDate;
 
-
     public boolean isEmpty() {
-        return  name            == null &&
-                type            == null &&
-                color           == null &&
-                model           == null &&
-                plateNumber     == null &&
-                chassisNumber   == null &&
-                kilometers      == null &&
-                cylinderCount   == null &&
-                passengerCount  == null &&
-                engineType      == null &&
-                origin          == null &&
-                walletNumber == null &&
-                typeOfCarPlate == null &&
-                annualContractNumber == null &&
-                annualContractDate == null &&
-                inspectionDate == null ;
+        // Only check fields that CANNOT be null in a meaningful update
+        // Exclude currentPossessorId and carPrice because they can be explicitly set to null
+        return name == null &&
+               type == null &&
+               color == null &&
+               model == null &&
+               plateNumber == null &&
+               chassisNumber == null &&
+               kilometers == null &&
+               cylinderCount == null &&
+               passengerCount == null &&
+               engineType == null &&
+               origin == null &&
+               walletNumber == null &&
+               typeOfCarPlate == null &&
+               annualContractNumber == null &&
+               annualContractDate == null &&
+               inspectionDate == null &&
+               description == null &&
+               initPrice == null;
+        // NOTE: currentPossessorId and carPrice are NOT checked here
+        // because they can be explicitly set to null
+    }
+    
+    // Add a method to check if this DTO contains ANY fields that need processing
+    public boolean hasAnyField() {
+        return name != null ||
+               type != null ||
+               color != null ||
+               model != null ||
+               plateNumber != null ||
+               chassisNumber != null ||
+               kilometers != null ||
+               cylinderCount != null ||
+               passengerCount != null ||
+               engineType != null ||
+               origin != null ||
+               walletNumber != null ||
+               typeOfCarPlate != null ||
+               annualContractNumber != null ||
+               annualContractDate != null ||
+               inspectionDate != null ||
+               description != null ||
+               initPrice != null ||
+               currentPossessorId != null ||
+               carPrice != null;
     }
 }

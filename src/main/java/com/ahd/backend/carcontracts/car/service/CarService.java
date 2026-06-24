@@ -126,49 +126,77 @@ public class CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
         return CarMapper.toDto(car);
     }
-
-    @Transactional
-    @Auditable(operation = "تحديث معلومات سيارة", captureArgs = true, captureResult = true)
-    public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
-        if (patch == null || patch.isEmpty()) {
-            throw new BadRequestException("Update payload must contain at least one field");
-        }
-        
-        Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id, getCompanyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
-        
-        // Store old values for notification
-        String oldName = car.getName();
-        String oldPlate = car.getPlateNumber();
-        
-        // Check chassis number uniqueness if changed
-        if (patch.getChassisNumber() != null &&
-                !patch.getChassisNumber().equals(car.getChassisNumber()) &&
-                carRepository.existsByChassisNumberAndCompanyIdAndStatus(patch.getChassisNumber(), getCompanyId(), "Pending")) {
-            throw new DuplicateResourceException("chassisNumber", patch.getChassisNumber(),
-                    "Car with this chassis number already exists");
-        }
-        
-        // Check plate number uniqueness if changed
-        if (patch.getPlateNumber() != null &&
-                !patch.getPlateNumber().equals(car.getPlateNumber()) &&
-                carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(patch.getPlateNumber(),
-                        patch.getWalletNumber(), patch.getTypeOfCarPlate(), getCompanyId(), "Pending")) {
-            throw new DuplicateResourceException("plateNumber", patch.getPlateNumber(),
-                    "Car with this plate number already exists");
-        }
-        
-        Car carUpdated = CarMapper.updateEntity(car, patch);
-        Car saved = carRepository.save(carUpdated);
-        
-        // ✅ إرسال إشعار التحديث
-        String changeDetails = generateChangeDetailsFromProperties(oldName, oldPlate, saved);
-        NotificationContext context = notificationSender.createCarContext("UPDATE", saved, changeDetails);
-        notificationSender.notifyCarOperation(context);
-        
-        return CarMapper.toDto(saved);
+@Transactional
+@Auditable(operation = "تحديث معلومات سيارة", captureArgs = true, captureResult = true)
+public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
+    // Check if the patch has ANY fields at all
+    if (patch == null || !patch.hasAnyField()) {
+        throw new BadRequestException("Update payload must contain at least one field");
+    }
+    
+    Car car = carRepository.findWithAttachmentsByIdAndCompanyId(id, getCompanyId())
+            .orElseThrow(() -> new ResourceNotFoundException("Car " + id + " not found"));
+    
+    // Store old values for notification
+    String oldName = car.getName();
+    String oldPlate = car.getPlateNumber();
+    
+    // Check chassis number uniqueness if changed
+    if (patch.getChassisNumber() != null &&
+            !patch.getChassisNumber().equals(car.getChassisNumber()) &&
+            carRepository.existsByChassisNumberAndCompanyIdAndStatus(patch.getChassisNumber(), getCompanyId(), "Pending")) {
+        throw new DuplicateResourceException("chassisNumber", patch.getChassisNumber(),
+                "Car with this chassis number already exists");
+    }
+    
+    // Check plate number uniqueness if changed
+    if (patch.getPlateNumber() != null &&
+            !patch.getPlateNumber().equals(car.getPlateNumber()) &&
+            carRepository.existsByPlateNumberAndWalletNumberAndTypeOfCarPlateAndCompanyIdAndStatus(patch.getPlateNumber(),
+                    patch.getWalletNumber(), patch.getTypeOfCarPlate(), getCompanyId(), "Pending")) {
+        throw new DuplicateResourceException("plateNumber", patch.getPlateNumber(),
+                "Car with this plate number already exists");
     }
 
+    if (!car.getStatus().equals("Pending") && patch.getCurrentPossessorId() != null) {
+        throw new BadRequestException("Cannot change current possessor of an active car");
+    }
+    
+    // Handle currentPossessorId - allows setting to null
+    // Check if the field was explicitly included in the request (even if null)
+    if (patch.getCurrentPossessorId() != null) {
+        // Set to a specific person
+        Person possessor = personRepository.findById(patch.getCurrentPossessorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Person not found with id: " + patch.getCurrentPossessorId()));
+        car.setCurrentPossessor(possessor);
+    } else if (patch.hasAnyField() && patch.getCurrentPossessorId() == null) {
+        // The field was included in the request with null value
+        // We know it was included because hasAnyField() is true
+        car.setCurrentPossessor(null);
+    }
+    
+    // Handle carPrice - sets to "0" if null
+    // Check if the field was explicitly included in the request (even if null)
+    if (patch.getCarPrice() != null) {
+        car.setCarPrice(patch.getCarPrice());
+    } else if (patch.hasAnyField() && patch.getCarPrice() == null) {
+        // The field was included in the request with null value
+        car.setCarPrice("0");
+    }
+    
+    // Apply all other updates using the mapper
+    CarMapper.updateEntity(car, patch);
+    
+    // Save the updated car
+    Car saved = carRepository.save(car);
+    
+    // Generate change details for notification
+    String changeDetails = generateChangeDetailsFromProperties(oldName, oldPlate, saved);
+    NotificationContext context = notificationSender.createCarContext("UPDATE", saved, changeDetails);
+    notificationSender.notifyCarOperation(context);
+    
+    return CarMapper.toDto(saved);
+}
     @Auditable(operation = "حذف سيارة", captureArgs = true, captureResult = true)
     public void softDeleteCar(Long id) {
         Car car = carRepository.findByIdAndCompanyIdAndDeletedFalse(id, getCompanyId())
