@@ -72,6 +72,11 @@ List<Company> findByDeletedFalse();
     long countCompaniesExpiringBetween(@Param("startDate") LocalDate startDate,
                                        @Param("endDate") LocalDate endDate);
 
+                                        @Query("SELECT MAX(c.code) FROM Company c")
+    String findMaxCode();
+    
+    Optional<Company> findTopByOrderByCodeDesc();
+
 }
 
 

@@ -49,10 +49,10 @@ public class AppUser implements UserDetails {
 
     @NotBlank(message = "Full name is required")
     @Size(max = 50, message = "Full name must not exceed 50 characters")
-    @Pattern(
-            regexp = "^[\\p{L} ]+$",
-            message = "Full name must contain only letters and spaces (no special characters)"
-    )
+    // @Pattern(
+    //         regexp = "^[\\p{L} ]+$",
+    //         message = "Full name must contain only letters and spaces (no special characters)"
+    // )
     private String fullName;
 
     private String image;

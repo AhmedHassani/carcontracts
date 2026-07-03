@@ -30,7 +30,7 @@ public record CompanyRequest(
         @Positive
         Integer userCount,
 
-        @NotNull
+        // @NotNull
         String code,
 
         /** موقع الشركة (اختياري) */

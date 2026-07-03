@@ -30,9 +30,9 @@ public class CompanyExpirationJob {
     private final UserRepository userRepository;
 
     /**
-     * Runs daily at 7:35 PM to check for expiring company subscriptions
+     * Runs daily at 11:00 PM to check for expiring company subscriptions
      */
-    @Scheduled(cron = "0 00 23 * * ?") // 11:00 PM daily
+    @Scheduled(cron = "0 21 20 * * ?") // 11:00 PM daily
     @Transactional
     public void checkCompanyExpirations() {
         log.info("========== STARTING COMPANY EXPIRATION JOB ==========");
@@ -143,9 +143,10 @@ public class CompanyExpirationJob {
         }
         
         long daysUntilExpiration = ChronoUnit.DAYS.between(today, expirationDate);
+        long daysSinceExpiration = ChronoUnit.DAYS.between(expirationDate, today);
         
-        log.debug("Company: {} (ID: {}), Expiration: {}, Days left: {}", 
-                 company.getCompanyName(), company.getId(), expirationDate, daysUntilExpiration);
+        log.debug("Company: {} (ID: {}), Expiration: {}, Days left: {}, Days since expiration: {}", 
+                 company.getCompanyName(), company.getId(), expirationDate, daysUntilExpiration, daysSinceExpiration);
         
         // ✅ Get only users with GET_NOTIFICATIONS permission (Super Admins + Company Users)
         List<Long> authorizedRecipients = getAllAuthorizedRecipients(company.getId());
@@ -166,20 +167,24 @@ public class CompanyExpirationJob {
         additionalData.put("ownerName", company.getOwnerName() != null ? company.getOwnerName() : "");
         additionalData.put("ownerContact", company.getOwnerContact() != null ? company.getOwnerContact() : "");
         
-        // 1. Check if EXPIRED
-        if (expirationDate.isBefore(today)) {
-            String title = "🚨 انتهاء اشتراك الشركة";
+        // 1. Check if company is expired within the last 10 days
+        if (daysSinceExpiration >= 0 && daysSinceExpiration <= 10 && expirationDate.isBefore(today)) {
+            // Send notification for each day in the last 10 days
+            int dayNumber = (int) daysSinceExpiration + 1; // 1 = first day expired, 10 = 10th day expired
+            
+            String title = "🚨 انتهاء اشتراك الشركة - اليوم " + dayNumber;
             String message = String.format(
-                "انتهى اشتراك شركة %s بتاريخ %s. يرجى تجديد الاشتراك فوراً.",
+                "انتهى اشتراك شركة %s منذ %d يوم (تاريخ الانتهاء: %s). يرجى تجديد الاشتراك فوراً.",
                 company.getCompanyName(),
+                daysSinceExpiration,
                 expirationDate
             );
             
             sendNotificationToUsers(authorizedRecipients, company.getId(), title, message, 
                                    "COMPANY_SUBSCRIPTION_EXPIRED", additionalData);
             
-            log.info("✅ Sent EXPIRED notification for company {} to {} authorized users", 
-                     company.getId(), authorizedRecipients.size());
+            log.info("✅ Sent EXPIRED notification (Day {} of 10) for company {} to {} authorized users", 
+                     dayNumber, company.getId(), authorizedRecipients.size());
             return 1;
         }
         
@@ -219,8 +224,8 @@ public class CompanyExpirationJob {
             return 1;
         }
         
-        log.debug("No notification needed for company {} (expires in {} days)", 
-                  company.getId(), daysUntilExpiration);
+        log.debug("No notification needed for company {} (expires in {} days, expired {} days ago)", 
+                  company.getId(), daysUntilExpiration, daysSinceExpiration);
         return 0;
     }
     

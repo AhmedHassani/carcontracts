@@ -26,6 +26,7 @@ import com.ahd.backend.carcontracts.notification.service.NotificationSender;
 import com.ahd.backend.carcontracts.notification.service.MessageService;
 import com.ahd.backend.carcontracts.util.base.ApiResponse;
 import com.ahd.backend.carcontracts.util.base.Pagination;
+import com.ahd.backend.carcontracts.company.service.CompanyCodeGenerator; 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -65,6 +67,7 @@ public class CompanyService {
     private final RolePermissionService rolePermissionService;
     private final Helper helper;
     private final EntityManager em;
+    private final CompanyCodeGenerator companyCodeGenerator;
     
     // ✅ ADD NOTIFICATION DEPENDENCIES
     private final NotificationSender notificationSender;
@@ -94,15 +97,22 @@ public class CompanyService {
         return copy;
     }
 
-    @Auditable(operation = "انشاء شركة", captureArgs = true, captureResult = true)
+   @Auditable(operation = "انشاء شركة", captureArgs = true, captureResult = true)
     public CompanyResponse createCompany(CompanyRequest request) {
+        String generatedCode = companyCodeGenerator.generateNextCode();
+        
         Role companyRole = roleRepository.findByName("ROLE_COMPANY")
                 .orElseThrow(() -> new ResourceNotFoundException("Company role not found"));
+        
         var createUser = toCreateUserRequest(request, companyRole);
         var user = authService.createUser(createUser);
+        
         Company company = companyMapper.toEntity(request);
+        company.setCode(generatedCode); // Set the auto-generated code
         company.setStatus(CompanyStatus.ACTIVE);
+        
         Company savedCompany = companyRepository.saveAndFlush(company);
+        
         CompanyUser relation = CompanyUser.builder()
                 .company(savedCompany)
                 .user(user)
@@ -110,7 +120,6 @@ public class CompanyService {
                 .build();
         companyUserRepository.save(relation);
         
-        // ✅ ADD NOTIFICATION FOR COMPANY CREATION
         NotificationContext context = notificationSender.createCompanyContext("CREATE", savedCompany);
         notificationSender.notifyCompanyOperation(context);
         
