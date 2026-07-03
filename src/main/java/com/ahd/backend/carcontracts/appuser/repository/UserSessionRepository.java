@@ -14,6 +14,8 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
     
     Optional<UserSession> findByRefreshToken(String refreshToken);
     
+    Optional<UserSession> findByAccessToken(String accessToken); // ADD THIS
+    
     @Modifying
     @Transactional
     @Query("UPDATE UserSession s SET s.isActive = false WHERE s.userId = :userId")

@@ -14,4 +14,5 @@ public class AuthRequest {
     private String username;
     @NotBlank(message = "Password must not be blank")
     private String password;
+    private String deviceId;
 }

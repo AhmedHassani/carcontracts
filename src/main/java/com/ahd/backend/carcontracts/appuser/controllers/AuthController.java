@@ -21,23 +21,27 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Validated @RequestBody AuthRequest req) {
+       @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(
+            @Validated @RequestBody AuthRequest req,
+            @RequestHeader(value = "x-device-id", required = false) String deviceId) {
+        
+        req.setDeviceId(deviceId);
+        
         AuthResponse authResponse = authService.login(req);
         return ResponseEntity.ok(authResponse);
     }
-
-    @PostMapping("/refresh")
+  @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@RequestBody RefreshRequest req) {
         AuthResponse authResponse = authService.refresh(req);
         return ResponseEntity.ok(authResponse);
     }
 
-    @PostMapping("/register")
+ @PostMapping("/register")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Object> createUser(@Validated @RequestBody CreateUserRequest request) {
         authService.createUser(request);
-        var response  = ApiResponse.builder()
+        var response = ApiResponse.builder()
                 .message("User created successfully")
                 .code(200)
                 .date(Instant.now())

@@ -4,6 +4,7 @@ import com.ahd.backend.carcontracts.appuser.services.AppUserDetailsService;
 import com.ahd.backend.carcontracts.appuser.repository.SecuredEndpointRepository;
 import com.ahd.backend.carcontracts.config.jwt.JwtAuthenticationFilter;
 import com.ahd.backend.carcontracts.config.jwt.JwtTokenProvider;
+import com.ahd.backend.carcontracts.config.jwt.TokenBlacklistService; // ADD THIS IMPORT
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,7 @@ public class SecurityConfig {
 
     private final AppUserDetailsService uds;
     private final JwtTokenProvider jwtProvider;
+    private final TokenBlacklistService tokenBlacklistService; // ADD THIS
     private final SecuredEndpointRepository endpointRepo;
     @Value("${application.api.base-path}")
     private String apiBasePath;
@@ -57,7 +59,7 @@ public class SecurityConfig {
                     authorize.anyRequest().authenticated();
                 })
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtProvider, uds),
+                        new JwtAuthenticationFilter(jwtProvider, uds, tokenBlacklistService), // ADD THE 3RD PARAMETER
                         UsernamePasswordAuthenticationFilter.class
                 );
         return http.build();
@@ -86,8 +88,4 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 }
-
-

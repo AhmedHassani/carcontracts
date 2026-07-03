@@ -28,6 +28,9 @@ public class UserSession {
     
     @Column(nullable = false)
     private LocalDateTime loginTime;
+
+     @Column(length = 1000)
+    private String accessToken;
     
     @Column(nullable = false)
     private Boolean isActive = true;
