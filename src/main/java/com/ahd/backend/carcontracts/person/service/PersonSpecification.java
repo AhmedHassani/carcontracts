@@ -69,6 +69,10 @@ public class PersonSpecification {
                 String pattern = "%" + criteria.nationalId().toLowerCase() + "%";
                 predicates.add(cb.like(cb.lower(root.get("nationalId")), pattern));
             }
+           if (criteria.nationalIdStatic() != null && !criteria.nationalIdStatic().isBlank()) {
+                String value = criteria.nationalIdStatic().toLowerCase();
+                predicates.add(cb.equal(cb.lower(root.get("nationalId")), value));
+            }
 
             if (criteria.residenceCardNo() != null && !criteria.residenceCardNo().isBlank()) {
                 String pattern = "%" + criteria.residenceCardNo().toLowerCase() + "%";

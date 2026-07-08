@@ -14,5 +14,6 @@ public record PersonSearchCriteria(
         String nationalId,
         String residenceCardNo,
         Long companyId,
-        String residence
+        String residence,
+        String nationalIdStatic
 ) implements BaseCriteria { }

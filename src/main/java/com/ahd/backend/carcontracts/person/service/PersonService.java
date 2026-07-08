@@ -79,6 +79,7 @@ public class PersonService {
                 .sortDirection(criteria.sortDirection())
                 .phoneNumber(criteria.phoneNumber())
                 .nationalId(criteria.nationalId())
+                .nationalIdStatic(criteria.nationalIdStatic())  
                 .residenceCardNo(criteria.residenceCardNo())
                 .residence(criteria.residence())
                 .companyId(getCompanyId())
