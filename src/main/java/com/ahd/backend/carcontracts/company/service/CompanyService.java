@@ -175,49 +175,83 @@ public class CompanyService {
                 .expirationDate(company.getExpirationDate())
                 .companyLocation(company.getCompanyLocation())
                 .status(company.getStatus())
+                .companyEmail(ownerLink != null && ownerLink.getUser() != null
+                        ? ownerLink.getUser().getEmail()
+                        : null)
                 .code(company.getCode())
+                .paymentCompanyType(company.getPaymentCompanyType())
                 .build();
     }
 
-    @Transactional
-    @Auditable(operation = "تحديث معلومات الشركة", captureArgs = true, captureResult = true)
-    public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
-        final Company company = companyRepository.findById(companyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
-        
-        // ✅ Store old company for change tracking
-        Company oldCompany = copyCompany(company);
-        
-        applyBasicUpdates(company, request);
-        boolean expirationChanged = applyDateUpdates(company, request);
-        if (expirationChanged) {
-            recalculateStatus(company);
-        }
-        AppUser user = updateOwnerUser(company, request);
-        userRepository.save(user);
-        Company saved = companyRepository.save(company);
-        
-        // ✅ ADD NOTIFICATION FOR COMPANY UPDATE
-        String changeDetails = notificationSender.generateCompanyChangeDetails(oldCompany, saved);
-        NotificationContext context = notificationSender.createCompanyContext("UPDATE", saved, changeDetails);
-        notificationSender.notifyCompanyOperation(context);
-        
-        // ✅ ADD SEPARATE NOTIFICATION FOR STATUS CHANGE IF STATUS CHANGED
-        if (oldCompany.getStatus() != saved.getStatus()) {
-            String statusChangeDetails = messageService.getMessage("notification.company.status.details",
-                oldCompany.getStatus() != null ? oldCompany.getStatus().toString() : "غير محدد",
-                saved.getStatus() != null ? saved.getStatus().toString() : "غير محدد");
-            NotificationContext statusContext = notificationSender.createCompanyContext("STATUS_CHANGE", saved, statusChangeDetails);
-            notificationSender.notifyCompanyOperation(statusContext);
-        }
-
-        return companyMapper.toResponse(
-                saved,
-                request.companyUsername().orElse(null),
-                request.companyPassword().orElse(null),
-                request.companyEmail().orElse(null)
-        );
+ //////////////
+@Transactional
+@Auditable(operation = "تحديث معلومات الشركة", captureArgs = true, captureResult = true)
+public CompanyResponse updateCompany(Long companyId, UpdateCompanyRequest request) {
+    final Company company = companyRepository.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException("Company not found: " + companyId));
+    
+    // ✅ Store old company for change tracking
+    Company oldCompany = copyCompany(company);
+    
+    applyBasicUpdates(company, request);
+    boolean expirationChanged = applyDateUpdates(company, request);
+    if (expirationChanged) {
+        recalculateStatus(company);
     }
+    AppUser user = updateOwnerUser(company, request);
+    userRepository.save(user);
+    Company saved = companyRepository.save(company);
+    
+    // ✅ ADD NOTIFICATION FOR COMPANY UPDATE
+    String changeDetails = notificationSender.generateCompanyChangeDetails(oldCompany, saved);
+    NotificationContext context = notificationSender.createCompanyContext("UPDATE", saved, changeDetails);
+    notificationSender.notifyCompanyOperation(context);
+    
+    // ✅ ADD SEPARATE NOTIFICATION FOR STATUS CHANGE IF STATUS CHANGED
+    if (oldCompany.getStatus() != saved.getStatus()) {
+        String statusChangeDetails = messageService.getMessage("notification.company.status.details",
+            oldCompany.getStatus() != null ? oldCompany.getStatus().toString() : "غير محدد",
+            saved.getStatus() != null ? saved.getStatus().toString() : "غير محدد");
+        NotificationContext statusContext = notificationSender.createCompanyContext("STATUS_CHANGE", saved, statusChangeDetails);
+        notificationSender.notifyCompanyOperation(statusContext);
+    }
+
+    // Get the password to return (either the new one or the existing one)
+    String passwordToReturn = request.companyPassword()
+            .orElseGet(() -> companyUserRepository.findByCompanyAndRole(company, CompanyUserRole.OWNER)
+                    .map(CompanyUser::getUser)
+                    .map(AppUser::getPassword)
+                    .orElse(null));
+
+    return companyMapper.toResponse(
+            saved,
+            request.companyUsername().orElse(null),
+            passwordToReturn,
+            request.companyEmail().orElse(null)
+    );
+}
+
+private AppUser updateOwnerUser(Company company, UpdateCompanyRequest req) {
+    CompanyUser ownerLink = companyUserRepository
+            .findByCompanyAndRole(company, CompanyUserRole.OWNER)
+            .orElseThrow(() -> new ResourceNotFoundException("Owner user not found for company: " + company.getId()));
+    AppUser user = ownerLink.getUser();
+    req.companyUsername().ifPresent(user::setUsername);
+    
+    // Only update password if a new one is provided in the request
+    if (req.companyPassword().isPresent()) {
+        String newPassword = req.companyPassword().get();
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+        }
+    }
+    
+    req.companyEmail().ifPresent(user::setEmail);
+    user.setFullName(req.ownerName().orElse(user.getFullName()));
+    user.setPhone(req.ownerContact().orElse(user.getPhone()));
+    return user;
+}
+ ////////////////
 
     private void applyBasicUpdates(Company company, UpdateCompanyRequest req) {
         req.companyName().ifPresent(company::setCompanyName);
@@ -235,18 +269,18 @@ public class CompanyService {
         company.setStatus(status);
     }
 
-    private AppUser updateOwnerUser(Company company, UpdateCompanyRequest req) {
-        CompanyUser ownerLink = companyUserRepository
-                .findByCompanyAndRole(company, CompanyUserRole.OWNER)
-                .orElseThrow(() -> new ResourceNotFoundException("Owner user not found for company: " + company.getId()));
-        AppUser user = ownerLink.getUser();
-        req.companyUsername().ifPresent(user::setUsername);
-        req.companyPassword().ifPresent(raw -> user.setPassword(passwordEncoder.encode(raw)));
-        req.companyEmail().ifPresent(user::setEmail);
-        user.setFullName(req.ownerName().orElse(user.getFullName()));
-        user.setPhone(req.ownerContact().orElse(user.getPhone()));
-        return user;
-    }
+    // private AppUser updateOwnerUser(Company company, UpdateCompanyRequest req) {
+    //     CompanyUser ownerLink = companyUserRepository
+    //             .findByCompanyAndRole(company, CompanyUserRole.OWNER)
+    //             .orElseThrow(() -> new ResourceNotFoundException("Owner user not found for company: " + company.getId()));
+    //     AppUser user = ownerLink.getUser();
+    //     req.companyUsername().ifPresent(user::setUsername);
+    //     req.companyPassword().ifPresent(raw -> user.setPassword(passwordEncoder.encode(raw)));
+    //     req.companyEmail().ifPresent(user::setEmail);
+    //     user.setFullName(req.ownerName().orElse(user.getFullName()));
+    //     user.setPhone(req.ownerContact().orElse(user.getPhone()));
+    //     return user;
+    // }
 
     private boolean applyDateUpdates(Company company, UpdateCompanyRequest req) {
         if (req.expirationDate().isEmpty()) return false;
