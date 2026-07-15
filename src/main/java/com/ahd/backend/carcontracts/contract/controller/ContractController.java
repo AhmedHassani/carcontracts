@@ -28,7 +28,7 @@ public class ContractController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('ADD_CONTRSCT') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('ADD_CONTRACT') or hasRole('SUPER_ADMIN')")
     public ContractResponse addContract(@Valid @RequestBody ContractRequest request) {
         return contractService.addContract(request);
     }

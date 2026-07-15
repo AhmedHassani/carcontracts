@@ -72,8 +72,12 @@ public class AuthorizationService {
     
     @Auditable(operation = "انشاء تخويل", captureArgs = true, captureResult = true)
     public AuthorizationResponse create(AuthorizationUpsertRequest r) {
-        if (authorizationRepository.existsByAuthorizationNumber(r.getAuthorizationNumber())) {
+        if (authorizationRepository.existsByAuthorizationNumberAndCompanyId(r.getAuthorizationNumber(), getCompanyId())) {
             throw new IllegalArgumentException("authorizationNumber already exists");
+        }
+        Long maxAuthorizationNumber = authorizationRepository.findMaxAuthorizationNumberByCompanyId(getCompanyId());
+        if (r.getAuthorizationNumber() == null) {
+            r.setAuthorizationNumber(maxAuthorizationNumber != null ? maxAuthorizationNumber + 1 : 1);
         }
         Person buyer = personRepository.findById(r.getBuyerId())
                 .orElseThrow(() -> new EntityNotFoundException("Buyer not found: " + r.getBuyerId()));
@@ -99,7 +103,7 @@ public class AuthorizationService {
         Authorization oldAuthorization = copyAuthorization(entity);
         
         if (!entity.getAuthorizationNumber().equals(r.getAuthorizationNumber())
-                && authorizationRepository.existsByAuthorizationNumber(r.getAuthorizationNumber())) {
+                && authorizationRepository.existsByAuthorizationNumberAndCompanyId(r.getAuthorizationNumber(), getCompanyId())) {
             throw new IllegalArgumentException("authorizationNumber already exists");
         }
         Person buyer = personRepository.findById(r.getBuyerId())

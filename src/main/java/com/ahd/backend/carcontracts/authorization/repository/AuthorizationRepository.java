@@ -12,8 +12,11 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface AuthorizationRepository extends JpaRepository<Authorization, Long>, JpaSpecificationExecutor<Authorization> {
-    boolean existsByAuthorizationNumber(Long authorizationNumber);
+    boolean existsByAuthorizationNumberAndCompanyId(Long authorizationNumber, Long companyId);
     Optional<Authorization> findByIdAndCompanyId(Long id, Long companyId);
     boolean  existsByIdAndCompanyId(Long id , Long companyId);
+
+    @Query("SELECT MAX(a.authorizationNumber) FROM Authorization a WHERE a.companyId = :companyId")
+    Long findMaxAuthorizationNumberByCompanyId(@Param("companyId") Long companyId);
 
 }
