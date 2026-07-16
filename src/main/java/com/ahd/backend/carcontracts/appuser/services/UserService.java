@@ -1,6 +1,6 @@
 package com.ahd.backend.carcontracts.appuser.services;
 
-import com.ahd.backend.carcontracts.S3.S3FileStorageService;
+import com.ahd.backend.carcontracts.r2.R2FileStorageService;
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.models.Role;
 import com.ahd.backend.carcontracts.appuser.dto.UpdateProfileRequest;
@@ -39,7 +39,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final S3FileStorageService imageStorageService;
+    private final R2FileStorageService imageStorageService;
     private final RoleRepository roleRepo;
     private final CompanyUserRepository companyUserRepository;
     private final Helper helper;

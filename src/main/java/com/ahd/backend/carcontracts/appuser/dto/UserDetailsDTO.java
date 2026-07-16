@@ -1,6 +1,6 @@
 package com.ahd.backend.carcontracts.appuser.dto;
 
-import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.r2.R2UrlService;
 import com.ahd.backend.carcontracts.appuser.models.AppUser;
 import com.ahd.backend.carcontracts.appuser.models.Permission;
 import com.ahd.backend.carcontracts.appuser.models.Role;
@@ -28,12 +28,12 @@ public class UserDetailsDTO {
     private PaymentCompanyType paymentCompanyType;
     
     @JsonIgnore
-    private String image; // S3 key
+    private String image; // r2 key
     
-    private String imageUrl; // Full S3 URL
+    private String imageUrl; // Full r2 URL
 
     public static UserDetailsDTO fromAppUser(AppUser user) {
-        S3UrlService s3UrlService = ApplicationContextProvider.getApplicationContext().getBean(S3UrlService.class);
+        R2UrlService r2UrlService = ApplicationContextProvider.getApplicationContext().getBean(R2UrlService.class);
         var result = user.getRoles().stream()
                 .collect(Collectors.teeing(
                         Collectors.mapping(Role::getName, Collectors.toList()),
@@ -56,12 +56,12 @@ public class UserDetailsDTO {
                 .roles(roleNames)
                 .permissions(allPermissions)
                 .image(user.getImage())
-                .imageUrl(s3UrlService.getImageUrl(user.getImage()))
+                .imageUrl(r2UrlService.getImageUrl(user.getImage()))
                 .build();
     }
 
     public static UserDetailsDTO fromAppUser(AppUser user, Company company) {
-        S3UrlService s3UrlService = ApplicationContextProvider.getApplicationContext().getBean(S3UrlService.class);
+        R2UrlService r2UrlService = ApplicationContextProvider.getApplicationContext().getBean(R2UrlService.class);
         var result = user.getRoles().stream()
                 .collect(Collectors.teeing(
                         Collectors.mapping(Role::getName, Collectors.toList()),
@@ -82,7 +82,7 @@ public class UserDetailsDTO {
                 .phone(user.getPhone())
                 .fullName(user.getFullName())
                 .image(user.getImage())
-                .imageUrl(s3UrlService.getImageUrl(user.getImage()))
+                .imageUrl(r2UrlService.getImageUrl(user.getImage()))
                 .companyUserId(company.getId())
                 .paymentCompanyType(company.getPaymentCompanyType())
                 .roles(roleNames)

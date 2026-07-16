@@ -1,6 +1,6 @@
 package com.ahd.backend.carcontracts.appuser.controllers;
 
-import com.ahd.backend.carcontracts.S3.S3FileStorageService;
+import com.ahd.backend.carcontracts.r2.R2FileStorageService;
 import com.ahd.backend.carcontracts.appuser.dto.UpdateProfileRequest;
 import com.ahd.backend.carcontracts.appuser.dto.UserDetailsDTO;
 import com.ahd.backend.carcontracts.appuser.services.UserService;
@@ -21,7 +21,7 @@ import java.time.Instant;
 public class UserController {
 
     private final UserService userService;
-    private final S3FileStorageService imageStorageService;
+    private final R2FileStorageService imageStorageService;
 
     @GetMapping("/me")
     public ResponseEntity<UserDetailsDTO> getCurrentUser() {

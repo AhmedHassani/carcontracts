@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.person.service;
 
-import com.ahd.backend.carcontracts.S3.S3FileStorageService;
-import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.r2.R2FileStorageService;
+import com.ahd.backend.carcontracts.r2.R2UrlService;
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.exception.BadRequestException;
 import com.ahd.backend.carcontracts.exception.ResourceNotFoundException;
@@ -35,8 +35,8 @@ import java.util.Optional;
 public class PersonService {
 
     private final PersonRepository personRepository;
-    private final S3FileStorageService fileStorageService;
-    private final S3UrlService s3UrlService;
+    private final R2FileStorageService fileStorageService;
+    private final R2UrlService r2UrlService;
     private final PersonAttachmentRepository personAttachmentRepository;
     private final Helper helper;
     private final NotificationSender notificationSender;  // ✅ Use NotificationSender instead of NotificationService
@@ -121,7 +121,7 @@ public class PersonService {
         }
         
         String key = fileStorageService.upload(dto.getFile());
-        att.setUrl(s3UrlService.getImageUrl(key));
+        att.setUrl(r2UrlService.getImageUrl(key));
         att.setOriginalName(dto.getFile().getOriginalFilename());
         personAttachmentRepository.save(att);
         
@@ -187,7 +187,7 @@ public class PersonService {
         });
         
         String key = fileStorageService.upload(file);
-        att.setUrl(s3UrlService.getImageUrl(key));
+        att.setUrl(r2UrlService.getImageUrl(key));
         att.setOriginalName(file.getOriginalFilename());
         personAttachmentRepository.save(att);
         
@@ -288,7 +288,7 @@ public class PersonService {
                 .orElseThrow(() -> new RuntimeException("Person not found with id: " + person.getId()));
         
         String key = fileStorageService.upload(file);
-        String url = s3UrlService.getImageUrl(key);
+        String url = r2UrlService.getImageUrl(key);
         PersonAttachment attachment = PersonAttachment.builder()
                 .person(person)
                 .docType(type)

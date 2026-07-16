@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.template.service;
 
 
-import com.ahd.backend.carcontracts.S3.S3FileStorageService;
+import com.ahd.backend.carcontracts.r2.R2FileStorageService;
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.company.model.Company;
 import com.ahd.backend.carcontracts.company.repository.CompanyRepository;
@@ -29,7 +29,7 @@ public class TemplateService {
     private final TemplateRepository templateRepository;
     private final CompanyRepository companyRepository;
     private final Helper helper;
-    private final S3FileStorageService s3FileStorageService;
+    private final R2FileStorageService r2FileStorageService;
 
 //    @Transactional
 //    public TemplateDTO saveTemplate(TemplateDTO dto) {
@@ -129,7 +129,7 @@ public class TemplateService {
         Company company = companyRepository.findById(companyId)
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
-        String imageKey = s3FileStorageService.upload(image);
+        String imageKey = r2FileStorageService.upload(image);
       //  dto.setImageKey(imageKey);
 
         Template entity = TemplateMapper.toEntity(dto, company);
@@ -147,7 +147,7 @@ public class TemplateService {
                 .orElseThrow(() -> new RuntimeException("Company not found"));
 
         // upload new first
-        String newKey = s3FileStorageService.upload(image);
+        String newKey = r2FileStorageService.upload(image);
        // String oldKey = template.getImageKey();
 
         template.setName(dto.getName());

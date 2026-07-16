@@ -1,7 +1,7 @@
 package com.ahd.backend.carcontracts.car.service;
 
-import com.ahd.backend.carcontracts.S3.S3FileStorageService;
-import com.ahd.backend.carcontracts.S3.S3UrlService;
+import com.ahd.backend.carcontracts.r2.R2FileStorageService;
+import com.ahd.backend.carcontracts.r2.R2UrlService;
 import com.ahd.backend.carcontracts.appuser.repository.UserRepository;
 import com.ahd.backend.carcontracts.audit.Auditable;
 import com.ahd.backend.carcontracts.car.dto.CarRequestDTO;
@@ -48,9 +48,9 @@ import com.ahd.backend.carcontracts.appuser.models.AppUser;
 public class CarService {
 
     private final CarRepository carRepository;
-    private final S3FileStorageService imageStorageService;
-    private final S3UrlService s3UrlService;
-    private final S3FileStorageService storageService;
+    private final R2FileStorageService imageStorageService;
+    private final R2UrlService r2UrlService;
+    private final R2FileStorageService storageService;
     private final CarAttachmentRepository carAttachmentRepo;
     private final CompanyUserRepository companyUserRepository;
     private final UserRepository userRepository;
@@ -102,7 +102,7 @@ public class CarService {
                 String key = storageService.upload(f);
                 CarAttachment att = CarAttachment.builder()
                         .car(car)
-                        .fileKey(s3UrlService.getImageUrl(key))
+                        .fileKey(r2UrlService.getImageUrl(key))
                         .mimeType(Optional.ofNullable(f.getContentType())
                                 .orElse("application/octet-stream"))
                         .build();
@@ -230,7 +230,7 @@ public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
         
         for (MultipartFile file : files) {
             String key = storageService.upload(file);
-            String url = s3UrlService.getImageUrl(key);
+            String url = r2UrlService.getImageUrl(key);
             CarAttachment att = CarAttachment.builder()
                     .car(car)
                     .fileKey(url)
