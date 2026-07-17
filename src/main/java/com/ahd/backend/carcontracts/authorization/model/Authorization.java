@@ -1,7 +1,5 @@
 package com.ahd.backend.carcontracts.authorization.model;
 
-
-
 import com.ahd.backend.carcontracts.car.model.Car;
 import com.ahd.backend.carcontracts.person.model.Person;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -17,16 +15,25 @@ import lombok.*;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 @Entity
-@Table(name = "authorizations")
+@Table(
+    name = "authorizations",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "unique_authorization_per_company",
+            columnNames = {"authorizationNumber", "company_id"}
+        )
+    }
+)
 public class Authorization {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     @Column(name = "company_id")
     private Long companyId;
 
     @NotNull
-    @Column(unique = true)
+    @Column(name = "authorizationNumber", nullable = false)
     private Long authorizationNumber;
 
     @NotNull
@@ -46,6 +53,5 @@ public class Authorization {
     private Long templateId;
 
     @Column(name = "is_change", nullable = false)
-    private boolean isChange = false; 
-
+    private boolean isChange = false;
 }
