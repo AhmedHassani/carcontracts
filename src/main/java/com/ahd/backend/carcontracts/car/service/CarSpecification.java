@@ -63,6 +63,16 @@ public class CarSpecification extends AbstractSpecification<CarSearchCriteria, C
     p.add(namePredicate);
 }
 
+    if (criteria.currentPossessorId() != null) {
+        if (criteria.currentPossessorId() == 0) {
+            // If ID is 0, find records where currentPossessor is NULL
+            p.add(cb.isNull(possessorJoin.get("id")));
+        } else {
+            // Find records with specific currentPossessor ID
+            p.add(cb.equal(possessorJoin.get("id"), criteria.currentPossessorId()));
+        }
+    }
+
 if (criteria.currentPossessor() != null && 
     criteria.currentPossessor().phone() != null && 
     !criteria.currentPossessor().phone().isBlank()) {

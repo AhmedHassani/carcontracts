@@ -286,6 +286,7 @@ public CarResponseDTO updateCar(Long id, UpdateCarRequestDTO patch) {
                 .chassisNumber(criteria.chassisNumber())
                 .model(criteria.model())
                 .status(criteria.status())
+                .currentPossessorId(criteria.currentPossessorId())
                 .description(criteria.description())
                 .name(criteria.name())
                 .carPrice(criteria.carPrice())

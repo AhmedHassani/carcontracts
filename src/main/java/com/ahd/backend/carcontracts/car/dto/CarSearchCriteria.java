@@ -25,5 +25,6 @@ public record CarSearchCriteria(
         String description,
         String name,
         Long carPrice,
-        CurrentPossessorFilter currentPossessor  // Just reference it, don't define it here
+        CurrentPossessorFilter currentPossessor,
+        Long currentPossessorId  // Just reference it, don't define it here
 ) implements BaseCriteria { }
