@@ -28,6 +28,7 @@ public class ContractResponse {
     private PaymentPlanDTO paymentPlan;
     private Long templateId;
     private boolean onus;
+    private String description;
 
 
     @Getter @Setter

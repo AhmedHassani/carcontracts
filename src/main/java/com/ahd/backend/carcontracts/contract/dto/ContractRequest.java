@@ -31,5 +31,5 @@ public class ContractRequest {
     private Long companyId;
     private Long possessorId;
     private boolean onus ; 
-
+    private String description;
 }

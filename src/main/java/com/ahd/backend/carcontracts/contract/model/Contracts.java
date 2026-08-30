@@ -53,5 +53,9 @@ public class Contracts {
     private Long templateId;
 
     @Column(name = "onus", nullable = false)
-    private boolean onus = true; 
+    private boolean onus = true;
+    
+    // NEW FIELD - Add this
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 }

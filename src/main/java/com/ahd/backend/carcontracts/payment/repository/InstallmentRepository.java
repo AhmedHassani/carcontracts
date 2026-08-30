@@ -76,7 +76,10 @@ List<Object[]> getIntInstallmentByMonth(
     @Param("start") LocalDate start,
     @Param("end") LocalDate end,
     @Param("companyId") Long companyId
-);@Query("""
+);
+
+
+@Query("""
     SELECT i.paidDate as day, 
            SUM(i.amount - COALESCE(i.remainingAmount, 0)) as totalAmount
     FROM Installment i 

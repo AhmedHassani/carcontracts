@@ -30,6 +30,7 @@ public final class ContractMapper {
         dto.setTemplateId(c.getTemplateId());
         dto.setContractNumber(c.getContractNumber());  // ADD THIS LINE
         dto.setOnus(c.isOnus());
+        dto.setDescription(c.getDescription());
         return dto;
     }
 
@@ -37,6 +38,7 @@ public final class ContractMapper {
                                         Person seller,
                                         Person buyer,
                                         Person guarantor,
+                                        String description,
                                         Person possessor,  // ADD THIS PARAMETER
                                         Car car,
                                         PaymentPlan plan) {
@@ -49,6 +51,7 @@ public final class ContractMapper {
         c.setPossessor(possessor);  // ADD THIS LINE
         c.setCar(car);
         c.setPaymentPlan(plan);
+        c.setDescription(description);
         return c;
     }
 

@@ -28,6 +28,7 @@ public class CarResponseDTO {
     private String origin;
     private List<CarAttachment> attachments;
     private LocalDateTime createdAt;
+    private LocalDateTime paidAt;
     private String walletNumber;
     private String typeOfCarPlate;
     private String status;

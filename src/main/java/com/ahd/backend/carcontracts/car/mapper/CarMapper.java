@@ -63,6 +63,7 @@ public final class CarMapper {
       .name(car.getName())
       .type(car.getType())
       .color(car.getColor())
+      .paidAt(car.getPaidAt())
       .model(car.getModel())
       .plateNumber(car.getPlateNumber())
       .chassisNumber(car.getChassisNumber())

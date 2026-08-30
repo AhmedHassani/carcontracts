@@ -93,6 +93,7 @@ public class ContractService {
         contract.setPaymentPlan(paymentPlan);
         contract.setCompanyId(getCompanyId());
         contract.setContractNumber(contractNumber); 
+        contract.setDescription(request.getDescription());
         contract = contractRepo.saveAndFlush(contract);
         
         // ✅ Add notification for contract creation

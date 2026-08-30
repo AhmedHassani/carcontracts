@@ -66,7 +66,7 @@ public class DashboardController  {
         switch (period.toLowerCase()) {
             case "day":
                 end = start.plusDays(1); // end = start + 1 day
-                Map<LocalDate, Long> daily = dashbordService.getInstallmentsDaily(start, end);
+System.out.println("the start date" + start + " the end date : " +  end);                Map<LocalDate, Long> daily = dashbordService.getInstallmentsDaily(start, end);
                 return ResponseEntity.ok(daily);
 
             case "week":
